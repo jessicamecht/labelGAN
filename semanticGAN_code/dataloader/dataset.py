@@ -45,6 +45,45 @@ class AdjustGamma(object):
 
         return img_gamma
 
+# for chest x-rays    
+class ChestXrayDataset(Dataset):
+    def __init__(self, root_dir, image_paths, label_paths):
+        self.image_paths = image_paths
+        self.label_paths = label_paths
+        self.root_dir = root_dir
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def __getitem__(self, idx):
+ 
+        #Reading images
+        img_name = os.path.join(self.root_dir,'images',self.image_paths[idx])
+        image = Image.open(img_name)
+        
+        #Converting to grayscale if RGB
+        image = ImageOps.grayscale(image)
+        
+        #Reading Labels
+        label_name = os.path.join(self.root_dir,'masks',self.label_paths[idx])
+        label = Image.open(label_name)
+        
+        #Converting to tensors and Resizing images
+        self.transform = transforms.Compose([transforms.ToTensor(),transforms.Resize((256, 256))])
+        self.transform_hflip = transforms.functional.hflip
+        
+        image = self.transform(image)
+        label = self.transform(label)
+        
+        #Flipping images and labels with probability 0.5
+        probability = torch.rand(1)
+        if probability<=0.5:
+            image = self.transform_hflip(image)
+            label = self.transform_hflip(label)
+
+        return image, label    
+
+    
 class CelebAMaskDataset(Dataset):
     def __init__(self, args, dataroot, unlabel_transform=None, latent_dir=None, is_label=True, phase='train', 
                     limit_size=None, unlabel_limit_size=None, aug=False, resolution=256):

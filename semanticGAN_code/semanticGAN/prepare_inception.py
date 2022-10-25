@@ -25,19 +25,25 @@ import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, ConcatDataset
 
+import sys, os
+sys.path.append("/home/rmpatil/teams/group-9/labelGAN/semanticGAN_code")
+
 import argparse
 from utils import inception_utils
-from dataloader import (CelebAMaskDataset)
+from dataloader.dataset import CelebAMaskDataset, ChestXrayDataset
 import pickle
 
 @torch.no_grad()
-def extract_features(args, loader, inception, device):
+def extract_features(args, loader, inception, device, dataset="celeba-mask"):
     pbar = loader
 
     pools, logits = [], []
 
     for data in pbar:
-        img = data['image']
+        if dataset == "celeba-mask":
+            img = data['image']
+        elif dataset == "chest-xray":
+            img, label_ = data
             
         # check img dim
         if img.shape[1] != 3:
@@ -60,8 +66,22 @@ def get_dataset(args):
         unlabel_dataset = CelebAMaskDataset(args, args.path, is_label=False)
         train_val_dataset = CelebAMaskDataset(args, args.path, is_label=True, phase='train-val')
         dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
+    elif args.dataset_name == 'chest-xray':
+        root_dir = '/home/rmpatil/teams/group-9/dataset_xray/'
+        image_folder = '/home/rmpatil/teams/group-9/dataset_xray/images/'
+        label_folder = '/home/rmpatil/teams/group-9/dataset_xray/masks/'
+        
+        label_paths = [label for label in os.listdir(label_folder)]
+        #only reading images which have labels
+        image_paths = [label.replace('_mask', '') for label in os.listdir(label_folder)]
+        
+        dataset = ChestXrayDataset(root_dir, image_paths, label_paths)
+        fid_size = int(0.2 * len(dataset))
+        dataset, _ = torch.utils.data.random_split(dataset, 
+                                                   [fid_size, len(dataset) - fid_size])
     else:
         raise Exception('No such a dataloader!')
+    
     return dataset
 
 if __name__ == '__main__':
@@ -76,16 +96,22 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str, required=True)
     parser.add_argument('--image_mode', type=str, default='RGB')
     parser.add_argument('--dataset_name', type=str, help='[celeba-mask]')
-    parser.add_argument('path', metavar='PATH', help='path to datset dir')
+#     parser.add_argument('path', metavar='PATH', help='path to datset dir')
 
     args = parser.parse_args()
 
     inception = inception_utils.load_inception_net()
 
     dset = get_dataset(args)
-    loader = DataLoader(dset, batch_size=args.batch, num_workers=4)
+    loader = DataLoader(dset,
+                        batch_size = args.batch,
+                        num_workers = 4)
 
-    pools, logits = extract_features(args, loader, inception, device)
+    pools, logits = extract_features(args,
+                                     loader,
+                                     inception,
+                                     device,
+                                     args.dataset_name)
 
     # pools = pools[: args.n_sample]
     # logits = logits[: args.n_sample]
