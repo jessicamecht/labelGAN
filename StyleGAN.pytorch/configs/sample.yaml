@@ -2,9 +2,9 @@
 
 output_dir: './output'
 structure: 'linear'
-device_id: ('3')
+device_id: ('0')
 dataset:
-  img_dir: '/Users/jessicaechterhoff/Dropbox/UCSD_2022_2023/Classes/291 DGM/project/data/chest_xray/train/NORMAL'
+  img_dir: '/home/jechterh/teams/group-9/nih_data/train'
   folder: False
   resolution: 128
 sched:
