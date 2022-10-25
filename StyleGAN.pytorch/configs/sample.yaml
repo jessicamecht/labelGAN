@@ -1,0 +1,11 @@
+# Config file for CelebA dataset (200k)
+
+output_dir: './output'
+structure: 'linear'
+device_id: ('3')
+dataset:
+  img_dir: '/Users/jessicaechterhoff/Dropbox/UCSD_2022_2023/Classes/291 DGM/project/data/chest_xray/train/NORMAL'
+  folder: False
+  resolution: 128
+sched:
+  epochs: [8,16,16,16,16,12]
