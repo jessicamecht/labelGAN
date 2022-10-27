@@ -21,10 +21,10 @@ cfg.n_classes = 0
 cfg.loss = "logistic"
 cfg.drift = 0.001
 cfg.d_repeats = 1
-cfg.use_ema = True
+cfg.use_ema = False
 cfg.ema_decay = 0.999
 
-cfg.num_works = 4
+cfg.num_works = 0
 cfg.num_samples = 36
 cfg.feedback_factor = 10
 cfg.checkpoint_factor = 10

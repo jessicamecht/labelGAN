@@ -802,12 +802,12 @@ class StyleGAN:
                 if epoch % checkpoint_factor == 0 or epoch == 1 or epoch == epochs[current_depth]:
                     save_dir = os.path.join(output, 'models')
                     os.makedirs(save_dir, exist_ok=True)
-                    gen_save_file = os.path.join(save_dir, "GAN_GEN_" + ".pth")
-                    dis_save_file = os.path.join(save_dir, "GAN_DIS_" + ".pth")
+                    gen_save_file = os.path.join(save_dir, "GAN_GEN_" + str(current_depth) + ".pth")
+                    dis_save_file = os.path.join(save_dir, "GAN_DIS_" + str(current_depth) + ".pth")
                     gen_optim_save_file = os.path.join(
-                        save_dir, "GAN_GEN_OPTIM_" + ".pth")
+                        save_dir, "GAN_GEN_OPTIM_" + str(current_depth) + ".pth")
                     dis_optim_save_file = os.path.join(
-                        save_dir, "GAN_DIS_OPTIM_" + ".pth")
+                        save_dir, "GAN_DIS_OPTIM_" + str(current_depth) + ".pth")
 
                     torch.save(self.gen.state_dict(), gen_save_file)
                     logger.info("Saving the model to: %s\n" % gen_save_file)

@@ -6,6 +6,11 @@ device_id: ('0')
 dataset:
   img_dir: '/home/jechterh/teams/group-9/nih_data/train'
   folder: False
-  resolution: 128
+  resolution: 256
+model:
+  gen:
+    mapping_layers: 8
+    # Negative numbers represent no truncation layers
+    truncation_psi: -1.
 sched:
-  epochs: [8,16,16,16,16,12]
+  epochs: [4,8,16,32,16,1,16]
