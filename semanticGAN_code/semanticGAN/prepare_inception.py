@@ -24,20 +24,26 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, ConcatDataset
+from torchvision import transforms
+
+import sys, os
+sys.path.append("/home/rmpatil/teams/group-9/labelGAN/semanticGAN_code")
 
 import argparse
 from utils import inception_utils
-from dataloader import (CelebAMaskDataset)
+from dataloader.dataset import CelebAMaskDataset, ChestXrayDataset
 import pickle
 
 @torch.no_grad()
-def extract_features(args, loader, inception, device):
+def extract_features(args, loader, inception, device, dataset="celeba-mask"):
     pbar = loader
 
     pools, logits = [], []
-
     for data in pbar:
-        img = data['image']
+        if dataset == "celeba-mask":
+            img = data['image']
+        elif dataset == "chest-xray":
+            img = data['image']
             
         # check img dim
         if img.shape[1] != 3:
@@ -54,14 +60,27 @@ def extract_features(args, loader, inception, device):
 
     return pools, logits
 
+def get_transformation():
+    transform = transforms.Compose(
+                    [
+                        transforms.ToTensor()
+                    ]
+                )
+    return transform
 
 def get_dataset(args):
     if args.dataset_name == 'celeba-mask':
         unlabel_dataset = CelebAMaskDataset(args, args.path, is_label=False)
         train_val_dataset = CelebAMaskDataset(args, args.path, is_label=True, phase='train-val')
         dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
+    elif args.dataset_name == 'chest-xray':
+        root_path = "/home/rmpatil/teams/group-9/"
+        unlabel_dataset = ChestXrayDataset(args, root_path, is_label=False, unlabel_transform = get_transformation())
+        train_val_dataset = ChestXrayDataset(args, root_path, is_label=True, phase='train-val')
+        dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
     else:
         raise Exception('No such a dataloader!')
+    
     return dataset
 
 if __name__ == '__main__':
@@ -76,16 +95,22 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=str, required=True)
     parser.add_argument('--image_mode', type=str, default='RGB')
     parser.add_argument('--dataset_name', type=str, help='[celeba-mask]')
-    parser.add_argument('path', metavar='PATH', help='path to datset dir')
+#     parser.add_argument('path', metavar='PATH', help='path to datset dir')
 
     args = parser.parse_args()
 
     inception = inception_utils.load_inception_net()
 
     dset = get_dataset(args)
-    loader = DataLoader(dset, batch_size=args.batch, num_workers=4)
+    loader = DataLoader(dset,
+                        batch_size = args.batch)#,
+                        #num_workers = 4)
 
-    pools, logits = extract_features(args, loader, inception, device)
+    pools, logits = extract_features(args,
+                                     loader,
+                                     inception,
+                                     device,
+                                     args.dataset_name)
 
     # pools = pools[: args.n_sample]
     # logits = logits[: args.n_sample]
@@ -101,4 +126,4 @@ if __name__ == '__main__':
     cov = np.cov(pools, rowvar=False)
 
     with open(args.output, 'wb') as f:
-        pickle.dump({'mean': mean, 'cov': cov, 'size': args.size, 'path': args.path}, f)
+        pickle.dump({'mean': mean, 'cov': cov, 'size': args.size}, f)

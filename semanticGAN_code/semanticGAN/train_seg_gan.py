@@ -36,7 +36,7 @@ from torchvision import transforms, utils
 from torch.utils.tensorboard import SummaryWriter
 
 from models.stylegan2_seg import GeneratorSeg, Discriminator, MultiscaleDiscriminator, GANLoss
-from dataloader.dataset import CelebAMaskDataset
+from dataloader.dataset import CelebAMaskDataset, ChestXrayDataset
 
 from utils.distributed import (
     get_rank,
@@ -516,14 +516,15 @@ def get_seg_dataset(args, phase='train'):
     if args.seg_name == 'celeba-mask':
         seg_dataset = CelebAMaskDataset(args, args.seg_dataset, is_label=True, phase=phase,
                                             limit_size=args.limit_data, aug=args.seg_aug, resolution=args.size)
-   
+    elif args.seg_name == 'chest-xray':
+        seg_dataset = ChestXrayDataset(args, args.seg_dataset, is_label=True, phase=phase, aug=args.seg_aug, resolution=args.size)
     else:
         raise Exception('No such a dataloader!')
     
     return seg_dataset
 
 def get_transformation(args):
-    if args.seg_name == 'celeba-mask':
+    if args.seg_name == 'celeba-mask' or args.seg_name == 'chest-xray':
         transform = transforms.Compose(
                     [
                         transforms.RandomHorizontalFlip(),
@@ -694,8 +695,10 @@ if __name__ == '__main__':
 
     if args.seg_name == 'celeba-mask':
         transform = get_transformation(args)
-        img_dataset = CelebAMaskDataset(args, args.img_dataset, unlabel_transform=transform, unlabel_limit_size=args.unlabel_limit_data,
-                                                is_label=False, resolution=args.size)
+        img_dataset = CelebAMaskDataset(args, args.img_dataset, unlabel_transform=transform, unlabel_limit_size=args.unlabel_limit_data, is_label=False, resolution=args.size)
+    elif args.seg_name == "chest-xray":
+        transform = get_transformation(args)
+        img_dataset = ChestXrayDataset(args, args.img_dataset, unlabel_transform=transform, is_label=False, resolution=args.size)
     else:
         raise Exception('No such a dataloader!')
 
