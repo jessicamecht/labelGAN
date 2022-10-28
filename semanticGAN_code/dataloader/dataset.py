@@ -47,41 +47,158 @@ class AdjustGamma(object):
 
 # for chest x-rays    
 class ChestXrayDataset(Dataset):
-    def __init__(self, root_dir, image_paths, label_paths):
-        self.image_paths = image_paths
-        self.label_paths = label_paths
-        self.root_dir = root_dir
+    # we require a large unlabeled dataset and a much smaller labeled dataset
+    # we use xray dataset with masks as our labeled dataset, and the nih kaggle dataset as our unlabeled dataset
+    def __init__(self, args, dataroot, unlabel_transform=None, latent_dir=None, is_label=True, phase='train', 
+                    limit_size=None, unlabel_limit_size=None, aug=False, resolution=256):
+
+        self.args = args
+        self.is_label = is_label
+
+        if is_label == True:
+            self.latent_dir = latent_dir # not really used in this class or for celebA-mask
+            self.data_root = os.path.join(dataroot, 'dataset_xray') #dataroot = "/home/rmpatil/teams/group-9/"
+            
+            #only reading images which have labels: total count = 704
+            label_folder = os.path.join(self.data_root, 'masks')
+#             all_image_paths = [label.replace('_mask', '') for label in os.listdir(label_folder)]
+#             all_label_paths = [label for label in os.listdir(label_folder)]
+                        
+            if phase == 'train':
+                with open(os.path.join(self.data_root, 'train_list.txt')) as f:
+                    self.filename_list = f.read().splitlines() 
+            elif phase == 'val':
+                with open(os.path.join(self.data_root, 'val_list.txt')) as f:
+                    self.filename_list = f.read().splitlines() 
+            elif phase == 'train-val':
+                with open(os.path.join(self.data_root, 'train_list.txt')) as f:
+                    x = f.read().splitlines() 
+                with open(os.path.join(self.data_root, 'val_list.txt')) as f:
+                    y = f.read().splitlines() 
+                self.filename_list = x + y
+            else:
+                with open(os.path.join(self.data_root, 'test_list.txt')) as f:
+                    self.filename_list = f.read().splitlines() 
+            
+            self.img_dir = os.path.join(self.data_root, 'images')
+            self.label_dir = label_folder
+        else:
+            self.data_root = os.path.join(dataroot, 'nih_data') #dataroot = "/home/rmpatil/teams/group-9/"
+            unlabel_images_folder = os.path.join(self.data_root, 'train') # we can extend this to test and validation sets as well
+            all_unlabel_image_paths = [unlabel_image for unlabel_image in os.listdir(unlabel_images_folder) if os.path.isfile(os.path.join(unlabel_images_folder, unlabel_image))]
+            self.filename_list = all_unlabel_image_paths
+            
+            self.img_dir = unlabel_images_folder
+            self.label_dir = None
+
+        
+        self.phase = phase
+        self.color_map = {
+            0: [  0,   0,   0],
+            1: [ 0,0,205],
+            2: [132,112,255],
+            3: [ 25,25,112],
+            4: [187,255,255],
+            5: [ 102,205,170],
+            6: [ 227,207,87],
+            7: [ 142,142,56]
+        }
+
+        self.data_size = len(self.filename_list)
+        self.resolution = resolution
+
+        self.aug = aug
+        if aug == True:
+            self.aug_t = albumentations.Compose([
+                            A.transforms.HorizontalFlip(p=0.5),
+                            A.transforms.ShiftScaleRotate(shift_limit=0.1,
+                                                scale_limit=0.2,
+                                                rotate_limit=15,
+                                                border_mode=cv2.BORDER_CONSTANT,
+                                                value=0,
+                                                mask_value=0,
+                                                p=0.5),
+                    ])
+
+        self.unlabel_transform = unlabel_transform
+        
+
+    def _mask_labels(self, mask_np):
+        label_size = len(self.color_map.keys())
+        labels = np.zeros((label_size, mask_np.shape[0], mask_np.shape[1]))
+        for i in range(label_size):
+            labels[i][mask_np==i] = 1.0
+        
+        return labels
+
+    
+    @staticmethod
+    def preprocess(img):
+        image_transform = transforms.Compose(
+                    [
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5), inplace=True)
+                    ]
+                )
+        img_tensor = image_transform(img)
+        # normalize
+        # img_tensor = (img_tensor - img_tensor.min()) / (img_tensor.max() - img_tensor.min())
+        # img_tensor = (img_tensor - 0.5) / 0.5
+
+        return img_tensor
+        
 
     def __len__(self):
-        return len(self.image_paths)
-
+        if hasattr(self.args, 'n_gpu') == False:
+            return self.data_size
+        # make sure dataloader size is larger than batchxngpu size
+        return max(self.args.batch*self.args.n_gpu, self.data_size)
+    
     def __getitem__(self, idx):
- 
-        #Reading images
-        img_name = os.path.join(self.root_dir,'images',self.image_paths[idx])
-        image = Image.open(img_name)
+        if idx >= self.data_size:
+            idx = idx % (self.data_size)
+        img_filename = self.filename_list[idx]
         
-        #Converting to grayscale if RGB
-        image = ImageOps.grayscale(image)
-        
-        #Reading Labels
-        label_name = os.path.join(self.root_dir,'masks',self.label_paths[idx])
-        label = Image.open(label_name)
-        
-        #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(),transforms.Resize((256, 256))])
-        self.transform_hflip = transforms.functional.hflip
-        
-        image = self.transform(image)
-        label = self.transform(label)
-        
-        #Flipping images and labels with probability 0.5
-        probability = torch.rand(1)
-        if probability<=0.5:
-            image = self.transform_hflip(image)
-            label = self.transform_hflip(label)
+        if self.is_label:
+            img_pil = Image.open(os.path.join(self.img_dir, img_filename)).convert('RGB').resize((self.resolution, self.resolution))
+            
+            mask_filename = img_filename
+            if "CHN" in img_filename:
+                mask_filename = mask_filename.replace(".png", "_mask.png")
+            
+            mask_pil = Image.open(os.path.join(self.label_dir, mask_filename)).convert('L').resize((self.resolution, self.resolution), resample=0)
+            
+            if (self.phase == 'train' or self.phase == 'train-val') and self.aug:
+                augmented = self.aug_t(image=np.array(img_pil), mask=np.array(mask_pil))
+                aug_img_pil = Image.fromarray(augmented['image'])
+                # apply pixel-wise transformation
+                img_tensor = self.preprocess(aug_img_pil)
 
-        return image, label    
+                mask_np = np.array(augmented['mask'])
+                labels = self._mask_labels(mask_np)
+
+                mask_tensor = torch.tensor(labels, dtype=torch.float)
+                mask_tensor = (mask_tensor - 0.5) / 0.5
+
+            else:
+                img_tensor = self.preprocess(img_pil)
+                mask_np = np.array(mask_pil)
+                labels = self._mask_labels(mask_np)
+
+                mask_tensor = torch.tensor(labels, dtype=torch.float)
+                mask_tensor = (mask_tensor - 0.5) / 0.5
+            
+            return {
+                'image': img_tensor,
+                'mask': mask_tensor
+            }
+        else:
+            img_pil = Image.open(os.path.join(self.img_dir, img_filename)).convert('RGB').resize((self.resolution, self.resolution))
+            img_tensor = self.unlabel_transform(img_pil)
+            return {
+                'image': img_tensor,
+            }
+   
 
     
 class CelebAMaskDataset(Dataset):

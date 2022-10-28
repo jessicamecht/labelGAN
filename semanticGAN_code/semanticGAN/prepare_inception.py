@@ -24,6 +24,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, ConcatDataset
+from torchvision import transforms
 
 import sys, os
 sys.path.append("/home/rmpatil/teams/group-9/labelGAN/semanticGAN_code")
@@ -38,12 +39,11 @@ def extract_features(args, loader, inception, device, dataset="celeba-mask"):
     pbar = loader
 
     pools, logits = [], []
-
     for data in pbar:
         if dataset == "celeba-mask":
             img = data['image']
         elif dataset == "chest-xray":
-            img, label_ = data
+            img = data['image']
             
         # check img dim
         if img.shape[1] != 3:
@@ -60,6 +60,13 @@ def extract_features(args, loader, inception, device, dataset="celeba-mask"):
 
     return pools, logits
 
+def get_transformation():
+    transform = transforms.Compose(
+                    [
+                        transforms.ToTensor()
+                    ]
+                )
+    return transform
 
 def get_dataset(args):
     if args.dataset_name == 'celeba-mask':
@@ -67,18 +74,10 @@ def get_dataset(args):
         train_val_dataset = CelebAMaskDataset(args, args.path, is_label=True, phase='train-val')
         dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
     elif args.dataset_name == 'chest-xray':
-        root_dir = '/home/rmpatil/teams/group-9/dataset_xray/'
-        image_folder = '/home/rmpatil/teams/group-9/dataset_xray/images/'
-        label_folder = '/home/rmpatil/teams/group-9/dataset_xray/masks/'
-        
-        label_paths = [label for label in os.listdir(label_folder)]
-        #only reading images which have labels
-        image_paths = [label.replace('_mask', '') for label in os.listdir(label_folder)]
-        
-        dataset = ChestXrayDataset(root_dir, image_paths, label_paths)
-        fid_size = int(0.2 * len(dataset))
-        dataset, _ = torch.utils.data.random_split(dataset, 
-                                                   [fid_size, len(dataset) - fid_size])
+        root_path = "/home/rmpatil/teams/group-9/"
+        unlabel_dataset = ChestXrayDataset(args, root_path, is_label=False, unlabel_transform = get_transformation())
+        train_val_dataset = ChestXrayDataset(args, root_path, is_label=True, phase='train-val')
+        dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
     else:
         raise Exception('No such a dataloader!')
     
@@ -104,8 +103,8 @@ if __name__ == '__main__':
 
     dset = get_dataset(args)
     loader = DataLoader(dset,
-                        batch_size = args.batch,
-                        num_workers = 4)
+                        batch_size = args.batch)#,
+                        #num_workers = 4)
 
     pools, logits = extract_features(args,
                                      loader,
@@ -127,4 +126,4 @@ if __name__ == '__main__':
     cov = np.cov(pools, rowvar=False)
 
     with open(args.output, 'wb') as f:
-        pickle.dump({'mean': mean, 'cov': cov, 'size': args.size, 'path': args.path}, f)
+        pickle.dump({'mean': mean, 'cov': cov, 'size': args.size}, f)
