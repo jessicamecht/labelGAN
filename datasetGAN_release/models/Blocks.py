@@ -44,7 +44,7 @@ class InputBlock(nn.Module):
         self.epi2 = LayerEpilogue(nf, dlatent_size, use_wscale, use_noise, use_pixel_norm, use_instance_norm,
                                   use_styles, activation_layer)
 
-    def forward(self, dlatents_in_range):
+    def forward(self, dlatents_in_range, latent_after_trans=None):
         batch_size = dlatents_in_range.size(0)
 
         if self.const_input_layer:
@@ -53,11 +53,25 @@ class InputBlock(nn.Module):
         else:
             x = self.dense(dlatents_in_range[:, 0]).view(batch_size, self.nf, 4, 4)
 
-        x = self.epi1(x, dlatents_in_range[:, 0])
+        '''x = self.epi1(x, dlatents_in_range[:, 0])
         x = self.conv(x)
         x = self.epi2(x, dlatents_in_range[:, 1])
 
-        return x
+        return x'''
+        if latent_after_trans is None:
+            x = self.epi1(x, dlatents_in_range[:, 0])
+        else:
+            x = self.epi1(x, dlatents_in_range[:, 0], latent_after_trans[0])  # latent_after_trans is a list
+
+        x = self.conv(x)
+
+        if latent_after_trans is None:
+            x1 = self.epi2(x, dlatents_in_range[:, 1])
+        else:
+            x1 = self.epi2(x, dlatents_in_range[:, 1], latent_after_trans[1])
+
+        return x1, x
+
 
 
 class GSynthesisBlock(nn.Module):
@@ -80,12 +94,20 @@ class GSynthesisBlock(nn.Module):
         self.epi2 = LayerEpilogue(out_channels, dlatent_size, use_wscale, use_noise, use_pixel_norm, use_instance_norm,
                                   use_styles, activation_layer)
 
-    def forward(self, x, dlatents_in_range):
+    def forward(self, x, dlatents_in_range, latent_after_trans=None):
         x = self.conv0_up(x)
-        x = self.epi1(x, dlatents_in_range[:, 0])
+
+        if latent_after_trans is None:
+            x = self.epi1(x, dlatents_in_range[:, 0])
+        else:
+            x = self.epi1(x, dlatents_in_range[:, 0], latent_after_trans[0])  # latent_after_trans is a list
         x = self.conv1(x)
-        x = self.epi2(x, dlatents_in_range[:, 1])
-        return x
+
+        if latent_after_trans is None:
+            x1 = self.epi2(x, dlatents_in_range[:, 1])
+        else:
+            x1 = self.epi2(x, dlatents_in_range[:, 1], latent_after_trans[1])
+        return x1, x
 
 
 class DiscriminatorTop(nn.Sequential):

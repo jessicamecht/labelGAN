@@ -430,7 +430,7 @@ def get_data_loader(dataset, batch_size, num_workers):
 
 class GMapping(nn.Module):
 
-    def __init__(self, latent_size=512, dlatent_size=512, dlatent_broadcast=None,
+    def __init__(self, latent_size=512, dlatent_size=512, dlatent_broadcast=18,
                  mapping_layers=8, mapping_fmaps=512, mapping_lrmul=0.01, mapping_nonlinearity='lrelu',
                  use_wscale=True, normalize_latents=True, **kwargs):
         """
@@ -489,6 +489,7 @@ class GMapping(nn.Module):
         x = self.map(x)
 
         # Broadcast -> batch_size * dlatent_broadcast * dlatent_size
+        #x = x.unsqueeze(1).expand(-1, 18, -1)
         if self.dlatent_broadcast is not None:
             x = x.unsqueeze(1).expand(-1, self.dlatent_broadcast, -1)
         return x
@@ -498,14 +499,60 @@ class GMapping(nn.Module):
             n_latent, 512
         ).cuda()
         mean_latent = self.forward(latent_in).mean(0, keepdim=True)
-        mean_latent = mean_latent.unsqueeze(1).expand(-1, 18, -1)
+        #mean_latent = mean_latent.unsqueeze(1).expand(-1, 18, -1)
         return mean_latent
+    
+class SegSynthesisBlock(nn.Module):
+    def __init__(self, prev_channel, current_channel, single_in=False):
+        super().__init__()
+        self.single_in = single_in
+        # self.in_conv = nn.Sequential(
+        #     nn.ReLU(),
+        #     nn.Conv2d(current_channel, current_channel, 3, 1, 1),
+        #     nn.BatchNorm2d(current_channel),
+        #     nn.ReLU(),
+        #     nn.Conv2d(current_channel, current_channel, 1),
+        #     nn.BatchNorm2d(current_channel)
+        # )
 
+        if not single_in:
+            self.up = nn.Upsample(scale_factor=2, mode="bilinear")
+
+            self.out_conv1 = nn.Sequential(
+                nn.ReLU(),
+                nn.Conv2d(current_channel + prev_channel, current_channel, 1, 1, 0),
+                nn.BatchNorm2d(current_channel)
+            )
+
+        self.out_conv2 = nn.Sequential(
+            nn.ReLU(),
+            nn.Conv2d(current_channel + current_channel, current_channel, 1, 1, 0),
+            nn.BatchNorm2d(current_channel)
+        )
+
+    def forward(self, x_curr, x_curr2, x_prev=None):
+
+        # x_curr = self.in_conv(x_curr)
+
+        if self.single_in:
+            x_middle = x_curr
+        else:
+            x_prev = self.up(x_prev)
+            x_concat = torch.cat([x_curr, x_prev], 1)
+
+            x_middle = self.out_conv1(x_concat)
+
+            x_middle = x_middle + x_curr
+
+        x_concat2 = torch.cat([x_curr2, x_middle], 1)
+        x_out = self.out_conv2(x_concat2)
+        x_out = x_out + x_curr2
+        return x_out
 
 class GSynthesis(nn.Module):
 
     def __init__(self, dlatent_size=512, num_channels=3, resolution=1024,
-                 fmap_base=8192, fmap_decay=1.0, fmap_max=512,
+                 fmap_base=8192, fmap_decay=1.0, fmap_max=512,seg_branch=False,
                  use_styles=True, const_input_layer=True, use_noise=True, nonlinearity='lrelu',
                  use_wscale=True, use_pixel_norm=False, use_instance_norm=True, blur_filter=None,
                  structure='linear', **kwargs):
@@ -545,7 +592,7 @@ class GSynthesis(nn.Module):
         resolution_log2 = int(np.log2(resolution))
         assert resolution == 2 ** resolution_log2 and resolution >= 4
         self.depth = resolution_log2 - 1
-
+        self.seg_branch = seg_branch
         self.num_layers = resolution_log2 * 2 - 2
         self.num_styles = self.num_layers if use_styles else 1
 
@@ -560,6 +607,8 @@ class GSynthesis(nn.Module):
 
         # Building blocks for remaining layers.
         blocks = []
+        if self.seg_branch:
+            seg_block = []
         for res in range(3, resolution_log2 + 1):
             last_channels = nf(res - 2)
             channels = nf(res - 1)
@@ -567,14 +616,29 @@ class GSynthesis(nn.Module):
             blocks.append(GSynthesisBlock(last_channels, channels, blur_filter, dlatent_size, gain, use_wscale,
                                           use_noise, use_pixel_norm, use_instance_norm, use_styles, act))
             rgb_converters.append(EqualizedConv2d(channels, num_channels, 1, gain=1, use_wscale=use_wscale))
+            
+            if self.seg_branch:
 
+                name = '{s}x{s}_seg'.format(s=2 ** res)
+
+                if len(seg_block) == 0:
+                    seg_block.append((name,
+                                          SegSynthesisBlock(last_channels, channels, single_in=True)))
+                else:
+                    seg_block.append((name,
+                                          SegSynthesisBlock(last_channels, channels)))
+            last_channels = channels
         self.blocks = nn.ModuleList(blocks)
         self.to_rgb = nn.ModuleList(rgb_converters)
+        
 
         # register the temporary upsampler
         self.temporaryUpsampler = lambda x: interpolate(x, scale_factor=2)
+        if self.seg_branch:
+            seg_block.append(("seg_out", nn.Conv2d(channels, 34, 1)))
+            self.seg_block = nn.ModuleDict(OrderedDict(seg_block))
 
-    def forward(self, dlatents_in, depth=0, alpha=0., labels_in=None):
+    def forward(self, dlatents_in, depth=4, alpha=0., labels_in=None, latent_after_trans=None):
         """
             forward pass of the Generator
             :param dlatents_in: Input: Disentangled latents (W) [mini_batch, num_layers, dlatent_size].
@@ -583,9 +647,10 @@ class GSynthesis(nn.Module):
             :param alpha: value of alpha for fade-in effect
             :return: y => output
         """
-
         assert depth < self.depth, "Requested output depth cannot be produced"
-
+        result_list = []
+        if self.seg_branch:
+            seg_branch_feature = None
         if self.structure == 'fixed':
             x = self.init_block(dlatents_in[:, 0:2])
             for i, block in enumerate(self.blocks):
@@ -596,18 +661,46 @@ class GSynthesis(nn.Module):
 
             if depth > 0:
                 for i, block in enumerate(self.blocks[:depth - 1]):
-                    x = block(x, dlatents_in[:, 2 * (i + 1):2 * (i + 2)])
+                    if i == 0:
+                        x, x2 = self.init_block(dlatents_in[:, 0:2])
+                        '''if latent_after_trans is None:
+                            x, x2 = block(dlatents_in[:, 2 * i:2 * i + 2], i)
+                        else:
+                            x, x2 = block(dlatents_in[:, 2 *i:2 * i + 2], latent_after_trans[2 * i:2 * i + 2])'''
+                    else:
+
+                        if latent_after_trans is None:
+                            x, x2 = block(x, dlatents_in[:, 2 * i:2 * i + 2])
+                        else:
+                            x, x2 = block(x, dlatents_in[:, 2 * i:2 * i + 2],
+                                      latent_after_trans[2 * i:2 * i + 2])  # latent_after_trans is a tensor list
+
+                        if self.seg_branch:
+
+                            name = '{s}x{s}_seg'.format(s=2 ** (i + 2))
+
+                            curr_seg_block = self.seg_block[name]
+                            if seg_branch_feature is None:
+                                seg_branch_feature = curr_seg_block(x2, x)
+                            else:
+                                seg_branch_feature = curr_seg_block(x2, x, x_prev=seg_branch_feature)
+                        
+                        
+                    x, x2 = block(x, dlatents_in[:, 2 * (i + 1):2 * (i + 2)])
+                    result_list.append(x)
+                    result_list.append(x2)
 
                 residual = self.to_rgb[depth - 1](self.temporaryUpsampler(x))
-                straight = self.to_rgb[depth](self.blocks[depth - 1](x, dlatents_in[:, 2 * depth:2 * (depth + 1)]))
+                #straight = self.to_rgb[depth](self.blocks[depth - 1](x, dlatents_in[:, 2 * depth:2 * (depth + 1)]))
 
-                images_out = (alpha * straight) + ((1 - alpha) * residual)
+                #images_out = (alpha * straight) #+ ((1 - alpha) * residual)
+                images_out = (alpha * residual) 
             else:
                 images_out = self.to_rgb[0](x)
         else:
             raise KeyError("Unknown structure: ", self.structure)
 
-        return images_out
+        return images_out, result_list
 
 
 class Generator(nn.Module):
@@ -786,7 +879,6 @@ class Discriminator(nn.Module):
     def forward(self, images_in, depth, alpha=1., labels_in=None):
         """
         :param images_in: First input: Images [mini_batch, channel, height, width].
-        :param labels_in: Second input: Labels [mini_batch, label_size].
         :param depth: current height of operation (Progressive GAN)
         :param alpha: current value of alpha for fade-in
         :return:

@@ -1,9 +1,9 @@
 {
   "exp_dir": "model_dir/new",
   "batch_size": 12,
-  "category": "car",
+  "category": "xray",
   "debug": false,
-  "dim": [384, 512, 5056],
+  "dim": [256, 256, 5056],
   "deeplab_res": 256,
   "number_class": 2,
   "testing_data_number_class": 2,

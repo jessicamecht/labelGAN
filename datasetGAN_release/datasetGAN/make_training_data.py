@@ -35,7 +35,7 @@ import numpy as np
 import os
 device_ids = [0]
 from PIL import Image
-from models.stylegan import GMapping, GSynthesis, Truncation
+from models.stylegan import GMapping, GSynthesis, Truncation, Generator
 
 from models.stylegan1 import G_mapping,G_synthesis, Truncation
 import copy
@@ -44,8 +44,6 @@ from utils.utils import latent_to_image, Interpolate
 import argparse
 
 import models as n
-
-print(n) 
 #from models.CustomLayer import Truncation
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -54,16 +52,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def prepare_stylegan(args):
 
     if args['stylegan_ver'] == "1":
-        if args['category'] == "car":
-            resolution = 512
-            max_layer = 8
-        elif  args['category'] == "face":
-            resolution = 1024
-            max_layer = 8
-        elif args['category'] == "bedroom":
-            resolution = 256
-            max_layer = 7
-        elif args['category'] == "cat":
+        if args['category'] == "xray":
             resolution = 256
             max_layer = 7
         else:
@@ -74,13 +63,29 @@ def prepare_stylegan(args):
             avg_latent = torch.from_numpy(avg_latent).type(torch.FloatTensor).to(device)
         else:
             avg_latent = None
-        g_all = nn.Sequential(OrderedDict([
+        '''g_all = nn.Sequential(OrderedDict([
             ('g_mapping', GMapping()),
-            ('truncation', Truncation(avg_latent,max_layer=max_layer, threshold=0.7,device=device)),
+            ('truncation', Truncation(avg_latent,max_layer=max_layer, threshold=0.7)),
             ('g_synthesis', GSynthesis(resolution=256))
+        ]))'''
+        g_all = nn.Sequential(OrderedDict([
+            ('g_mapping', G_mapping()),
+            ('truncation', Truncation(avg_latent,max_layer=max_layer, threshold=0.7, device=device)),
+            ('g_synthesis', G_synthesis(resolution=256))
         ]))
+        
+        #print('hhh', GSynthesis())
+        #print('kkk', G_synthesis())
         ckpt = torch.load(args['stylegan_checkpoint'], map_location=device)
-                                  
+        for key in list(ckpt.keys()):
+            new_key = key.replace('init_block', 'blocks.4x4').replace('blocks.0.', 'blocks.8x8.')
+            new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
+            new_key = new_key.replace('blocks.3.', 'blocks.64x64.').replace('blocks.2.', 'blocks.32x32.')
+            new_key = new_key.replace('blocks.4.', 'blocks.128x128.').replace('blocks.6.', 'blocks.512x512.')
+            new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
+            new_key = new_key.replace("g_synthesis.to_rgb.6.", "g_synthesis.torgb.")
+            ckpt[new_key] = ckpt.pop(key)
+
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
         g_all = nn.DataParallel(g_all, device_ids=device_ids).cuda()
@@ -120,7 +125,6 @@ def prepare_stylegan(args):
 
         upsamplers.append(Interpolate(res, 'bilinear'))
         upsamplers.append(Interpolate(res, 'bilinear'))
-
     return g_all, avg_latent, upsamplers
 
 
@@ -156,8 +160,7 @@ def generate_data(args, num_sample, sv_path):
 
         for i in range(num_sample):
             if i % 10 == 0:
-                print("Genearte", i, "Out of:", num_sample)
-
+                print("Generate", i, "Out of:", num_sample)
             if i == 0:
 
                 latent = avg_latent.to(device)
@@ -173,12 +176,10 @@ def generate_data(args, num_sample, sv_path):
                 img, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
                                                          return_upsampled_layers=False)
 
-            if args['dim'][0] != args['dim'][1]:
-                img = img[:, 64:448][0]
-            else:
-                img = img[0]
-
-
+            #if args['dim'][0] != args['dim'][1]:
+            #    img = img[:, 64:448][0]
+            #else:
+            img = img[0]
             img = Image.fromarray(img)
 
             image_name =  os.path.join(sv_path, "image_%d.jpg" % i)
@@ -194,16 +195,14 @@ def generate_data(args, num_sample, sv_path):
             img, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
                                      return_upsampled_layers=False)
 
-            if args['dim'][0] != args['dim'][1]:
-                img = img[:, 64:448][0]
-            else:
-                img = img[0]
-
-
+            #if args['dim'][0] != args['dim'][1]:
+            #    img = img[:, 64:448][0]
+            #else:
+            img = img[0]
             img = Image.fromarray(img)
 
             image_name =  os.path.join(sv_path, 'reconstruct', "image_%d.jpg" % i)
-            img.save(image_name)
+            img.save("./image_%d.jpg" % i)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

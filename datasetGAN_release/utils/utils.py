@@ -72,7 +72,6 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # style_latents = latents
     if return_stylegan_latent:
         return  style_latents
-    print(style_latents)
     img_list, affine_layers = g_all.module.g_synthesis(style_latents)
 
     if return_only_im:
