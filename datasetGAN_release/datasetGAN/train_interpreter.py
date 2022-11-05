@@ -140,19 +140,34 @@ def prepare_stylegan(args):
         elif args['category'] == "cat":
             resolution = 256
             max_layer = 7
+        elif args['category'] == "xray":
+            resolution = 256
+            max_layer = 7
         else:
             assert "Not implementated!"
 
         avg_latent = np.load(args['average_latent'])
         avg_latent = torch.from_numpy(avg_latent).type(torch.FloatTensor).to(device)
+        
+        
 
         g_all = nn.Sequential(OrderedDict([
             ('g_mapping', G_mapping()),
             ('truncation', Truncation(avg_latent,max_layer=max_layer, device=device, threshold=0.7)),
             ('g_synthesis', G_synthesis( resolution=resolution))
         ]))
+        
+        ckpt = torch.load(args['stylegan_checkpoint'], map_location=device)
+        for key in list(ckpt.keys()):
+            new_key = key.replace('init_block', 'blocks.4x4').replace('blocks.0.', 'blocks.8x8.')
+            new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
+            new_key = new_key.replace('blocks.3.', 'blocks.64x64.').replace('blocks.2.', 'blocks.32x32.')
+            new_key = new_key.replace('blocks.4.', 'blocks.128x128.').replace('blocks.6.', 'blocks.512x512.')
+            new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
+            new_key = new_key.replace("g_synthesis.to_rgb.6.", "g_synthesis.torgb.")
+            ckpt[new_key] = ckpt.pop(key)
 
-        g_all.load_state_dict(torch.load(args['stylegan_checkpoint'], map_location=device))
+        g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
         g_all = nn.DataParallel(g_all, device_ids=device_ids).cuda()
 
@@ -198,6 +213,8 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
         from utils.data_util import bedroom_palette as palette
     elif args['category'] == 'cat':
         from utils.data_util import cat_palette as palette
+    elif args['category'] == 'xray':
+        from utils.data_util import xray_palette as palette
     else:
         assert False
     if not vis:
@@ -368,7 +385,8 @@ def prepare_data(args, palette):
 
         im_frame = np.load(os.path.join( args['annotation_mask_path'] , name))
         mask = np.array(im_frame)
-        mask =  cv2.resize(np.squeeze(mask), dsize=(args['dim'][1], args['dim'][0]), interpolation=cv2.INTER_NEAREST)
+        mask = mask.squeeze()
+        mask =  cv2.resize(np.float32(mask), dsize=(args['dim'][1], args['dim'][0]), interpolation=cv2.INTER_NEAREST)
 
         mask_list.append(mask)
 
@@ -408,14 +426,17 @@ def prepare_data(args, palette):
             feature_maps = feature_maps[:, :, 64:448]
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
-
         feature_maps = feature_maps.reshape(-1, args['dim'][2])
         new_mask =  np.squeeze(mask)
 
         mask = mask.reshape(-1)
-
-        all_feature_maps_train[args['dim'][0] * args['dim'][1] * i: args['dim'][0] * args['dim'][1] * i + args['dim'][0] * args['dim'][1]] = feature_maps.cpu().detach().numpy().astype(np.float16)
-        all_mask_train[args['dim'][0] * args['dim'][1] * i:args['dim'][0] * args['dim'][1] * i + args['dim'][0] * args['dim'][1]] = mask.astype(np.float16)
+        start = args['dim'][0] * args['dim'][1] * i
+        end =  args['dim'][0] * args['dim'][1] * i + args['dim'][0] * args['dim'][1]
+        all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
+        
+        start = args['dim'][0] * args['dim'][1] * i
+        end = args['dim'][0] * args['dim'][1] * i + args['dim'][0] * args['dim'][1]
+        all_mask_train[start:end] = mask.astype(np.float16)
 
         img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
 
@@ -425,7 +446,8 @@ def prepare_data(args, palette):
 
 
     vis = np.concatenate(vis, 1)
-    scipy.misc.imsave(os.path.join(args['exp_dir'], "train_data.jpg"),
+    import imageio
+    imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
 
     return all_feature_maps_train, all_mask_train, num_data
@@ -442,6 +464,8 @@ def main(args
         from utils.data_util import bedroom_palette as palette
     elif args['category'] == 'cat':
         from utils.data_util import cat_palette as palette
+    elif args['category'] == 'xray':
+        from utils.data_util import xray_palette as palette
 
 
     all_feature_maps_train_all, all_mask_train_all, num_data = prepare_data(args, palette)
