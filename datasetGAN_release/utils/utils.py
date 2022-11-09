@@ -129,7 +129,8 @@ def colorize_mask(mask, palette):
 
     new_mask = Image.fromarray(mask.astype(np.uint8)).convert('P')
     new_mask.putpalette(palette)
-    return np.array(new_mask.convert('RGB'))
+    conv = np.array(new_mask.convert('RGB'))
+    return conv
 
 
 def get_label_stas(data_loader):

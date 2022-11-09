@@ -100,7 +100,7 @@ face_palette = [int(item * 255) for item in face_palette]
 
 
 xray_palette = [0,0,0,
-               1,1,1]
+               19, 164, 187]
 
 
 car_12_palette =[ 255,  255,  255, # 0 background

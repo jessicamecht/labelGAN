@@ -25,7 +25,7 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 
 import sys
 sys.path.append('..')
-
+import imageio
 import torch
 import torch.nn as nn
 torch.manual_seed(0)
@@ -59,7 +59,7 @@ class trainData(Dataset):
         self.y_data = y_data
 
     def __getitem__(self, index):
-        return self.X_data[index], self.y_data[index]
+        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
 
     def __len__(self):
         return len(self.X_data)
@@ -68,7 +68,7 @@ class trainData(Dataset):
 class pixel_classifier(nn.Module):
     def __init__(self, numpy_class, dim):
         super(pixel_classifier, self).__init__()
-        if numpy_class < 32:
+        if numpy_class < 32 and numpy_class!=2:
             self.layers = nn.Sequential(
                 nn.Linear(dim, 128),
                 nn.ReLU(),
@@ -332,12 +332,14 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
             del (affine_layers)
             if vis:
 
-                color_mask = 0.7 * colorize_mask(img_seg_final, palette) + 0.3 * img
-
-                scipy.misc.imsave(os.path.join(result_path, "vis_" + str(i) + '.jpg'),
+                color_mask = 0.7 * colorize_mask(img_seg_final, palette) #+ 0.3 * img
+                
+                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + '_mask.jpg'),
                                   color_mask.astype(np.uint8))
-                scipy.misc.imsave(os.path.join(result_path, "vis_" + str(i) + '_image.jpg'),
+                
+                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + '_image.jpg'),
                                   img.astype(np.uint8))
+
             else:
                 seg_cache.append(img_seg_final)
                 curr_result['uncertrainty_score'] = top_k.item()
@@ -369,7 +371,9 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 def prepare_data(args, palette):
     g_all, avg_latent, upsamplers = prepare_stylegan(args)
     latent_all = np.load(args['annotation_image_latent_path'])
-    latent_all = torch.from_numpy(latent_all).cuda()
+    
+    latent_all = torch.from_numpy(latent_all).cuda()[0:15]
+    print("gere", latent_all.shape)
 
     # load annotated mask
     mask_list = []
@@ -381,9 +385,10 @@ def prepare_data(args, palette):
 
         if i >= args['max_training']:
             break
-        name = 'image_mask%0d.npy' % i
+        name = 'image_%0d.png' % i
+        
+        im_frame = Image.open(os.path.join( args['annotation_mask_path'] , name)).convert('L')
 
-        im_frame = np.load(os.path.join( args['annotation_mask_path'] , name))
         mask = np.array(im_frame)
         mask = mask.squeeze()
         mask =  cv2.resize(np.float32(mask), dsize=(args['dim'][1], args['dim'][0]), interpolation=cv2.INTER_NEAREST)
@@ -471,8 +476,8 @@ def main(args
     all_feature_maps_train_all, all_mask_train_all, num_data = prepare_data(args, palette)
 
 
-    train_data = trainData(torch.FloatTensor(all_feature_maps_train_all),
-                           torch.FloatTensor(all_mask_train_all))
+    train_data = trainData(all_feature_maps_train_all,
+                           all_mask_train_all)
 
 
     count_dict = get_label_stas(train_data)
