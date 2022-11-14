@@ -1,13 +1,13 @@
 {
   "exp_dir": "model_dir/new",
-  "batch_size": 12,
+  "batch_size": 8,
   "category": "xray",
   "debug": false,
   "dim": [256, 256, 4992],
   "deeplab_res": 256,
-  "number_class": 2,
+  "number_class": 144,
   "testing_data_number_class": 2,
-  "max_training": 16,
+  "max_training": 100,
   "stylegan_ver": "1",
   "annotation_data_from_w": false,
   "annotation_mask_path": "./generations",
@@ -15,7 +15,7 @@
   "average_latent": "./generations/avg_latent_stylegan1.npy",
   "annotation_image_latent_path": "./generations/latent_stylegan1.npy",
   "stylegan_checkpoint": "/home/jechterh/teams/group-9/checkpoints/styleGAN/GAN_GEN_6.pth",
-  "model_num": 10,
+  "model_num": 1,
   "upsample_mode":"bilinear"
 }
 
