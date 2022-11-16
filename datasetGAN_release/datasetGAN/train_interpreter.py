@@ -90,6 +90,32 @@ class pixel_classifier(nn.Module):
                 nn.Linear(128, numpy_class),
                 # nn.Sigmoid()
             )
+            
+class pixel_classifier_2(nn.Module):
+    def __init__(self, numpy_class, dim):
+        super(pixel_classifier, self).__init__()
+        if numpy_class < 32 and numpy_class!=2:
+            self.layers = nn.Sequential(
+                nn.Linear(dim, 128),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, 32),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=32),
+                nn.Linear(32, numpy_class),
+                # nn.Sigmoid()
+            )
+        else:
+            self.layers = nn.Sequential(
+                nn.Linear(dim, 256),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=256),
+                nn.Linear(256, 128),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, numpy_class),
+                # nn.Sigmoid()
+            )
 
 
     def init_weights(self, init_type='normal', gain=0.02):
@@ -513,7 +539,7 @@ def main(args
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        for epoch in range(100):
+        for epoch in range(50):
             for X_batch, y_batch in train_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
                 y_batch = y_batch.type(torch.long)
