@@ -66,9 +66,9 @@ class trainData(Dataset):
 
 
 class pixel_classifier(nn.Module):
-    def __init__(self, numpy_class, dim):
+    def __init__(self, numpy_class, dim, ablation='small'):
         super(pixel_classifier, self).__init__()
-        if numpy_class < 32 and numpy_class!=2:
+        if numpy_class < 32:
             self.layers = nn.Sequential(
                 nn.Linear(dim, 128),
                 nn.ReLU(),
@@ -77,7 +77,23 @@ class pixel_classifier(nn.Module):
                 nn.ReLU(),
                 nn.BatchNorm1d(num_features=32),
                 nn.Linear(32, numpy_class),
-                # nn.Sigmoid()
+                #nn.Sigmoid()
+            )
+        elif ablation=="small":
+            self.layers = nn.Sequential(
+                nn.Linear(dim, 128),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, numpy_class),
+                #nn.Sigmoid()
+            )
+        elif ablation=="big":
+            self.layers = nn.Sequential(
+                nn.Linear(dim, 128),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, numpy_class),
+                #nn.Sigmoid()
             )
         else:
             self.layers = nn.Sequential(
@@ -88,35 +104,8 @@ class pixel_classifier(nn.Module):
                 nn.ReLU(),
                 nn.BatchNorm1d(num_features=128),
                 nn.Linear(128, numpy_class),
-                # nn.Sigmoid()
+                #nn.Sigmoid()
             )
-            
-class pixel_classifier_2(nn.Module):
-    def __init__(self, numpy_class, dim):
-        super(pixel_classifier, self).__init__()
-        if numpy_class < 32 and numpy_class!=2:
-            self.layers = nn.Sequential(
-                nn.Linear(dim, 128),
-                nn.ReLU(),
-                nn.BatchNorm1d(num_features=128),
-                nn.Linear(128, 32),
-                nn.ReLU(),
-                nn.BatchNorm1d(num_features=32),
-                nn.Linear(32, numpy_class),
-                # nn.Sigmoid()
-            )
-        else:
-            self.layers = nn.Sequential(
-                nn.Linear(dim, 256),
-                nn.ReLU(),
-                nn.BatchNorm1d(num_features=256),
-                nn.Linear(256, 128),
-                nn.ReLU(),
-                nn.BatchNorm1d(num_features=128),
-                nn.Linear(128, numpy_class),
-                # nn.Sigmoid()
-            )
-
 
     def init_weights(self, init_type='normal', gain=0.02):
         '''
@@ -175,7 +164,6 @@ def prepare_stylegan(args):
         avg_latent = np.load(args['average_latent'])
         avg_latent = torch.from_numpy(avg_latent).type(torch.FloatTensor).to(device)
         
-        
 
         g_all = nn.Sequential(OrderedDict([
             ('g_mapping', G_mapping()),
@@ -184,6 +172,7 @@ def prepare_stylegan(args):
         ]))
         
         ckpt = torch.load(args['stylegan_checkpoint'], map_location=device)
+        
         for key in list(ckpt.keys()):
             new_key = key.replace('init_block', 'blocks.4x4').replace('blocks.0.', 'blocks.8x8.')
             new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
@@ -263,6 +252,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
         classifier = pixel_classifier(numpy_class=args['number_class']
                                       , dim=args['dim'][-1])
         classifier =  nn.DataParallel(classifier, device_ids=device_ids).cuda()
+        print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
@@ -322,7 +312,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
             seg_mode_ensemble = []
             for MODEL_NUMBER in range(args['model_num']):
                 classifier = classifier_list[MODEL_NUMBER]
-
+                print('affine_layers.shape', affine_layers.shape)
                 img_seg = classifier(affine_layers)
 
                 img_seg = img_seg.squeeze()
@@ -358,7 +348,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
             del (affine_layers)
             if vis:
 
-                color_mask = 0.7 * colorize_mask(img_seg_final, palette) #+ 0.3 * img
+                color_mask = colorize_mask(img_seg_final, palette) #+ 0.3 * img
                 
                 imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + '_mask.jpg'),
                                   color_mask.astype(np.uint8))
@@ -398,7 +388,7 @@ def prepare_data(args, palette):
     g_all, avg_latent, upsamplers = prepare_stylegan(args)
     latent_all = np.load(args['annotation_image_latent_path'])
     
-    latent_all = torch.from_numpy(latent_all).cuda()[0:15]
+    latent_all = torch.from_numpy(latent_all).cuda()[15:30]
     print("gere", latent_all.shape)
 
     # load annotated mask
@@ -426,7 +416,7 @@ def prepare_data(args, palette):
         img = img.resize((args['dim'][1], args['dim'][0]))
 
         im_list.append(np.array(img))
-
+    print("gere1")
     # delete small annotation error
     for i in range(len(mask_list)):  # clean up artifacts in the annotation, must do
         for target in range(1, 50):
@@ -436,12 +426,12 @@ def prepare_data(args, palette):
 
     all_mask = np.stack(mask_list)
 
-
+    
     # 3. Generate ALL training data for training pixel classifier
     all_feature_maps_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all), args['dim'][2]), dtype=np.float16)
     all_mask_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all),), dtype=np.float16)
 
-
+    print("gere0")
     vis = []
     for i in range(len(latent_all) ):
 
@@ -467,15 +457,16 @@ def prepare_data(args, palette):
         
         start = args['dim'][0] * args['dim'][1] * i
         end = args['dim'][0] * args['dim'][1] * i + args['dim'][0] * args['dim'][1]
-        all_mask_train[start:end] = mask.astype(np.float16)
-
+        
+        all_mask_train[start:end] = (mask == 143).astype(np.float16)
+        
         img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
 
         curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0 )
-
+        print("geres")
         vis.append( curr_vis )
 
-
+    print("gere2")
     vis = np.concatenate(vis, 1)
     import imageio
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
@@ -484,7 +475,7 @@ def prepare_data(args, palette):
     return all_feature_maps_train, all_mask_train, num_data
 
 
-def main(args
+def main(args, checkpoint_path=""
          ):
 
     if args['category'] == 'car':
@@ -499,9 +490,10 @@ def main(args
         from utils.data_util import xray_palette as palette
 
 
+        
     all_feature_maps_train_all, all_mask_train_all, num_data = prepare_data(args, palette)
 
-
+    print('pdata')
     train_data = trainData(all_feature_maps_train_all,
                            all_mask_train_all)
 
@@ -525,20 +517,33 @@ def main(args
 
         gc.collect()
 
-        classifier = pixel_classifier(numpy_class=(max_label + 1), dim=args['dim'][-1])
+        classifier = pixel_classifier(numpy_class=(max_label+1), dim=args['dim'][-1])
 
-        classifier.init_weights()
+        
 
-        classifier = nn.DataParallel(classifier, device_ids=device_ids).cuda()
+        
+
+        print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
+
+        if checkpoint_path != "":
+            checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
+            classifier.load_state_dict(checkpoint['model_state_dict'])
+            classifier.eval()
+        else:
+            classifier.init_weights()
+            classifier.train()
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters(), lr=0.001)
-        classifier.train()
+        
+
+
 
 
         iteration = 0
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
+        accs = []
         for epoch in range(50):
             for X_batch, y_batch in train_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
@@ -549,9 +554,10 @@ def main(args
                 y_pred = classifier(X_batch)
                 loss = criterion(y_pred, y_batch)
                 acc = multi_acc(y_pred, y_batch)
-
-                loss.backward()
-                optimizer.step()
+                
+                if checkpoint_path == "":
+                    loss.backward()
+                    optimizer.step()
 
                 iteration += 1
                 if iteration % 1000 == 0:
@@ -559,14 +565,16 @@ def main(args
                     gc.collect()
 
 
-                if iteration % 5000 == 0:
+                if iteration % 50000 == 0:
                     model_path = os.path.join(args['exp_dir'],
                                               'model_20parts_iter' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')
-                    print('Save checkpoint, Epoch : ', str(epoch), ' Path: ', model_path)
+                    #print('Save checkpoint, Epoch : ', str(epoch), ' Path: ', model_path)
+                    
+                    if checkpoint_path == "":
+                        torch.save({'model_state_dict': classifier.state_dict()},
+                                   model_path)
 
-                    torch.save({'model_state_dict': classifier.state_dict()},
-                               model_path)
-
+                accs.append(acc.item())
                 if epoch > 3:
                     if loss.item() < best_loss:
                         best_loss = loss.item()
@@ -578,6 +586,8 @@ def main(args
                         stop_sign = 1
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
                         break
+            print('Epoch : ', str(epoch), 'loss', loss.item(), 'acc', np.array(accs).mean())
+
 
             if stop_sign == 1:
                 break
@@ -604,9 +614,10 @@ if __name__ == '__main__':
     parser.add_argument('--generate_data', type=bool, default=False)
     parser.add_argument('--save_vis', type=bool, default=False)
     parser.add_argument('--start_step', type=int, default=0)
+    parser.add_argument('--eval_interp', type=bool, default=False)
 
     parser.add_argument('--resume', type=str,  default="")
-    parser.add_argument('--num_sample', type=int,  default=1000)
+    parser.add_argument('--num_sample', type=int,  default=2000)
 
     args = parser.parse_args()
 
@@ -626,8 +637,8 @@ if __name__ == '__main__':
 
     os.system('cp %s %s' % (args.exp, opts['exp_dir']))
 
-
-
+    if args.eval_interp:
+        main(opts, checkpoint_path=args.resume)
     if args.generate_data:
         generate_data(opts, args.resume, args.num_sample, vis=args.save_vis, start_step=args.start_step)
     else:

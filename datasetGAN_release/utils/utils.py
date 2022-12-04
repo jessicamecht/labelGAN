@@ -85,8 +85,8 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         return img_list, style_latents
 
     number_feautre = 0
-
-    for item in affine_layers:
+    for i, item in enumerate(affine_layers):
+        #if i%6==0:
         number_feautre += item.shape[1]
 
 
@@ -94,12 +94,14 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
     if return_upsampled_layers:
 
         start_channel_index = 0
-        for i in range(len(affine_layers)):
+        for i in range(0,len(affine_layers)):
+            #if i == 0: continue
+            print(i, 'i')
             len_channel = affine_layers[i].shape[1]
             affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
                 affine_layers[i])
             start_channel_index += len_channel
-
+    print(affine_layers_upsamples.shape, 'affine_layers_upsamples')
     if img_list.shape[-2] != 512:
         img_list = upsamplers[-1](img_list)
 
@@ -141,5 +143,4 @@ def get_label_stas(data_loader):
             count_dict[int(y.item())] = 1
         else:
             count_dict[int(y.item())] += 1
-
     return count_dict

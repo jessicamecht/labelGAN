@@ -1,0 +1,10 @@
+2022-10-27 02:50:21 INFO: Using 1 GPUs.
+2022-10-27 02:50:28 INFO: Loading generator from: ./output/models/GAN_GEN_5.pth
+2022-10-27 02:50:28 INFO: Loading discriminator from: ./output/models/GAN_DIS_5.pth
+2022-10-27 02:50:28 INFO: Loading generator optimizer from: ./output/models/GAN_GEN_OPTIM_5.pth
+2022-10-27 02:50:28 INFO: Loading discriminator optimizer from: ./output/models/GAN_DIS_OPTIM_5.pth
+2022-10-27 02:50:28 INFO: Starting the training process ... 
+
+2022-10-27 02:50:28 INFO: Currently working on depth: 6
+2022-10-27 02:50:28 INFO: Current resolution: 128 x 128
+2022-10-27 02:50:28 INFO: Epoch: [1]
