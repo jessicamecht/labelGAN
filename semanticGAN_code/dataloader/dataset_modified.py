@@ -84,7 +84,7 @@ class ChestXrayDataset(Dataset):
             self.label_dir = label_folder
         else:
             self.data_root = os.path.join(dataroot, 'nih_data') #dataroot = "/home/rmpatil/teams/group-9/"
-            unlabel_images_folder = os.path.join(self.data_root, 'train') # we can extend this to test and validation sets as well
+            unlabel_images_folder = os.path.join(self.data_root, 'train_1000') # we can extend this to test and validation sets as well
             all_unlabel_image_paths = [unlabel_image for unlabel_image in os.listdir(unlabel_images_folder) if os.path.isfile(os.path.join(unlabel_images_folder, unlabel_image))]
             self.filename_list = all_unlabel_image_paths
             

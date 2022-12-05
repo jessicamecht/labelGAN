@@ -27,11 +27,11 @@ from torch.utils.data import DataLoader, ConcatDataset
 from torchvision import transforms
 
 import sys, os
-sys.path.append("/home/rmpatil/teams/group-9/labelGAN/semanticGAN_code")
+sys.path.append("/content/drive/MyDrive/Fall2022/labelGAN/semanticGAN_code")
 
 import argparse
 from utils import inception_utils
-from dataloader.dataset import CelebAMaskDataset, ChestXrayDataset
+from dataloader.dataset_modified import CelebAMaskDataset, ChestXrayDataset
 import pickle
 
 @torch.no_grad()
@@ -74,7 +74,7 @@ def get_dataset(args):
         train_val_dataset = CelebAMaskDataset(args, args.path, is_label=True, phase='train-val')
         dataset = ConcatDataset([unlabel_dataset, train_val_dataset])
     elif args.dataset_name == 'chest-xray':
-        root_path = "/home/rmpatil/teams/group-9/"
+        root_path = "/content/drive/MyDrive/Fall2022/"
         unlabel_dataset = ChestXrayDataset(args, root_path, is_label=False, unlabel_transform = get_transformation())
         train_val_dataset = ChestXrayDataset(args, root_path, is_label=True, phase='train-val')
         dataset = ConcatDataset([unlabel_dataset, train_val_dataset])

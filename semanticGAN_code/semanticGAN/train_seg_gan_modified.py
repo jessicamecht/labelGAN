@@ -36,7 +36,7 @@ from torchvision import transforms, utils
 from torch.utils.tensorboard import SummaryWriter
 
 from models.stylegan2_seg import GeneratorSeg, Discriminator, MultiscaleDiscriminator, GANLoss
-from dataloader.dataset import CelebAMaskDataset, ChestXrayDataset
+from dataloader.dataset_modified import CelebAMaskDataset, ChestXrayDataset
 
 from utils.distributed import (
     get_rank,
@@ -545,6 +545,45 @@ def get_transformation(args):
     
     return transform
 
+def generate_samples(args, generator, g_ema, n_samples = 100):
+    def gen_sample(sample_z, gen, path, i):
+        gen.eval()
+        sample_img, sample_seg = gen([sample_z])
+        sample_img = sample_img.detach().cpu()
+        sample_seg = sample_seg.detach().cpu()
+                        
+        if args.seg_name == 'chest-xray':
+            sample_seg = torch.argmax(sample_seg, dim=1)
+            color_map = seg_val_loader.dataset.color_map
+            sample_mask = torch.zeros((sample_seg.shape[0], sample_seg.shape[1], sample_seg.shape[2], 3), dtype=torch.float)
+            for key in color_map:
+                sample_mask[sample_seg==key] = torch.tensor(color_map[key], dtype=torch.float)
+            sample_mask = sample_mask.permute(0,3,1,2)
+        
+        file_path = f'generated_samples_{path}'
+        os.makedirs(os.path.join(ckpt_dir, file_path), exist_ok=True)
+
+        utils.save_image(
+            sample_img,
+            os.path.join(ckpt_dir, f'{file_path}/img_{str(i).zfill(6)}.png'),
+            normalize=True,
+            range=(-1, 1),
+        )
+                        
+        utils.save_image(
+            sample_mask,
+            os.path.join(ckpt_dir, f'{file_path}/mask_{str(i).zfill(6)}.png'),
+            normalize=True,
+        )       
+        
+    with torch.no_grad():
+        for i in range(n_samples):
+            if i % 100 == 0:
+                print(f"Generated sample and mask : {i}")
+            sample_z = torch.randn(1, args.latent, device=device)
+            gen_sample(sample_z, g_ema, "g_ema", i)
+            # gen_sample(sample_z, generator, "generator", i)
+            
 if __name__ == '__main__':
     device = 'cuda'
 
@@ -583,6 +622,8 @@ if __name__ == '__main__':
     parser.add_argument('--seg_aug', action='store_true', help='seg augmentation')
 
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoint/')
+    
+    parser.add_argument('--generate', type=bool, default=False)
 
     args = parser.parse_args()
 
@@ -743,5 +784,8 @@ if __name__ == '__main__':
 
     torch.backends.cudnn.benchmark = True
     
-    train(args, ckpt_dir, img_loader, seg_loader, seg_val_loader, generator, discriminator_img, discriminator_seg,
+    if args.generate:
+        generate_samples(args, generator, g_ema, 1500)
+    else:
+        train(args, ckpt_dir, img_loader, seg_loader, seg_val_loader, generator, discriminator_img, discriminator_seg,
                     g_optim, d_img_optim, d_seg_optim, g_ema, device, writer)
