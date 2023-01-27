@@ -446,7 +446,7 @@ def train(args, ckpt_dir, img_loader, seg_loader, seg_val_loader, generator, dis
             writer.add_scalar('g/seg_adv_loss', g_seg_adv_loss_val, global_step=i)
             writer.add_scalar('g/seg_feat_loss', g_seg_feat_loss_val, global_step=i)
 
-
+            print("Iteration : " + str(i))
             if i % args.viz_every == 0:
                 with torch.no_grad():
                     g_ema.eval()
@@ -462,6 +462,13 @@ def train(args, ckpt_dir, img_loader, seg_loader, seg_val_loader, generator, dis
                             sample_mask[sample_seg==key] = torch.tensor(color_map[key], dtype=torch.float)
                         sample_mask = sample_mask.permute(0,3,1,2)
                     
+                    elif args.seg_name == 'chest-xray':
+                        sample_seg = torch.argmax(sample_seg, dim=1)
+                        color_map = seg_val_loader.dataset.color_map
+                        sample_mask = torch.zeros((sample_seg.shape[0], sample_seg.shape[1], sample_seg.shape[2], 3), dtype=torch.float)
+                        for key in color_map:
+                            sample_mask[sample_seg==key] = torch.tensor(color_map[key], dtype=torch.float)
+                        sample_mask = sample_mask.permute(0,3,1,2)
                     else:
                         raise Exception('No such a dataloader!')
 
@@ -487,7 +494,7 @@ def train(args, ckpt_dir, img_loader, seg_loader, seg_val_loader, generator, dis
                 print("==================Start calculating validation scores==================")
                 validate(args, discriminator_img, discriminator_seg, seg_val_loader, device, writer, i)
                 
-            if i % args.save_every == 0:
+            if i % args.save_every == 0 and i > 0:
                 print("==================Start calculating FID==================")
                 IS_mean, IS_std, FID = get_inception_metrics(sample_fn, num_inception_images=10000, use_torch=False)
                 print("iteration {0:08d}: FID: {1:.4f}, IS_mean: {2:.4f}, IS_std: {3:.4f}".format(i, FID, IS_mean, IS_std))
@@ -548,19 +555,19 @@ if __name__ == '__main__':
     parser.add_argument('--inception', type=str, help='inception pkl', required=True)
 
     parser.add_argument('--seg_name', type=str, help='segmentation dataloader name[celeba-mask]', default='celeba-mask')
-    parser.add_argument('--iter', type=int, default=800000)
-    parser.add_argument('--batch', type=int, default=16)
+    parser.add_argument('--iter', type=int, default=100000)
+    parser.add_argument('--batch', type=int, default=8)
     parser.add_argument('--n_sample', type=int, default=64)
-    parser.add_argument('--size', type=int, default=256)
+    parser.add_argument('--size', type=int, default=64)
     parser.add_argument('--r1', type=float, default=10)
     parser.add_argument('--path_regularize', type=float, default=2)
     parser.add_argument('--path_batch_shrink', type=int, default=2)
     parser.add_argument('--d_reg_every', type=int, default=16)
     parser.add_argument('--g_reg_every', type=int, default=4)
     parser.add_argument('--d_use_seg_every', type=int, help='frequency mixing seg image with real image', default=-1)
-    parser.add_argument('--viz_every', type=int, default=100)
-    parser.add_argument('--eval_every', type=int, default=1000)
-    parser.add_argument('--save_every', type=int, default=2000)
+    parser.add_argument('--viz_every', type=int, default=500)
+    parser.add_argument('--eval_every', type=int, default=500)
+    parser.add_argument('--save_every', type=int, default=1000)
 
     parser.add_argument('--mixing', type=float, default=0.9)
     parser.add_argument('--lambda_dseg_feat', type=float, default=2.0)
@@ -663,9 +670,9 @@ if __name__ == '__main__':
         discriminator_seg.load_state_dict(ckpt['d_seg'])
         g_ema.load_state_dict(ckpt['g_ema'])
 
-        g_optim.load_state_dict(ckpt['g_optim'])
-        d_img_optim.load_state_dict(ckpt['d_img_optim'])
-        d_seg_optim.load_state_dict(ckpt['d_seg_optim'])
+        # g_optim.load_state_dict(ckpt['g_optim'])
+        # d_img_optim.load_state_dict(ckpt['d_img_optim'])
+        # d_seg_optim.load_state_dict(ckpt['d_seg_optim'])
 
     if args.distributed:
         generator = nn.parallel.DistributedDataParallel(
@@ -691,12 +698,13 @@ if __name__ == '__main__':
             broadcast_buffers=False,
             find_unused_parameters=True,
         )
-
-
+    print(args.seg_name)
+    print(type(args.seg_name))
     if args.seg_name == 'celeba-mask':
         transform = get_transformation(args)
         img_dataset = CelebAMaskDataset(args, args.img_dataset, unlabel_transform=transform, unlabel_limit_size=args.unlabel_limit_data, is_label=False, resolution=args.size)
-    elif args.seg_name == "chest-xray":
+    elif args.seg_name == 'chest-xray':
+        print("temppp")
         transform = get_transformation(args)
         img_dataset = ChestXrayDataset(args, args.img_dataset, unlabel_transform=transform, is_label=False, resolution=args.size)
     else:
