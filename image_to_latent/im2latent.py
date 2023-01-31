@@ -15,7 +15,7 @@ class ImageToLatent(torch.nn.Module):
         self.conv2d = torch.nn.Conv2d(2048, 256, kernel_size=1)
         self.flatten = torch.nn.Flatten()
         self.dense1 = torch.nn.Linear(16384, 256)
-        self.dense2 = torch.nn.Linear(256, (18 * 512))
+        self.dense2 = torch.nn.Linear(256, 512)
 
     def forward(self, image):
         x = self.resnet(image)
@@ -23,7 +23,7 @@ class ImageToLatent(torch.nn.Module):
         x = self.flatten(x)
         x = self.dense1(x)
         x = self.dense2(x)
-        x = x.view((-1, 18, 512))
+        x = x.view((-1, 512))
 
         return x
 
