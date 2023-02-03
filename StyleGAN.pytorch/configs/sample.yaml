@@ -2,15 +2,16 @@
 
 output_dir: './output'
 structure: 'linear'
-device_id: ('0')
+device_id: ('1')
 dataset:
-  img_dir: '/home/jechterh/teams/group-9/nih_data/train'
+  img_dir: '/data1/jessica/data/labelGAN/nih_data/train'
   folder: False
-  resolution: 256
+  resolution: 1024
 model:
   gen:
     mapping_layers: 8
     # Negative numbers represent no truncation layers
     truncation_psi: -1.
 sched:
-  epochs: [4,8,16,32,16,1,16]
+  epochs: [4,8,16,32,16,8,16,4,16]
+  batch_sizes: [128, 128, 128, 64, 32, 16, 8, 8, 8]
