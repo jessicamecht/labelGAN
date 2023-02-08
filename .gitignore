@@ -4,4 +4,5 @@
 **/.ipynb_checkpoints
 *.pth
 *.npy
+*.png
 /StyleGAN.pytorch/output/*
