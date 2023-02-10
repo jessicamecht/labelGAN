@@ -5,4 +5,5 @@
 *.pth
 *.npy
 *.png
+*.pickle
 /StyleGAN.pytorch/output/*
