@@ -1,242 +1,283 @@
-2022-10-27 02:51:10 INFO: Using 1 GPUs.
-2022-10-27 02:51:16 INFO: Loading generator from: ./output/models/GAN_GEN_5.pth
-2022-10-27 02:51:16 INFO: Loading discriminator from: ./output/models/GAN_DIS_5.pth
-2022-10-27 02:51:16 INFO: Loading generator optimizer from: ./output/models/GAN_GEN_OPTIM_5.pth
-2022-10-27 02:51:16 INFO: Loading discriminator optimizer from: ./output/models/GAN_DIS_OPTIM_5.pth
-2022-10-27 02:51:16 INFO: Starting the training process ... 
+2023-02-03 11:07:23 INFO: Using 1 GPUs.
+2023-02-03 11:07:25 INFO: Loading generator from: /data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_7.pth
+2023-02-03 11:07:32 INFO: Loading discriminator from: /data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_DIS_7.pth
+2023-02-03 11:07:32 INFO: Loading generator optimizer from: /data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_OPTIM_7.pth
+2023-02-03 11:07:33 INFO: Loading discriminator optimizer from: /data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_DIS_OPTIM_7.pth
+2023-02-03 11:07:34 INFO: Starting the training process ... 
 
-2022-10-27 02:51:16 INFO: Currently working on depth: 6
-2022-10-27 02:51:16 INFO: Current resolution: 128 x 128
-2022-10-27 02:51:16 INFO: Epoch: [1]
-2022-10-27 02:51:21 INFO: Elapsed: [0:00:04] Step: 1  Batch: 1  D_Loss: 1.386325  G_Loss: 0.693356
-2022-10-27 02:52:44 INFO: Elapsed: [0:01:28] Step: 33  Batch: 33  D_Loss: 1.386200  G_Loss: 0.693333
-2022-10-27 02:54:08 INFO: Elapsed: [0:02:51] Step: 66  Batch: 66  D_Loss: 1.386169  G_Loss: 0.692477
-2022-10-27 02:55:32 INFO: Elapsed: [0:04:15] Step: 99  Batch: 99  D_Loss: 1.386290  G_Loss: 0.688455
-2022-10-27 02:56:56 INFO: Elapsed: [0:05:39] Step: 132  Batch: 132  D_Loss: 1.386192  G_Loss: 0.696071
-2022-10-27 02:58:20 INFO: Elapsed: [0:07:03] Step: 165  Batch: 165  D_Loss: 1.385831  G_Loss: 0.694134
-2022-10-27 02:59:44 INFO: Elapsed: [0:08:27] Step: 198  Batch: 198  D_Loss: 1.386144  G_Loss: 0.699338
-2022-10-27 03:01:07 INFO: Elapsed: [0:09:50] Step: 231  Batch: 231  D_Loss: 1.387010  G_Loss: 0.696453
-2022-10-27 03:02:31 INFO: Elapsed: [0:11:14] Step: 264  Batch: 264  D_Loss: 1.385974  G_Loss: 0.694607
-2022-10-27 03:03:55 INFO: Elapsed: [0:12:38] Step: 297  Batch: 297  D_Loss: 1.386177  G_Loss: 0.693439
-2022-10-27 03:05:08 INFO: Time taken for epoch: 0:13:51
+2023-02-03 11:07:34 INFO: Currently working on depth: 8
+2023-02-03 11:07:34 INFO: Current resolution: 512 x 512
+2023-02-03 11:07:34 INFO: Epoch: [1]
+2023-02-03 11:07:54 INFO: Elapsed: [0:00:19] Step: 1  Batch: 1  D_Loss: 1.751688  G_Loss: 0.301947
+2023-02-03 11:17:57 INFO: Elapsed: [0:10:22] Step: 66  Batch: 66  D_Loss: 0.979540  G_Loss: 1.117644
+2023-02-03 11:28:07 INFO: Elapsed: [0:20:33] Step: 132  Batch: 132  D_Loss: 1.215283  G_Loss: 0.871399
+2023-02-03 11:38:18 INFO: Elapsed: [0:30:43] Step: 198  Batch: 198  D_Loss: 1.181516  G_Loss: 0.770812
+2023-02-03 11:48:38 INFO: Elapsed: [0:41:04] Step: 264  Batch: 264  D_Loss: 1.096400  G_Loss: 1.470818
+2023-02-03 11:59:07 INFO: Elapsed: [0:51:33] Step: 330  Batch: 330  D_Loss: 1.526266  G_Loss: 0.639257
+2023-02-03 12:09:28 INFO: Elapsed: [1:01:54] Step: 396  Batch: 396  D_Loss: 0.955143  G_Loss: 1.410893
+2023-02-03 12:19:56 INFO: Elapsed: [1:12:22] Step: 462  Batch: 462  D_Loss: 1.243203  G_Loss: 0.890543
+2023-02-03 12:30:13 INFO: Elapsed: [1:22:39] Step: 528  Batch: 528  D_Loss: 1.063532  G_Loss: 1.420678
+2023-02-03 12:40:30 INFO: Elapsed: [1:32:56] Step: 594  Batch: 594  D_Loss: 1.091327  G_Loss: 0.963032
+2023-02-03 12:49:24 INFO: Time taken for epoch: 1:41:49
 
-2022-10-27 03:05:08 INFO: Saving the model to: ./output/models/GAN_GEN_5.pth
+2023-02-03 12:49:24 INFO: Saving the model to: ./output/models/GAN_GEN_7.pth
 
-2022-10-27 03:05:10 INFO: Currently working on depth: 7
-2022-10-27 03:05:10 INFO: Current resolution: 256 x 256
-2022-10-27 03:05:10 INFO: Epoch: [1]
-2022-10-27 03:05:14 INFO: Elapsed: [0:13:57] Step: 327  Batch: 1  D_Loss: 1.385959  G_Loss: 0.693311
-2022-10-27 03:07:27 INFO: Elapsed: [0:16:11] Step: 392  Batch: 66  D_Loss: 1.386639  G_Loss: 0.693842
-2022-10-27 03:09:44 INFO: Elapsed: [0:18:27] Step: 458  Batch: 132  D_Loss: 1.386638  G_Loss: 0.698232
-2022-10-27 03:12:00 INFO: Elapsed: [0:20:43] Step: 524  Batch: 198  D_Loss: 1.384915  G_Loss: 0.696777
-2022-10-27 03:14:15 INFO: Elapsed: [0:22:58] Step: 590  Batch: 264  D_Loss: 1.383808  G_Loss: 0.704879
-2022-10-27 03:16:32 INFO: Elapsed: [0:25:15] Step: 656  Batch: 330  D_Loss: 1.386566  G_Loss: 0.676222
-2022-10-27 03:18:47 INFO: Elapsed: [0:27:30] Step: 722  Batch: 396  D_Loss: 1.381024  G_Loss: 0.695419
-2022-10-27 03:21:02 INFO: Elapsed: [0:29:45] Step: 788  Batch: 462  D_Loss: 1.366493  G_Loss: 0.739181
-2022-10-27 03:23:19 INFO: Elapsed: [0:32:02] Step: 854  Batch: 528  D_Loss: 1.371276  G_Loss: 0.703496
-2022-10-27 03:25:33 INFO: Elapsed: [0:34:16] Step: 920  Batch: 594  D_Loss: 1.383799  G_Loss: 0.662409
-2022-10-27 03:27:34 INFO: Time taken for epoch: 0:22:24
+2023-02-03 12:49:25 INFO: Epoch: [2]
+2023-02-03 12:49:34 INFO: Elapsed: [1:42:00] Step: 652  Batch: 1  D_Loss: 1.143740  G_Loss: 1.355829
+2023-02-03 13:00:25 INFO: Elapsed: [1:52:51] Step: 717  Batch: 66  D_Loss: 0.989374  G_Loss: 1.086449
+2023-02-03 13:12:17 INFO: Elapsed: [2:04:42] Step: 783  Batch: 132  D_Loss: 1.087533  G_Loss: 0.950544
+2023-02-03 13:24:08 INFO: Elapsed: [2:16:34] Step: 849  Batch: 198  D_Loss: 1.063943  G_Loss: 1.212724
+2023-02-03 13:36:00 INFO: Elapsed: [2:28:26] Step: 915  Batch: 264  D_Loss: 1.316627  G_Loss: 0.831808
+2023-02-03 13:47:53 INFO: Elapsed: [2:40:19] Step: 981  Batch: 330  D_Loss: 1.090361  G_Loss: 0.905387
+2023-02-03 13:59:01 INFO: Elapsed: [2:51:27] Step: 1047  Batch: 396  D_Loss: 1.017644  G_Loss: 0.976632
+2023-02-03 14:09:17 INFO: Elapsed: [3:01:43] Step: 1113  Batch: 462  D_Loss: 1.144130  G_Loss: 1.217388
+2023-02-03 14:20:23 INFO: Elapsed: [3:12:48] Step: 1179  Batch: 528  D_Loss: 1.395322  G_Loss: 0.631821
+2023-02-03 14:32:26 INFO: Elapsed: [3:24:51] Step: 1245  Batch: 594  D_Loss: 1.276296  G_Loss: 0.666366
+2023-02-03 14:42:56 INFO: Time taken for epoch: 1:53:31
 
-2022-10-27 03:27:34 INFO: Saving the model to: ./output/models/GAN_GEN_6.pth
+2023-02-03 14:42:56 INFO: Epoch: [3]
+2023-02-03 14:43:07 INFO: Elapsed: [3:35:33] Step: 1303  Batch: 1  D_Loss: 0.916860  G_Loss: 1.267870
+2023-02-03 14:54:56 INFO: Elapsed: [3:47:22] Step: 1368  Batch: 66  D_Loss: 1.124574  G_Loss: 0.783997
+2023-02-03 15:06:57 INFO: Elapsed: [3:59:23] Step: 1434  Batch: 132  D_Loss: 1.057498  G_Loss: 0.710155
+2023-02-03 15:18:57 INFO: Elapsed: [4:11:23] Step: 1500  Batch: 198  D_Loss: 0.964834  G_Loss: 0.975806
+2023-02-03 15:30:57 INFO: Elapsed: [4:23:23] Step: 1566  Batch: 264  D_Loss: 0.941359  G_Loss: 0.696715
+2023-02-03 15:42:57 INFO: Elapsed: [4:35:23] Step: 1632  Batch: 330  D_Loss: 1.054955  G_Loss: 1.488835
+2023-02-03 15:54:59 INFO: Elapsed: [4:47:24] Step: 1698  Batch: 396  D_Loss: 1.057649  G_Loss: 0.962308
+2023-02-03 16:06:58 INFO: Elapsed: [4:59:24] Step: 1764  Batch: 462  D_Loss: 0.993575  G_Loss: 0.788213
+2023-02-03 16:18:58 INFO: Elapsed: [5:11:24] Step: 1830  Batch: 528  D_Loss: 1.083728  G_Loss: 0.542852
+2023-02-03 16:30:59 INFO: Elapsed: [5:23:25] Step: 1896  Batch: 594  D_Loss: 1.202667  G_Loss: 0.647233
+2023-02-03 16:41:22 INFO: Time taken for epoch: 1:58:26
 
-2022-10-27 03:27:35 INFO: Epoch: [2]
-2022-10-27 03:27:37 INFO: Elapsed: [0:36:21] Step: 979  Batch: 1  D_Loss: 1.374524  G_Loss: 0.684623
-2022-10-27 03:29:52 INFO: Elapsed: [0:38:35] Step: 1044  Batch: 66  D_Loss: 1.373429  G_Loss: 0.661697
-2022-10-27 03:32:07 INFO: Elapsed: [0:40:50] Step: 1110  Batch: 132  D_Loss: 1.377752  G_Loss: 0.733442
-2022-10-27 03:34:24 INFO: Elapsed: [0:43:07] Step: 1176  Batch: 198  D_Loss: 1.384294  G_Loss: 0.687308
-2022-10-27 03:36:39 INFO: Elapsed: [0:45:22] Step: 1242  Batch: 264  D_Loss: 1.403225  G_Loss: 0.723332
-2022-10-27 03:38:54 INFO: Elapsed: [0:47:37] Step: 1308  Batch: 330  D_Loss: 1.381449  G_Loss: 0.649894
-2022-10-27 03:41:08 INFO: Elapsed: [0:49:52] Step: 1374  Batch: 396  D_Loss: 1.384915  G_Loss: 0.696086
-2022-10-27 03:43:24 INFO: Elapsed: [0:52:07] Step: 1440  Batch: 462  D_Loss: 1.382967  G_Loss: 0.691690
-2022-10-27 03:45:39 INFO: Elapsed: [0:54:22] Step: 1506  Batch: 528  D_Loss: 1.378281  G_Loss: 0.663903
-2022-10-27 03:47:54 INFO: Elapsed: [0:56:38] Step: 1572  Batch: 594  D_Loss: 1.391822  G_Loss: 0.681231
-2022-10-27 03:49:54 INFO: Time taken for epoch: 0:22:18
+2023-02-03 16:41:22 INFO: Epoch: [4]
+2023-02-03 16:41:33 INFO: Elapsed: [5:33:59] Step: 1954  Batch: 1  D_Loss: 0.933822  G_Loss: 0.954646
+2023-02-03 16:53:20 INFO: Elapsed: [5:45:46] Step: 2019  Batch: 66  D_Loss: 1.075031  G_Loss: 1.216294
+2023-02-03 17:05:19 INFO: Elapsed: [5:57:45] Step: 2085  Batch: 132  D_Loss: 0.997570  G_Loss: 1.399704
+2023-02-03 17:17:19 INFO: Elapsed: [6:09:45] Step: 2151  Batch: 198  D_Loss: 0.872713  G_Loss: 1.434942
+2023-02-03 17:29:19 INFO: Elapsed: [6:21:44] Step: 2217  Batch: 264  D_Loss: 0.904304  G_Loss: 0.917764
+2023-02-03 17:41:18 INFO: Elapsed: [6:33:44] Step: 2283  Batch: 330  D_Loss: 1.054197  G_Loss: 1.545865
+2023-02-03 17:53:18 INFO: Elapsed: [6:45:44] Step: 2349  Batch: 396  D_Loss: 1.170854  G_Loss: 0.869273
+2023-02-03 18:05:18 INFO: Elapsed: [6:57:44] Step: 2415  Batch: 462  D_Loss: 0.946909  G_Loss: 1.088214
+2023-02-03 18:17:18 INFO: Elapsed: [7:09:43] Step: 2481  Batch: 528  D_Loss: 1.187512  G_Loss: 0.950660
+2023-02-03 18:29:17 INFO: Elapsed: [7:21:43] Step: 2547  Batch: 594  D_Loss: 0.799861  G_Loss: 1.625016
+2023-02-03 18:39:40 INFO: Time taken for epoch: 1:58:17
 
-2022-10-27 03:49:54 INFO: Epoch: [3]
-2022-10-27 03:49:56 INFO: Elapsed: [0:58:39] Step: 1631  Batch: 1  D_Loss: 1.563656  G_Loss: 0.824956
-2022-10-27 03:52:09 INFO: Elapsed: [1:00:53] Step: 1696  Batch: 66  D_Loss: 1.383718  G_Loss: 0.698613
-2022-10-27 03:54:25 INFO: Elapsed: [1:03:09] Step: 1762  Batch: 132  D_Loss: 1.390058  G_Loss: 0.698616
-2022-10-27 03:56:41 INFO: Elapsed: [1:05:25] Step: 1828  Batch: 198  D_Loss: 1.391441  G_Loss: 0.651361
-2022-10-27 03:58:58 INFO: Elapsed: [1:07:41] Step: 1894  Batch: 264  D_Loss: 1.379015  G_Loss: 0.686963
-2022-10-27 04:01:13 INFO: Elapsed: [1:09:56] Step: 1960  Batch: 330  D_Loss: 1.374553  G_Loss: 0.739111
-2022-10-27 04:03:28 INFO: Elapsed: [1:12:11] Step: 2026  Batch: 396  D_Loss: 1.382932  G_Loss: 0.698457
-2022-10-27 04:05:43 INFO: Elapsed: [1:14:27] Step: 2092  Batch: 462  D_Loss: 1.390725  G_Loss: 0.707143
-2022-10-27 04:07:59 INFO: Elapsed: [1:16:42] Step: 2158  Batch: 528  D_Loss: 1.384492  G_Loss: 0.651755
-2022-10-27 04:10:15 INFO: Elapsed: [1:18:58] Step: 2224  Batch: 594  D_Loss: 1.383415  G_Loss: 0.701228
-2022-10-27 04:12:14 INFO: Time taken for epoch: 0:22:20
+2023-02-03 18:39:40 INFO: Saving the model to: ./output/models/GAN_GEN_7.pth
 
-2022-10-27 04:12:14 INFO: Epoch: [4]
-2022-10-27 04:12:16 INFO: Elapsed: [1:20:59] Step: 2283  Batch: 1  D_Loss: 1.383366  G_Loss: 0.691483
-2022-10-27 04:14:29 INFO: Elapsed: [1:23:13] Step: 2348  Batch: 66  D_Loss: 1.385307  G_Loss: 0.693777
-2022-10-27 04:16:45 INFO: Elapsed: [1:25:28] Step: 2414  Batch: 132  D_Loss: 1.381571  G_Loss: 0.688428
-2022-10-27 04:19:01 INFO: Elapsed: [1:27:44] Step: 2480  Batch: 198  D_Loss: 1.377450  G_Loss: 0.650070
-2022-10-27 04:21:16 INFO: Elapsed: [1:29:59] Step: 2546  Batch: 264  D_Loss: 1.383584  G_Loss: 0.687015
-2022-10-27 04:23:32 INFO: Elapsed: [1:32:15] Step: 2612  Batch: 330  D_Loss: 1.380279  G_Loss: 0.749350
-2022-10-27 04:25:46 INFO: Elapsed: [1:34:30] Step: 2678  Batch: 396  D_Loss: 1.382033  G_Loss: 0.660559
-2022-10-27 04:28:02 INFO: Elapsed: [1:36:45] Step: 2744  Batch: 462  D_Loss: 1.382699  G_Loss: 0.700005
-2022-10-27 04:30:17 INFO: Elapsed: [1:39:00] Step: 2810  Batch: 528  D_Loss: 1.378648  G_Loss: 0.703017
-2022-10-27 04:32:33 INFO: Elapsed: [1:41:16] Step: 2876  Batch: 594  D_Loss: 1.375185  G_Loss: 0.724048
-2022-10-27 04:34:33 INFO: Time taken for epoch: 0:22:18
+2023-02-03 18:39:41 INFO: Currently working on depth: 9
+2023-02-03 18:39:41 INFO: Current resolution: 1024 x 1024
+2023-02-03 18:39:41 INFO: Epoch: [1]
+2023-02-03 18:40:26 INFO: Elapsed: [7:32:51] Step: 2605  Batch: 1  D_Loss: 0.753034  G_Loss: 1.333444
+2023-02-03 19:06:54 INFO: Elapsed: [7:59:20] Step: 2670  Batch: 66  D_Loss: 0.393724  G_Loss: 2.257478
+2023-02-03 19:33:51 INFO: Elapsed: [8:26:17] Step: 2736  Batch: 132  D_Loss: 0.641919  G_Loss: 1.595593
+2023-02-03 20:00:53 INFO: Elapsed: [8:53:18] Step: 2802  Batch: 198  D_Loss: 0.645944  G_Loss: 3.009664
+2023-02-03 20:27:57 INFO: Elapsed: [9:20:23] Step: 2868  Batch: 264  D_Loss: 0.346890  G_Loss: 2.374542
+2023-02-03 20:55:06 INFO: Elapsed: [9:47:31] Step: 2934  Batch: 330  D_Loss: 0.739862  G_Loss: 3.026395
+2023-02-03 21:23:34 INFO: Elapsed: [10:15:59] Step: 3000  Batch: 396  D_Loss: 0.576469  G_Loss: 1.852715
+2023-02-03 21:52:10 INFO: Elapsed: [10:44:36] Step: 3066  Batch: 462  D_Loss: 0.967496  G_Loss: 2.536484
+2023-02-03 22:20:45 INFO: Elapsed: [11:13:10] Step: 3132  Batch: 528  D_Loss: 0.365650  G_Loss: 2.638549
+2023-02-03 22:49:19 INFO: Elapsed: [11:41:44] Step: 3198  Batch: 594  D_Loss: 0.718676  G_Loss: 2.456728
+2023-02-03 23:14:02 INFO: Time taken for epoch: 4:34:20
 
-2022-10-27 04:34:33 INFO: Epoch: [5]
-2022-10-27 04:34:35 INFO: Elapsed: [1:43:18] Step: 2935  Batch: 1  D_Loss: 1.375455  G_Loss: 0.767100
-2022-10-27 04:36:49 INFO: Elapsed: [1:45:33] Step: 3000  Batch: 66  D_Loss: 1.383292  G_Loss: 0.673563
-2022-10-27 04:39:07 INFO: Elapsed: [1:47:50] Step: 3066  Batch: 132  D_Loss: 1.393325  G_Loss: 0.697577
-2022-10-27 04:41:23 INFO: Elapsed: [1:50:06] Step: 3132  Batch: 198  D_Loss: 1.381212  G_Loss: 0.695892
-2022-10-27 04:43:40 INFO: Elapsed: [1:52:23] Step: 3198  Batch: 264  D_Loss: 1.388384  G_Loss: 0.768389
-2022-10-27 04:45:57 INFO: Elapsed: [1:54:41] Step: 3264  Batch: 330  D_Loss: 1.381629  G_Loss: 0.684774
-2022-10-27 04:48:14 INFO: Elapsed: [1:56:57] Step: 3330  Batch: 396  D_Loss: 1.487119  G_Loss: 0.515738
-2022-10-27 04:50:29 INFO: Elapsed: [1:59:12] Step: 3396  Batch: 462  D_Loss: 1.382532  G_Loss: 0.690220
-2022-10-27 04:52:46 INFO: Elapsed: [2:01:29] Step: 3462  Batch: 528  D_Loss: 1.387232  G_Loss: 0.696174
-2022-10-27 04:55:04 INFO: Elapsed: [2:03:47] Step: 3528  Batch: 594  D_Loss: 1.378383  G_Loss: 0.683649
-2022-10-27 04:57:04 INFO: Time taken for epoch: 0:22:30
+2023-02-03 23:14:02 INFO: Saving the model to: ./output/models/GAN_GEN_8.pth
 
-2022-10-27 04:57:04 INFO: Epoch: [6]
-2022-10-27 04:57:06 INFO: Elapsed: [2:05:49] Step: 3587  Batch: 1  D_Loss: 1.381838  G_Loss: 0.737407
-2022-10-27 04:59:20 INFO: Elapsed: [2:08:03] Step: 3652  Batch: 66  D_Loss: 1.388475  G_Loss: 0.690447
-2022-10-27 05:01:36 INFO: Elapsed: [2:10:19] Step: 3718  Batch: 132  D_Loss: 1.370345  G_Loss: 0.592455
-2022-10-27 05:03:51 INFO: Elapsed: [2:12:34] Step: 3784  Batch: 198  D_Loss: 1.380845  G_Loss: 0.716084
-2022-10-27 05:06:06 INFO: Elapsed: [2:14:50] Step: 3850  Batch: 264  D_Loss: 1.356884  G_Loss: 0.678279
-2022-10-27 05:08:24 INFO: Elapsed: [2:17:07] Step: 3916  Batch: 330  D_Loss: 1.365186  G_Loss: 0.662833
-2022-10-27 05:10:40 INFO: Elapsed: [2:19:24] Step: 3982  Batch: 396  D_Loss: 1.352399  G_Loss: 0.538650
-2022-10-27 05:12:56 INFO: Elapsed: [2:21:39] Step: 4048  Batch: 462  D_Loss: 1.355189  G_Loss: 0.939465
-2022-10-27 05:15:13 INFO: Elapsed: [2:23:56] Step: 4114  Batch: 528  D_Loss: 1.300653  G_Loss: 0.905903
-2022-10-27 05:17:30 INFO: Elapsed: [2:26:14] Step: 4180  Batch: 594  D_Loss: 1.331837  G_Loss: 0.756666
-2022-10-27 05:19:31 INFO: Time taken for epoch: 0:22:27
+2023-02-03 23:14:03 INFO: Epoch: [2]
+2023-02-03 23:14:28 INFO: Elapsed: [12:06:54] Step: 3256  Batch: 1  D_Loss: 0.385316  G_Loss: 2.518771
+2023-02-03 23:42:35 INFO: Elapsed: [12:35:01] Step: 3321  Batch: 66  D_Loss: 0.886891  G_Loss: 1.587073
+2023-02-04 00:11:10 INFO: Elapsed: [13:03:35] Step: 3387  Batch: 132  D_Loss: 0.726934  G_Loss: 2.336935
+2023-02-04 00:39:42 INFO: Elapsed: [13:32:08] Step: 3453  Batch: 198  D_Loss: 0.423719  G_Loss: 2.646661
+2023-02-04 01:08:12 INFO: Elapsed: [14:00:38] Step: 3519  Batch: 264  D_Loss: 0.759356  G_Loss: 2.734143
+2023-02-04 01:36:45 INFO: Elapsed: [14:29:10] Step: 3585  Batch: 330  D_Loss: 1.006071  G_Loss: 0.765294
+2023-02-04 02:05:19 INFO: Elapsed: [14:57:45] Step: 3651  Batch: 396  D_Loss: 0.617559  G_Loss: 1.721780
+2023-02-04 02:33:49 INFO: Elapsed: [15:26:15] Step: 3717  Batch: 462  D_Loss: 0.961841  G_Loss: 1.686677
+2023-02-04 03:02:17 INFO: Elapsed: [15:54:43] Step: 3783  Batch: 528  D_Loss: 0.338056  G_Loss: 2.178108
+2023-02-04 03:30:48 INFO: Elapsed: [16:23:13] Step: 3849  Batch: 594  D_Loss: 0.765776  G_Loss: 1.118384
+2023-02-04 03:55:28 INFO: Time taken for epoch: 4:41:24
 
-2022-10-27 05:19:31 INFO: Epoch: [7]
-2022-10-27 05:19:33 INFO: Elapsed: [2:28:16] Step: 4239  Batch: 1  D_Loss: 1.389797  G_Loss: 1.055662
-2022-10-27 05:21:47 INFO: Elapsed: [2:30:30] Step: 4304  Batch: 66  D_Loss: 1.385089  G_Loss: 0.712552
-2022-10-27 05:24:00 INFO: Elapsed: [2:32:44] Step: 4370  Batch: 132  D_Loss: 1.314460  G_Loss: 0.776014
-2022-10-27 05:26:17 INFO: Elapsed: [2:35:00] Step: 4436  Batch: 198  D_Loss: 1.406794  G_Loss: 0.973132
-2022-10-27 05:28:34 INFO: Elapsed: [2:37:17] Step: 4502  Batch: 264  D_Loss: 1.318863  G_Loss: 0.959610
-2022-10-27 05:30:52 INFO: Elapsed: [2:39:35] Step: 4568  Batch: 330  D_Loss: 1.265604  G_Loss: 0.806303
-2022-10-27 05:33:08 INFO: Elapsed: [2:41:51] Step: 4634  Batch: 396  D_Loss: 1.326650  G_Loss: 0.714900
-2022-10-27 05:35:24 INFO: Elapsed: [2:44:07] Step: 4700  Batch: 462  D_Loss: 1.449826  G_Loss: 0.788575
-2022-10-27 05:37:40 INFO: Elapsed: [2:46:24] Step: 4766  Batch: 528  D_Loss: 1.317057  G_Loss: 0.908694
-2022-10-27 05:39:58 INFO: Elapsed: [2:48:41] Step: 4832  Batch: 594  D_Loss: 1.292246  G_Loss: 0.854425
-2022-10-27 05:41:57 INFO: Time taken for epoch: 0:22:25
+2023-02-04 03:55:28 INFO: Epoch: [3]
+2023-02-04 03:55:53 INFO: Elapsed: [16:48:19] Step: 3907  Batch: 1  D_Loss: 0.988053  G_Loss: 1.093768
+2023-02-04 04:23:51 INFO: Elapsed: [17:16:16] Step: 3972  Batch: 66  D_Loss: 0.698546  G_Loss: 2.254066
+2023-02-04 04:52:15 INFO: Elapsed: [17:44:40] Step: 4038  Batch: 132  D_Loss: 0.461981  G_Loss: 2.607898
+2023-02-04 05:20:37 INFO: Elapsed: [18:13:03] Step: 4104  Batch: 198  D_Loss: 0.410956  G_Loss: 2.690031
+2023-02-04 05:48:59 INFO: Elapsed: [18:41:25] Step: 4170  Batch: 264  D_Loss: 0.757054  G_Loss: 3.134861
+2023-02-04 06:17:24 INFO: Elapsed: [19:09:50] Step: 4236  Batch: 330  D_Loss: 1.166143  G_Loss: 1.922648
+2023-02-04 06:45:47 INFO: Elapsed: [19:38:12] Step: 4302  Batch: 396  D_Loss: 1.524054  G_Loss: 0.523462
+2023-02-04 07:14:17 INFO: Elapsed: [20:06:43] Step: 4368  Batch: 462  D_Loss: 0.905873  G_Loss: 2.104211
+2023-02-04 07:42:49 INFO: Elapsed: [20:35:15] Step: 4434  Batch: 528  D_Loss: 0.904578  G_Loss: 0.723271
+2023-02-04 08:11:21 INFO: Elapsed: [21:03:46] Step: 4500  Batch: 594  D_Loss: 0.725080  G_Loss: 1.695947
+2023-02-04 08:36:03 INFO: Time taken for epoch: 4:40:35
 
-2022-10-27 05:41:57 INFO: Epoch: [8]
-2022-10-27 05:41:59 INFO: Elapsed: [2:50:42] Step: 4891  Batch: 1  D_Loss: 1.334367  G_Loss: 0.774533
-2022-10-27 05:44:12 INFO: Elapsed: [2:52:55] Step: 4956  Batch: 66  D_Loss: 1.303381  G_Loss: 0.912771
-2022-10-27 05:46:29 INFO: Elapsed: [2:55:13] Step: 5022  Batch: 132  D_Loss: 1.329249  G_Loss: 0.820801
-2022-10-27 05:48:45 INFO: Elapsed: [2:57:28] Step: 5088  Batch: 198  D_Loss: 1.335941  G_Loss: 0.745559
-2022-10-27 05:51:01 INFO: Elapsed: [2:59:45] Step: 5154  Batch: 264  D_Loss: 1.321948  G_Loss: 0.787628
-2022-10-27 05:53:18 INFO: Elapsed: [3:02:01] Step: 5220  Batch: 330  D_Loss: 1.348256  G_Loss: 1.072059
-2022-10-27 05:55:35 INFO: Elapsed: [3:04:18] Step: 5286  Batch: 396  D_Loss: 1.300930  G_Loss: 0.845978
-2022-10-27 05:57:51 INFO: Elapsed: [3:06:34] Step: 5352  Batch: 462  D_Loss: 1.338095  G_Loss: 0.642271
-2022-10-27 06:00:08 INFO: Elapsed: [3:08:51] Step: 5418  Batch: 528  D_Loss: 1.315273  G_Loss: 0.677101
-2022-10-27 06:02:24 INFO: Elapsed: [3:11:07] Step: 5484  Batch: 594  D_Loss: 1.310070  G_Loss: 0.727280
-2022-10-27 06:04:26 INFO: Time taken for epoch: 0:22:29
+2023-02-04 08:36:03 INFO: Epoch: [4]
+2023-02-04 08:36:28 INFO: Elapsed: [21:28:54] Step: 4558  Batch: 1  D_Loss: 0.851649  G_Loss: 0.952694
+2023-02-04 09:04:36 INFO: Elapsed: [21:57:02] Step: 4623  Batch: 66  D_Loss: 0.758935  G_Loss: 1.063388
+2023-02-04 09:33:11 INFO: Elapsed: [22:25:37] Step: 4689  Batch: 132  D_Loss: 0.952291  G_Loss: 1.137114
+2023-02-04 10:01:44 INFO: Elapsed: [22:54:10] Step: 4755  Batch: 198  D_Loss: 1.353394  G_Loss: 2.093126
+2023-02-04 10:30:18 INFO: Elapsed: [23:22:43] Step: 4821  Batch: 264  D_Loss: 1.358307  G_Loss: 1.382489
+2023-02-04 10:58:50 INFO: Elapsed: [23:51:16] Step: 4887  Batch: 330  D_Loss: 0.886429  G_Loss: 0.965662
+2023-02-04 11:27:23 INFO: Elapsed: [1 day, 0:19:49] Step: 4953  Batch: 396  D_Loss: 0.503984  G_Loss: 3.106216
+2023-02-04 11:55:55 INFO: Elapsed: [1 day, 0:48:21] Step: 5019  Batch: 462  D_Loss: 1.257649  G_Loss: 0.939022
+2023-02-04 12:24:27 INFO: Elapsed: [1 day, 1:16:52] Step: 5085  Batch: 528  D_Loss: 1.083339  G_Loss: 2.294703
+2023-02-04 12:54:07 INFO: Elapsed: [1 day, 1:46:33] Step: 5151  Batch: 594  D_Loss: 0.854918  G_Loss: 1.269138
+2023-02-04 13:20:02 INFO: Time taken for epoch: 4:43:59
 
-2022-10-27 06:04:26 INFO: Epoch: [9]
-2022-10-27 06:04:28 INFO: Elapsed: [3:13:12] Step: 5543  Batch: 1  D_Loss: 1.285227  G_Loss: 0.627481
-2022-10-27 06:06:44 INFO: Elapsed: [3:15:27] Step: 5608  Batch: 66  D_Loss: 1.351805  G_Loss: 0.973299
-2022-10-27 06:09:01 INFO: Elapsed: [3:17:44] Step: 5674  Batch: 132  D_Loss: 1.333147  G_Loss: 0.859052
-2022-10-27 06:11:16 INFO: Elapsed: [3:19:59] Step: 5740  Batch: 198  D_Loss: 1.261972  G_Loss: 0.861740
-2022-10-27 06:13:32 INFO: Elapsed: [3:22:15] Step: 5806  Batch: 264  D_Loss: 1.308178  G_Loss: 0.793496
-2022-10-27 06:15:49 INFO: Elapsed: [3:24:32] Step: 5872  Batch: 330  D_Loss: 1.354905  G_Loss: 0.862171
-2022-10-27 06:18:05 INFO: Elapsed: [3:26:48] Step: 5938  Batch: 396  D_Loss: 1.296614  G_Loss: 0.920549
-2022-10-27 06:20:21 INFO: Elapsed: [3:29:04] Step: 6004  Batch: 462  D_Loss: 1.385056  G_Loss: 0.609057
-2022-10-27 06:22:37 INFO: Elapsed: [3:31:21] Step: 6070  Batch: 528  D_Loss: 1.334300  G_Loss: 0.918262
-2022-10-27 06:24:54 INFO: Elapsed: [3:33:37] Step: 6136  Batch: 594  D_Loss: 1.349573  G_Loss: 0.771877
-2022-10-27 06:26:54 INFO: Time taken for epoch: 0:22:28
+2023-02-04 13:20:02 INFO: Epoch: [5]
+2023-02-04 13:20:29 INFO: Elapsed: [1 day, 2:12:55] Step: 5209  Batch: 1  D_Loss: 0.662423  G_Loss: 2.200444
+2023-02-04 13:49:43 INFO: Elapsed: [1 day, 2:42:09] Step: 5274  Batch: 66  D_Loss: 1.121724  G_Loss: 0.838854
+2023-02-04 14:19:16 INFO: Elapsed: [1 day, 3:11:42] Step: 5340  Batch: 132  D_Loss: 0.749873  G_Loss: 1.608415
+2023-02-04 14:47:48 INFO: Elapsed: [1 day, 3:40:13] Step: 5406  Batch: 198  D_Loss: 0.815014  G_Loss: 2.773170
+2023-02-04 15:16:19 INFO: Elapsed: [1 day, 4:08:44] Step: 5472  Batch: 264  D_Loss: 0.774282  G_Loss: 2.449391
+2023-02-04 15:44:49 INFO: Elapsed: [1 day, 4:37:15] Step: 5538  Batch: 330  D_Loss: 0.663647  G_Loss: 2.121998
+2023-02-04 16:13:18 INFO: Elapsed: [1 day, 5:05:44] Step: 5604  Batch: 396  D_Loss: 0.978498  G_Loss: 1.456042
+2023-02-04 16:41:50 INFO: Elapsed: [1 day, 5:34:16] Step: 5670  Batch: 462  D_Loss: 1.005523  G_Loss: 1.641528
+2023-02-04 17:10:21 INFO: Elapsed: [1 day, 6:02:46] Step: 5736  Batch: 528  D_Loss: 1.564631  G_Loss: 0.345731
+2023-02-04 17:38:50 INFO: Elapsed: [1 day, 6:31:16] Step: 5802  Batch: 594  D_Loss: 1.297128  G_Loss: 0.761535
+2023-02-04 18:03:31 INFO: Time taken for epoch: 4:43:29
 
-2022-10-27 06:26:54 INFO: Epoch: [10]
-2022-10-27 06:26:57 INFO: Elapsed: [3:35:40] Step: 6195  Batch: 1  D_Loss: 1.303935  G_Loss: 0.832391
-2022-10-27 06:29:11 INFO: Elapsed: [3:37:54] Step: 6260  Batch: 66  D_Loss: 1.353567  G_Loss: 0.880723
-2022-10-27 06:31:28 INFO: Elapsed: [3:40:11] Step: 6326  Batch: 132  D_Loss: 1.382425  G_Loss: 0.919869
-2022-10-27 06:33:44 INFO: Elapsed: [3:42:27] Step: 6392  Batch: 198  D_Loss: 1.320344  G_Loss: 0.780648
-2022-10-27 06:36:01 INFO: Elapsed: [3:44:44] Step: 6458  Batch: 264  D_Loss: 1.331626  G_Loss: 0.867772
-2022-10-27 06:38:17 INFO: Elapsed: [3:47:00] Step: 6524  Batch: 330  D_Loss: 1.327718  G_Loss: 0.729732
-2022-10-27 06:40:32 INFO: Elapsed: [3:49:15] Step: 6590  Batch: 396  D_Loss: 1.349506  G_Loss: 0.923273
-2022-10-27 06:42:47 INFO: Elapsed: [3:51:30] Step: 6656  Batch: 462  D_Loss: 1.283701  G_Loss: 0.788039
-2022-10-27 06:45:03 INFO: Elapsed: [3:53:46] Step: 6722  Batch: 528  D_Loss: 1.324615  G_Loss: 0.701241
-2022-10-27 06:47:19 INFO: Elapsed: [3:56:02] Step: 6788  Batch: 594  D_Loss: 1.305647  G_Loss: 0.789830
-2022-10-27 06:49:18 INFO: Time taken for epoch: 0:22:23
+2023-02-04 18:03:31 INFO: Epoch: [6]
+2023-02-04 18:03:57 INFO: Elapsed: [1 day, 6:56:22] Step: 5860  Batch: 1  D_Loss: 1.000082  G_Loss: 1.262328
+2023-02-04 18:32:01 INFO: Elapsed: [1 day, 7:24:27] Step: 5925  Batch: 66  D_Loss: 1.058725  G_Loss: 1.260098
+2023-02-04 19:00:29 INFO: Elapsed: [1 day, 7:52:55] Step: 5991  Batch: 132  D_Loss: 0.903357  G_Loss: 0.729232
+2023-02-04 19:28:33 INFO: Elapsed: [1 day, 8:20:59] Step: 6057  Batch: 198  D_Loss: 0.890831  G_Loss: 1.197282
+2023-02-04 19:55:56 INFO: Elapsed: [1 day, 8:48:22] Step: 6123  Batch: 264  D_Loss: 0.665112  G_Loss: 1.724524
+2023-02-04 20:23:22 INFO: Elapsed: [1 day, 9:15:48] Step: 6189  Batch: 330  D_Loss: 0.738006  G_Loss: 1.984228
+2023-02-04 20:50:48 INFO: Elapsed: [1 day, 9:43:14] Step: 6255  Batch: 396  D_Loss: 1.048495  G_Loss: 2.246298
+2023-02-04 21:18:14 INFO: Elapsed: [1 day, 10:10:40] Step: 6321  Batch: 462  D_Loss: 0.985710  G_Loss: 2.800570
+2023-02-04 21:45:45 INFO: Elapsed: [1 day, 10:38:11] Step: 6387  Batch: 528  D_Loss: 0.848404  G_Loss: 0.837317
+2023-02-04 22:10:55 INFO: Elapsed: [1 day, 11:03:20] Step: 6453  Batch: 594  D_Loss: 0.714021  G_Loss: 2.264016
+2023-02-04 22:31:51 INFO: Time taken for epoch: 4:28:20
 
-2022-10-27 06:49:19 INFO: Saving the model to: ./output/models/GAN_GEN_6.pth
+2023-02-04 22:31:51 INFO: Epoch: [7]
+2023-02-04 22:32:13 INFO: Elapsed: [1 day, 11:24:38] Step: 6511  Batch: 1  D_Loss: 1.022158  G_Loss: 1.327469
+2023-02-04 22:56:00 INFO: Elapsed: [1 day, 11:48:26] Step: 6576  Batch: 66  D_Loss: 0.980555  G_Loss: 1.104877
+2023-02-04 23:20:14 INFO: Elapsed: [1 day, 12:12:40] Step: 6642  Batch: 132  D_Loss: 0.956089  G_Loss: 0.760731
+2023-02-04 23:44:18 INFO: Elapsed: [1 day, 12:36:44] Step: 6708  Batch: 198  D_Loss: 0.865765  G_Loss: 1.610910
+2023-02-05 00:08:24 INFO: Elapsed: [1 day, 13:00:50] Step: 6774  Batch: 264  D_Loss: 1.189710  G_Loss: 0.782261
+2023-02-05 00:32:35 INFO: Elapsed: [1 day, 13:25:01] Step: 6840  Batch: 330  D_Loss: 1.179870  G_Loss: 0.591555
+2023-02-05 00:56:42 INFO: Elapsed: [1 day, 13:49:08] Step: 6906  Batch: 396  D_Loss: 0.979727  G_Loss: 1.496637
+2023-02-05 01:20:53 INFO: Elapsed: [1 day, 14:13:19] Step: 6972  Batch: 462  D_Loss: 0.722580  G_Loss: 1.737363
+2023-02-05 01:45:02 INFO: Elapsed: [1 day, 14:37:28] Step: 7038  Batch: 528  D_Loss: 1.066744  G_Loss: 2.440320
+2023-02-05 02:09:15 INFO: Elapsed: [1 day, 15:01:41] Step: 7104  Batch: 594  D_Loss: 1.070930  G_Loss: 1.225557
+2023-02-05 02:30:12 INFO: Time taken for epoch: 3:58:20
 
-2022-10-27 06:49:20 INFO: Epoch: [11]
-2022-10-27 06:49:22 INFO: Elapsed: [3:58:05] Step: 6847  Batch: 1  D_Loss: 1.319469  G_Loss: 0.742307
-2022-10-27 06:51:36 INFO: Elapsed: [4:00:19] Step: 6912  Batch: 66  D_Loss: 1.347918  G_Loss: 0.630577
-2022-10-27 06:53:52 INFO: Elapsed: [4:02:35] Step: 6978  Batch: 132  D_Loss: 1.367534  G_Loss: 0.932968
-2022-10-27 06:56:07 INFO: Elapsed: [4:04:51] Step: 7044  Batch: 198  D_Loss: 1.334513  G_Loss: 0.708618
-2022-10-27 06:58:23 INFO: Elapsed: [4:07:06] Step: 7110  Batch: 264  D_Loss: 1.306047  G_Loss: 0.809850
-2022-10-27 07:00:39 INFO: Elapsed: [4:09:22] Step: 7176  Batch: 330  D_Loss: 1.323995  G_Loss: 0.701502
-2022-10-27 07:02:54 INFO: Elapsed: [4:11:38] Step: 7242  Batch: 396  D_Loss: 1.311720  G_Loss: 0.710509
-2022-10-27 07:05:11 INFO: Elapsed: [4:13:54] Step: 7308  Batch: 462  D_Loss: 1.349672  G_Loss: 0.931482
-2022-10-27 07:07:27 INFO: Elapsed: [4:16:10] Step: 7374  Batch: 528  D_Loss: 1.263658  G_Loss: 1.152710
-2022-10-27 07:09:42 INFO: Elapsed: [4:18:25] Step: 7440  Batch: 594  D_Loss: 1.285755  G_Loss: 0.843418
-2022-10-27 07:11:41 INFO: Time taken for epoch: 0:22:21
+2023-02-05 02:30:12 INFO: Epoch: [8]
+2023-02-05 02:30:33 INFO: Elapsed: [1 day, 15:22:59] Step: 7162  Batch: 1  D_Loss: 1.035565  G_Loss: 1.457869
+2023-02-05 02:54:17 INFO: Elapsed: [1 day, 15:46:43] Step: 7227  Batch: 66  D_Loss: 0.844926  G_Loss: 1.306488
+2023-02-05 03:18:27 INFO: Elapsed: [1 day, 16:10:53] Step: 7293  Batch: 132  D_Loss: 0.921115  G_Loss: 2.358911
+2023-02-05 03:42:37 INFO: Elapsed: [1 day, 16:35:03] Step: 7359  Batch: 198  D_Loss: 1.144341  G_Loss: 1.711643
+2023-02-05 04:06:46 INFO: Elapsed: [1 day, 16:59:12] Step: 7425  Batch: 264  D_Loss: 0.898731  G_Loss: 0.987092
+2023-02-05 04:30:58 INFO: Elapsed: [1 day, 17:23:24] Step: 7491  Batch: 330  D_Loss: 0.949778  G_Loss: 1.827440
+2023-02-05 04:55:07 INFO: Elapsed: [1 day, 17:47:33] Step: 7557  Batch: 396  D_Loss: 1.077305  G_Loss: 1.532299
+2023-02-05 05:19:10 INFO: Elapsed: [1 day, 18:11:35] Step: 7623  Batch: 462  D_Loss: 0.758467  G_Loss: 1.393985
+2023-02-05 05:43:20 INFO: Elapsed: [1 day, 18:35:46] Step: 7689  Batch: 528  D_Loss: 1.018076  G_Loss: 1.797363
+2023-02-05 06:07:29 INFO: Elapsed: [1 day, 18:59:55] Step: 7755  Batch: 594  D_Loss: 0.965616  G_Loss: 1.352836
+2023-02-05 06:28:25 INFO: Time taken for epoch: 3:58:13
 
-2022-10-27 07:11:41 INFO: Epoch: [12]
-2022-10-27 07:11:44 INFO: Elapsed: [4:20:27] Step: 7499  Batch: 1  D_Loss: 1.307226  G_Loss: 0.835259
-2022-10-27 07:13:57 INFO: Elapsed: [4:22:40] Step: 7564  Batch: 66  D_Loss: 1.364342  G_Loss: 0.853271
-2022-10-27 07:16:12 INFO: Elapsed: [4:24:55] Step: 7630  Batch: 132  D_Loss: 1.316902  G_Loss: 0.814385
-2022-10-27 07:18:27 INFO: Elapsed: [4:27:10] Step: 7696  Batch: 198  D_Loss: 1.329550  G_Loss: 0.852919
-2022-10-27 07:20:44 INFO: Elapsed: [4:29:27] Step: 7762  Batch: 264  D_Loss: 1.332938  G_Loss: 0.702993
-2022-10-27 07:22:59 INFO: Elapsed: [4:31:42] Step: 7828  Batch: 330  D_Loss: 1.402222  G_Loss: 0.706204
-2022-10-27 07:25:15 INFO: Elapsed: [4:33:58] Step: 7894  Batch: 396  D_Loss: 1.272009  G_Loss: 0.836315
-2022-10-27 07:27:30 INFO: Elapsed: [4:36:14] Step: 7960  Batch: 462  D_Loss: 1.357755  G_Loss: 0.608925
-2022-10-27 07:29:46 INFO: Elapsed: [4:38:29] Step: 8026  Batch: 528  D_Loss: 1.388335  G_Loss: 0.884202
-2022-10-27 07:32:03 INFO: Elapsed: [4:40:47] Step: 8092  Batch: 594  D_Loss: 1.255910  G_Loss: 0.952064
-2022-10-27 07:34:03 INFO: Time taken for epoch: 0:22:21
+2023-02-05 06:28:25 INFO: Epoch: [9]
+2023-02-05 06:28:47 INFO: Elapsed: [1 day, 19:21:12] Step: 7813  Batch: 1  D_Loss: 1.066721  G_Loss: 1.743830
+2023-02-05 06:52:35 INFO: Elapsed: [1 day, 19:45:01] Step: 7878  Batch: 66  D_Loss: 1.034509  G_Loss: 0.887519
+2023-02-05 07:16:47 INFO: Elapsed: [1 day, 20:09:12] Step: 7944  Batch: 132  D_Loss: 0.908833  G_Loss: 1.508914
+2023-02-05 07:41:00 INFO: Elapsed: [1 day, 20:33:26] Step: 8010  Batch: 198  D_Loss: 0.882823  G_Loss: 1.888737
+2023-02-05 08:05:13 INFO: Elapsed: [1 day, 20:57:39] Step: 8076  Batch: 264  D_Loss: 0.957953  G_Loss: 1.809854
+2023-02-05 08:29:25 INFO: Elapsed: [1 day, 21:21:50] Step: 8142  Batch: 330  D_Loss: 1.119939  G_Loss: 2.439238
+2023-02-05 08:53:34 INFO: Elapsed: [1 day, 21:45:59] Step: 8208  Batch: 396  D_Loss: 1.131739  G_Loss: 1.562126
+2023-02-05 09:17:43 INFO: Elapsed: [1 day, 22:10:08] Step: 8274  Batch: 462  D_Loss: 1.043398  G_Loss: 0.983876
+2023-02-05 09:41:53 INFO: Elapsed: [1 day, 22:34:19] Step: 8340  Batch: 528  D_Loss: 0.896406  G_Loss: 1.011659
+2023-02-05 10:06:05 INFO: Elapsed: [1 day, 22:58:31] Step: 8406  Batch: 594  D_Loss: 1.021121  G_Loss: 1.332635
+2023-02-05 10:27:00 INFO: Time taken for epoch: 3:58:35
 
-2022-10-27 07:34:03 INFO: Epoch: [13]
-2022-10-27 07:34:05 INFO: Elapsed: [4:42:49] Step: 8151  Batch: 1  D_Loss: 1.397674  G_Loss: 0.559013
-2022-10-27 07:36:19 INFO: Elapsed: [4:45:02] Step: 8216  Batch: 66  D_Loss: 1.345335  G_Loss: 0.816932
-2022-10-27 07:38:35 INFO: Elapsed: [4:47:19] Step: 8282  Batch: 132  D_Loss: 1.317937  G_Loss: 0.694599
-2022-10-27 07:40:52 INFO: Elapsed: [4:49:35] Step: 8348  Batch: 198  D_Loss: 1.306853  G_Loss: 0.758910
-2022-10-27 07:43:07 INFO: Elapsed: [4:51:50] Step: 8414  Batch: 264  D_Loss: 1.356449  G_Loss: 0.719175
-2022-10-27 07:45:23 INFO: Elapsed: [4:54:06] Step: 8480  Batch: 330  D_Loss: 1.262053  G_Loss: 0.742937
-2022-10-27 07:47:39 INFO: Elapsed: [4:56:22] Step: 8546  Batch: 396  D_Loss: 1.350793  G_Loss: 0.674551
-2022-10-27 07:49:56 INFO: Elapsed: [4:58:39] Step: 8612  Batch: 462  D_Loss: 1.286830  G_Loss: 0.780131
-2022-10-27 07:52:11 INFO: Elapsed: [5:00:54] Step: 8678  Batch: 528  D_Loss: 1.311472  G_Loss: 0.880337
-2022-10-27 07:54:26 INFO: Elapsed: [5:03:09] Step: 8744  Batch: 594  D_Loss: 1.320052  G_Loss: 0.876247
-2022-10-27 07:56:25 INFO: Time taken for epoch: 0:22:21
+2023-02-05 10:27:00 INFO: Epoch: [10]
+2023-02-05 10:27:22 INFO: Elapsed: [1 day, 23:19:47] Step: 8464  Batch: 1  D_Loss: 1.063414  G_Loss: 1.693183
+2023-02-05 10:51:10 INFO: Elapsed: [1 day, 23:43:36] Step: 8529  Batch: 66  D_Loss: 1.050434  G_Loss: 1.600935
+2023-02-05 11:15:23 INFO: Elapsed: [2 days, 0:07:48] Step: 8595  Batch: 132  D_Loss: 1.073276  G_Loss: 0.688903
+2023-02-05 11:39:35 INFO: Elapsed: [2 days, 0:32:00] Step: 8661  Batch: 198  D_Loss: 1.233287  G_Loss: 0.865359
+2023-02-05 12:03:43 INFO: Elapsed: [2 days, 0:56:09] Step: 8727  Batch: 264  D_Loss: 1.014374  G_Loss: 1.375799
+2023-02-05 12:27:54 INFO: Elapsed: [2 days, 1:20:19] Step: 8793  Batch: 330  D_Loss: 0.980452  G_Loss: 1.125304
+2023-02-05 12:52:06 INFO: Elapsed: [2 days, 1:44:32] Step: 8859  Batch: 396  D_Loss: 0.828255  G_Loss: 1.202774
+2023-02-05 13:16:17 INFO: Elapsed: [2 days, 2:08:43] Step: 8925  Batch: 462  D_Loss: 1.261914  G_Loss: 2.244999
+2023-02-05 13:40:29 INFO: Elapsed: [2 days, 2:32:54] Step: 8991  Batch: 528  D_Loss: 1.083705  G_Loss: 0.937394
+2023-02-05 14:04:38 INFO: Elapsed: [2 days, 2:57:04] Step: 9057  Batch: 594  D_Loss: 1.079567  G_Loss: 0.660158
+2023-02-05 14:25:36 INFO: Time taken for epoch: 3:58:36
 
-2022-10-27 07:56:25 INFO: Epoch: [14]
-2022-10-27 07:56:27 INFO: Elapsed: [5:05:10] Step: 8803  Batch: 1  D_Loss: 1.344506  G_Loss: 0.708442
-2022-10-27 07:58:41 INFO: Elapsed: [5:07:24] Step: 8868  Batch: 66  D_Loss: 1.287768  G_Loss: 0.807937
-2022-10-27 08:00:57 INFO: Elapsed: [5:09:41] Step: 8934  Batch: 132  D_Loss: 1.357053  G_Loss: 0.822236
-2022-10-27 08:03:12 INFO: Elapsed: [5:11:55] Step: 9000  Batch: 198  D_Loss: 1.350644  G_Loss: 0.907528
-2022-10-27 08:05:28 INFO: Elapsed: [5:14:11] Step: 9066  Batch: 264  D_Loss: 1.315552  G_Loss: 0.777313
-2022-10-27 08:07:43 INFO: Elapsed: [5:16:27] Step: 9132  Batch: 330  D_Loss: 1.264850  G_Loss: 0.738557
-2022-10-27 08:09:58 INFO: Elapsed: [5:18:41] Step: 9198  Batch: 396  D_Loss: 1.422465  G_Loss: 0.915255
-2022-10-27 08:12:13 INFO: Elapsed: [5:20:57] Step: 9264  Batch: 462  D_Loss: 1.286416  G_Loss: 0.942493
-2022-10-27 08:14:28 INFO: Elapsed: [5:23:11] Step: 9330  Batch: 528  D_Loss: 1.375000  G_Loss: 0.991769
-2022-10-27 08:16:43 INFO: Elapsed: [5:25:27] Step: 9396  Batch: 594  D_Loss: 1.334154  G_Loss: 0.802864
-2022-10-27 08:18:41 INFO: Time taken for epoch: 0:22:16
+2023-02-05 14:25:36 INFO: Saving the model to: ./output/models/GAN_GEN_8.pth
 
-2022-10-27 08:18:41 INFO: Epoch: [15]
-2022-10-27 08:18:43 INFO: Elapsed: [5:27:27] Step: 9455  Batch: 1  D_Loss: 1.409029  G_Loss: 0.590519
-2022-10-27 08:20:57 INFO: Elapsed: [5:29:40] Step: 9520  Batch: 66  D_Loss: 1.280992  G_Loss: 0.850567
-2022-10-27 08:23:12 INFO: Elapsed: [5:31:55] Step: 9586  Batch: 132  D_Loss: 1.269167  G_Loss: 0.827060
-2022-10-27 08:25:27 INFO: Elapsed: [5:34:10] Step: 9652  Batch: 198  D_Loss: 1.350262  G_Loss: 0.793271
-2022-10-27 08:27:43 INFO: Elapsed: [5:36:26] Step: 9718  Batch: 264  D_Loss: 1.341027  G_Loss: 0.610877
-2022-10-27 08:29:58 INFO: Elapsed: [5:38:42] Step: 9784  Batch: 330  D_Loss: 1.261635  G_Loss: 0.930132
-2022-10-27 08:32:14 INFO: Elapsed: [5:40:57] Step: 9850  Batch: 396  D_Loss: 1.287730  G_Loss: 0.760036
-2022-10-27 08:34:29 INFO: Elapsed: [5:43:12] Step: 9916  Batch: 462  D_Loss: 1.328681  G_Loss: 0.840889
-2022-10-27 08:36:44 INFO: Elapsed: [5:45:27] Step: 9982  Batch: 528  D_Loss: 1.261302  G_Loss: 0.880836
-2022-10-27 08:39:00 INFO: Elapsed: [5:47:44] Step: 10048  Batch: 594  D_Loss: 1.339702  G_Loss: 0.798466
-2022-10-27 08:41:00 INFO: Time taken for epoch: 0:22:19
+2023-02-05 14:25:37 INFO: Epoch: [11]
+2023-02-05 14:25:59 INFO: Elapsed: [2 days, 3:18:25] Step: 9115  Batch: 1  D_Loss: 0.749957  G_Loss: 1.251292
+2023-02-05 14:49:49 INFO: Elapsed: [2 days, 3:42:15] Step: 9180  Batch: 66  D_Loss: 0.977284  G_Loss: 0.726042
+2023-02-05 15:14:00 INFO: Elapsed: [2 days, 4:06:26] Step: 9246  Batch: 132  D_Loss: 1.642381  G_Loss: 0.655121
+2023-02-05 15:38:12 INFO: Elapsed: [2 days, 4:30:38] Step: 9312  Batch: 198  D_Loss: 0.890272  G_Loss: 1.991082
+2023-02-05 16:02:23 INFO: Elapsed: [2 days, 4:54:49] Step: 9378  Batch: 264  D_Loss: 0.998267  G_Loss: 0.989645
+2023-02-05 16:26:34 INFO: Elapsed: [2 days, 5:18:59] Step: 9444  Batch: 330  D_Loss: 1.057447  G_Loss: 1.135743
+2023-02-05 16:50:45 INFO: Elapsed: [2 days, 5:43:10] Step: 9510  Batch: 396  D_Loss: 1.046728  G_Loss: 0.909957
+2023-02-05 17:14:55 INFO: Elapsed: [2 days, 6:07:20] Step: 9576  Batch: 462  D_Loss: 1.224781  G_Loss: 0.857149
+2023-02-05 17:39:05 INFO: Elapsed: [2 days, 6:31:31] Step: 9642  Batch: 528  D_Loss: 1.119412  G_Loss: 1.563006
+2023-02-05 18:03:18 INFO: Elapsed: [2 days, 6:55:43] Step: 9708  Batch: 594  D_Loss: 1.634635  G_Loss: 0.486412
+2023-02-05 18:24:14 INFO: Time taken for epoch: 3:58:36
 
-2022-10-27 08:41:00 INFO: Epoch: [16]
-2022-10-27 08:41:02 INFO: Elapsed: [5:49:46] Step: 10107  Batch: 1  D_Loss: 1.325905  G_Loss: 0.688352
-2022-10-27 08:43:16 INFO: Elapsed: [5:52:00] Step: 10172  Batch: 66  D_Loss: 1.277094  G_Loss: 0.822795
-2022-10-27 08:45:32 INFO: Elapsed: [5:54:16] Step: 10238  Batch: 132  D_Loss: 1.330341  G_Loss: 0.791154
-2022-10-27 08:47:49 INFO: Elapsed: [5:56:32] Step: 10304  Batch: 198  D_Loss: 1.278302  G_Loss: 0.843315
-2022-10-27 08:50:04 INFO: Elapsed: [5:58:47] Step: 10370  Batch: 264  D_Loss: 1.338637  G_Loss: 0.801748
-2022-10-27 08:52:21 INFO: Elapsed: [6:01:04] Step: 10436  Batch: 330  D_Loss: 1.326946  G_Loss: 0.831867
-2022-10-27 08:54:36 INFO: Elapsed: [6:03:19] Step: 10502  Batch: 396  D_Loss: 1.417554  G_Loss: 0.907335
-2022-10-27 08:56:52 INFO: Elapsed: [6:05:35] Step: 10568  Batch: 462  D_Loss: 1.342860  G_Loss: 0.749312
-2022-10-27 08:59:06 INFO: Elapsed: [6:07:49] Step: 10634  Batch: 528  D_Loss: 1.333289  G_Loss: 0.802264
-2022-10-27 09:01:22 INFO: Elapsed: [6:10:06] Step: 10700  Batch: 594  D_Loss: 1.451916  G_Loss: 0.942201
-2022-10-27 09:03:21 INFO: Time taken for epoch: 0:22:20
+2023-02-05 18:24:14 INFO: Epoch: [12]
+2023-02-05 18:24:36 INFO: Elapsed: [2 days, 7:17:02] Step: 9766  Batch: 1  D_Loss: 0.813258  G_Loss: 2.558498
+2023-02-05 18:48:24 INFO: Elapsed: [2 days, 7:40:49] Step: 9831  Batch: 66  D_Loss: 1.251320  G_Loss: 0.934175
+2023-02-05 19:12:34 INFO: Elapsed: [2 days, 8:05:00] Step: 9897  Batch: 132  D_Loss: 1.448910  G_Loss: 0.672095
+2023-02-05 19:36:45 INFO: Elapsed: [2 days, 8:29:10] Step: 9963  Batch: 198  D_Loss: 0.894374  G_Loss: 1.119724
+2023-02-05 20:00:57 INFO: Elapsed: [2 days, 8:53:23] Step: 10029  Batch: 264  D_Loss: 1.016409  G_Loss: 2.223195
+2023-02-05 20:25:11 INFO: Elapsed: [2 days, 9:17:36] Step: 10095  Batch: 330  D_Loss: 1.004092  G_Loss: 1.121311
+2023-02-05 20:49:25 INFO: Elapsed: [2 days, 9:41:51] Step: 10161  Batch: 396  D_Loss: 1.071897  G_Loss: 1.364282
+2023-02-05 21:13:39 INFO: Elapsed: [2 days, 10:06:05] Step: 10227  Batch: 462  D_Loss: 1.072235  G_Loss: 1.475988
+2023-02-05 21:37:53 INFO: Elapsed: [2 days, 10:30:19] Step: 10293  Batch: 528  D_Loss: 0.842745  G_Loss: 1.443754
+2023-02-05 22:02:06 INFO: Elapsed: [2 days, 10:54:31] Step: 10359  Batch: 594  D_Loss: 1.044209  G_Loss: 0.887866
+2023-02-05 22:23:04 INFO: Time taken for epoch: 3:58:49
 
-2022-10-27 09:03:22 INFO: Saving the model to: ./output/models/GAN_GEN_6.pth
+2023-02-05 22:23:04 INFO: Epoch: [13]
+2023-02-05 22:23:26 INFO: Elapsed: [2 days, 11:15:51] Step: 10417  Batch: 1  D_Loss: 1.380528  G_Loss: 0.816886
+2023-02-05 22:47:17 INFO: Elapsed: [2 days, 11:39:42] Step: 10482  Batch: 66  D_Loss: 0.739789  G_Loss: 2.803305
+2023-02-05 23:11:31 INFO: Elapsed: [2 days, 12:03:57] Step: 10548  Batch: 132  D_Loss: 1.090073  G_Loss: 1.429610
+2023-02-05 23:35:44 INFO: Elapsed: [2 days, 12:28:10] Step: 10614  Batch: 198  D_Loss: 0.967896  G_Loss: 1.786744
+2023-02-05 23:59:59 INFO: Elapsed: [2 days, 12:52:25] Step: 10680  Batch: 264  D_Loss: 1.025076  G_Loss: 1.389542
+2023-02-06 00:24:14 INFO: Elapsed: [2 days, 13:16:40] Step: 10746  Batch: 330  D_Loss: 1.082196  G_Loss: 2.254967
+2023-02-06 00:48:26 INFO: Elapsed: [2 days, 13:40:52] Step: 10812  Batch: 396  D_Loss: 1.049510  G_Loss: 0.923324
+2023-02-06 01:12:40 INFO: Elapsed: [2 days, 14:05:05] Step: 10878  Batch: 462  D_Loss: 1.086175  G_Loss: 3.058681
+2023-02-06 01:36:53 INFO: Elapsed: [2 days, 14:29:19] Step: 10944  Batch: 528  D_Loss: 1.085564  G_Loss: 1.148629
+2023-02-06 02:01:11 INFO: Elapsed: [2 days, 14:53:37] Step: 11010  Batch: 594  D_Loss: 1.152754  G_Loss: 0.817635
+2023-02-06 02:22:08 INFO: Time taken for epoch: 3:59:03
 
-2022-10-27 09:03:23 INFO: Training completed.
+2023-02-06 02:22:08 INFO: Epoch: [14]
+2023-02-06 02:22:29 INFO: Elapsed: [2 days, 15:14:55] Step: 11068  Batch: 1  D_Loss: 0.901177  G_Loss: 1.004849
+2023-02-06 02:46:19 INFO: Elapsed: [2 days, 15:38:44] Step: 11133  Batch: 66  D_Loss: 1.221228  G_Loss: 0.783067
+2023-02-06 03:10:30 INFO: Elapsed: [2 days, 16:02:55] Step: 11199  Batch: 132  D_Loss: 0.754300  G_Loss: 2.018783
+2023-02-06 03:34:40 INFO: Elapsed: [2 days, 16:27:05] Step: 11265  Batch: 198  D_Loss: 0.821686  G_Loss: 1.111792
+2023-02-06 03:58:51 INFO: Elapsed: [2 days, 16:51:16] Step: 11331  Batch: 264  D_Loss: 0.805667  G_Loss: 1.702915
+2023-02-06 04:23:07 INFO: Elapsed: [2 days, 17:15:33] Step: 11397  Batch: 330  D_Loss: 0.996137  G_Loss: 1.816964
+2023-02-06 04:47:18 INFO: Elapsed: [2 days, 17:39:43] Step: 11463  Batch: 396  D_Loss: 0.863608  G_Loss: 1.107348
+2023-02-06 05:11:28 INFO: Elapsed: [2 days, 18:03:54] Step: 11529  Batch: 462  D_Loss: 1.117704  G_Loss: 1.316206
+2023-02-06 05:35:39 INFO: Elapsed: [2 days, 18:28:05] Step: 11595  Batch: 528  D_Loss: 0.833809  G_Loss: 1.371336
+2023-02-06 05:59:51 INFO: Elapsed: [2 days, 18:52:17] Step: 11661  Batch: 594  D_Loss: 0.666128  G_Loss: 2.102265
+2023-02-06 06:20:57 INFO: Time taken for epoch: 3:58:49
+
+2023-02-06 06:20:57 INFO: Epoch: [15]
+2023-02-06 06:21:19 INFO: Elapsed: [2 days, 19:13:44] Step: 11719  Batch: 1  D_Loss: 0.896082  G_Loss: 1.644915
+2023-02-06 06:45:06 INFO: Elapsed: [2 days, 19:37:32] Step: 11784  Batch: 66  D_Loss: 1.072757  G_Loss: 0.587412
+2023-02-06 07:09:15 INFO: Elapsed: [2 days, 20:01:41] Step: 11850  Batch: 132  D_Loss: 0.977338  G_Loss: 0.998172
+2023-02-06 07:33:24 INFO: Elapsed: [2 days, 20:25:50] Step: 11916  Batch: 198  D_Loss: 1.117834  G_Loss: 1.814877
+2023-02-06 07:57:35 INFO: Elapsed: [2 days, 20:50:00] Step: 11982  Batch: 264  D_Loss: 0.943249  G_Loss: 1.337536
+2023-02-06 08:21:45 INFO: Elapsed: [2 days, 21:14:11] Step: 12048  Batch: 330  D_Loss: 0.884948  G_Loss: 1.060483
+2023-02-06 08:45:48 INFO: Elapsed: [2 days, 21:38:13] Step: 12114  Batch: 396  D_Loss: 0.799081  G_Loss: 1.650552
+2023-02-06 09:09:58 INFO: Elapsed: [2 days, 22:02:24] Step: 12180  Batch: 462  D_Loss: 0.783900  G_Loss: 1.268786
+2023-02-06 09:34:08 INFO: Elapsed: [2 days, 22:26:33] Step: 12246  Batch: 528  D_Loss: 1.292123  G_Loss: 0.854290
+2023-02-06 09:58:18 INFO: Elapsed: [2 days, 22:50:43] Step: 12312  Batch: 594  D_Loss: 1.498671  G_Loss: 0.372584
+2023-02-06 10:20:14 INFO: Time taken for epoch: 3:59:16
+
+2023-02-06 10:20:14 INFO: Epoch: [16]
+2023-02-06 10:20:35 INFO: Elapsed: [2 days, 23:13:01] Step: 12370  Batch: 1  D_Loss: 0.928706  G_Loss: 1.258809
+2023-02-06 10:44:23 INFO: Elapsed: [2 days, 23:36:49] Step: 12435  Batch: 66  D_Loss: 1.117523  G_Loss: 1.964864
+2023-02-06 11:08:35 INFO: Elapsed: [3 days, 0:01:00] Step: 12501  Batch: 132  D_Loss: 0.772543  G_Loss: 1.949255
+2023-02-06 11:32:49 INFO: Elapsed: [3 days, 0:25:15] Step: 12567  Batch: 198  D_Loss: 0.893902  G_Loss: 1.186145
+2023-02-06 11:57:03 INFO: Elapsed: [3 days, 0:49:28] Step: 12633  Batch: 264  D_Loss: 0.853932  G_Loss: 1.789938
+2023-02-06 12:21:16 INFO: Elapsed: [3 days, 1:13:42] Step: 12699  Batch: 330  D_Loss: 0.824457  G_Loss: 1.537009
+2023-02-06 12:45:32 INFO: Elapsed: [3 days, 1:37:57] Step: 12765  Batch: 396  D_Loss: 0.667365  G_Loss: 1.717683
+2023-02-06 13:09:46 INFO: Elapsed: [3 days, 2:02:12] Step: 12831  Batch: 462  D_Loss: 0.876566  G_Loss: 2.466580
+2023-02-06 13:34:32 INFO: Elapsed: [3 days, 2:26:57] Step: 12897  Batch: 528  D_Loss: 0.989047  G_Loss: 0.839439
+2023-02-06 13:58:46 INFO: Elapsed: [3 days, 2:51:12] Step: 12963  Batch: 594  D_Loss: 1.218781  G_Loss: 1.198830
+2023-02-06 14:19:45 INFO: Time taken for epoch: 3:59:31
+
+2023-02-06 14:19:46 INFO: Saving the model to: ./output/models/GAN_GEN_8.pth
+
+2023-02-06 14:19:47 INFO: Training completed.
 

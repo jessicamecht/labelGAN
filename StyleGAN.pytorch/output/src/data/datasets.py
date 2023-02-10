@@ -24,10 +24,10 @@ class FlatDirectoryImageDataset(Dataset):
         """
         file_names = os.listdir(self.data_dir)
         files = []  # initialize to empty list
-
         for file_name in file_names:
             possible_file = os.path.join(self.data_dir, file_name)
-            if os.path.isfile(possible_file):
+            possible_file = os.path.join(self.data_dir, file_name)
+            if os.path.isfile(possible_file) and "._" not in possible_file and 'IM-0348-0001.jpeg' not in file_name:
                 files.append(possible_file)
 
         # return the files list
@@ -70,7 +70,11 @@ class FlatDirectoryImageDataset(Dataset):
 
         else:
             # read the image:
-            img = Image.open(self.files[idx]).convert('RGB')
+            try:
+                img = Image.open(self.files[idx]).convert('RGB')
+            except: 
+                print(self.files[idx])
+                exit(0)
 
         # apply the transforms on the image
         if self.transform is not None:
@@ -102,7 +106,8 @@ class FoldersDistributedDataset(Dataset):
             file_names = os.listdir(file_path)
             for file_name in file_names:
                 possible_file = os.path.join(file_path, file_name)
-                if os.path.isfile(possible_file):
+                print(possible_file)
+                if os.path.isfile(possible_file) and possible_file[0] != ".":
                     files.append(possible_file)
 
         # return the files list
