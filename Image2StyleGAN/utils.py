@@ -32,7 +32,7 @@ def save_random_generations(g_all, device):
     img = (img +1.0)/2.0
     save_image(img.clamp(0,1),"save_image/random_SG1-{}.png".format(i+1))
 
-def embedding_function(image, perceptual, g_synthesis, device):
+def embedding_function(image, perceptual, g_synthesis, device, image_id):
   upsample = torch.nn.Upsample(scale_factor = 256/1024, mode = 'bilinear')
   tr = transforms.Resize((1024, 1024))
   image = tr(image)
@@ -64,11 +64,11 @@ def embedding_function(image, perceptual, g_synthesis, device):
     loss_m=mse.detach().cpu().numpy()
     loss_psnr.append(psnr)
     loss_.append(loss_np)
-    if (e+1)%500==0 :
-      print("iter{}: loss -- {},  mse_loss --{},  percep_loss --{}, psnr --{}".format(e+1,loss_np,loss_m,loss_p,psnr))
-      save_image(syn_img.clamp(0,1),"obama{}.png".format(e+1))
-      #np.save("loss_list.npy",loss_)
-      #np.save("latent_W.npy".format(),latents.detach().cpu().numpy())
+    #if (e+1)%500==0 :
+    #  print("iter{}: loss -- {},  mse_loss --{},  percep_loss --{}, psnr --{}".format(e+1,loss_np,loss_m,loss_p,psnr))
+  save_image(syn_img.clamp(0,1),f"./images/generated/{image_id}.png".format(e+1))
+  #np.save("loss_list.npy",loss_)
+  np.save(f"./images/latents/latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
 
   #plt.plot(loss_, label = 'Loss = MSELoss + Perceptual')
   #plt.plot(loss_psnr, label = 'PSNR')
