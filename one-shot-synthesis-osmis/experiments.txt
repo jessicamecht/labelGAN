@@ -1,0 +1,6 @@
+# experiments metadata
+python train.py --exp_name first_run_skin_lesion --dataset_name skin_lesion --num_epochs 150000 --max_size 256 --use_kornia_augm --prob_augm 0.7
+
+## osmis
+# chest xray - image-mask pair is:CHNCXR_0078_0.png ## shenken dataset? or nih?
+# skin lesion - image-mask pair is: trainx - imgx80, imgy80 ## https://www.kaggle.com/datasets/hashbanger/skin-lesion-segmentation?resource=download
