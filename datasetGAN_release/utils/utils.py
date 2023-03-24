@@ -24,6 +24,8 @@ import torch
 from PIL import Image
 import numpy as np
 from torch import nn
+device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+
 
 class Interpolate(nn.Module):
     def __init__(self, size, mode):
@@ -61,9 +63,11 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
     '''Given a input latent code, generate corresponding image and concatenated feature maps'''
 
     # assert (len(latents) == 1)  # for GPU memory constraints
+    print('v', latents.shape)
     if not use_style_latents:
         # generate style_latents from latents
-        style_latents = g_all.module.truncation(g_all.module.g_mapping(latents))
+        l = g_all.module.g_mapping(latents)
+        style_latents = g_all.module.truncation(l)
         style_latents = style_latents.clone()  # make different layers non-alias
 
     else:
@@ -72,6 +76,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # style_latents = latents
     if return_stylegan_latent:
         return  style_latents
+    print('style_latents', style_latents)
     img_list, affine_layers = g_all.module.g_synthesis(style_latents)
 
     if return_only_im:
@@ -90,7 +95,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         number_feautre += item.shape[1]
 
 
-    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim).cuda()
+    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim).to(device)
     if return_upsampled_layers:
 
         start_channel_index = 0
@@ -138,7 +143,7 @@ def colorize_mask(mask, palette):
 def get_label_stas(data_loader):
     count_dict = {}
     for i in range(data_loader.__len__()):
-        x, y = data_loader.__getitem__(i)
+        x, y, label = data_loader.__getitem__(i)
         if int(y.item()) not in count_dict:
             count_dict[int(y.item())] = 1
         else:
