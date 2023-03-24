@@ -53,12 +53,15 @@ def main(args, checkpoint_path=""
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_all, all_mask_train_all, num_data, labels = prepare_data(args, palette)
-    print('all_feature_maps_train_all', all_feature_maps_train_all.shape, all_mask_train_all.shape)
+    all_feature_maps_train_list, all_mask_train_list, num_data, labels = prepare_data(args, palette)
+    print('torch.tensor(all_feature_maps_train_list', torch.stack(all_feature_maps_train_list).shape)
+    all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
+    all_mask_train_all = torch.concat(all_mask_train_list, axis=0)
 
     train_data = trainData(all_feature_maps_train_all,
-                           all_mask_train_all, labels)
-
+                           all_mask_train_all)
+    
+    label_loader = labelData(torch.stack(all_feature_maps_train_list), labels)
 
     count_dict = get_label_stas(train_data)
 
@@ -74,12 +77,12 @@ def main(args, checkpoint_path=""
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
-
     for MODEL_NUMBER in range(args['model_num']):
 
         gc.collect()
 
-        classifier = label_classifier(numpy_class=(max_label+1), dim=args['dim'][-1])
+        label_classifier_instance = label_classifier(len(np.unique(labels)), 18*512)
+        classifier = segm_classifier((max_label+1), args['dim'][-1])
 
         if checkpoint_path != "":
             checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -88,18 +91,55 @@ def main(args, checkpoint_path=""
         else:
             classifier.init_weights()
             classifier.train()
+            label_classifier_instance.init_weights()
+            label_classifier_instance.train()
         criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(classifier.parameters(), lr=0.001)
+        optimizer = optim.Adam(classifier.parameters() , lr=0.001)
+        optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.001)
 
         iteration = 0
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        accs = []
+        accs, accs_label = [], []
         for epoch in range(50):
-            for X_batch, y_batch, label in train_loader:
-                X_batch, y_batch,label = X_batch.to(device), y_batch.to(device)
-                y_batch = y_batch.type(torch.long)
+            for X_batch, label in label_loader:
+                X_batch, label = X_batch.to(device), label.to(device)
+                optimizer_label.zero_grad()
+                y_pred = label_classifier_instance(X_batch)
+                loss = criterion(y_pred, label)
+                acc = multi_acc(y_pred, label)
+                
+                if checkpoint_path == "":
+                    loss.backward()
+                    optimizer.step()
+
+                iteration += 1
+                if iteration % 1000 == 0:
+                    print('Epoch : ', str(epoch), 'iteration', iteration, 'loss', loss.item(), 'acc', acc)
+                    gc.collect()
+                if iteration % 50000 == 0:
+                    model_path = os.path.join(args['exp_dir'],
+                                              'model_label_classif_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')                    
+                    if checkpoint_path == "":
+                        torch.save({'model_state_dict_label': label_classifier_instance.state_dict()},
+                                   model_path)
+
+                accs_label.append(acc.item())
+                if epoch > 3:
+                    if loss.item() < best_loss:
+                        best_loss = loss.item()
+                        break_count = 0
+                    else:
+                        break_count += 1
+
+                    if break_count > 50:
+                        stop_sign = 1
+                        print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
+                        break
+
+            for X_batch, y_batch in train_loader:
+                X_batch, y_batch = X_batch.to(device), y_batch.to(device)
                 y_batch = y_batch.type(torch.long)
 
                 optimizer.zero_grad()
@@ -138,7 +178,7 @@ def main(args, checkpoint_path=""
                         stop_sign = 1
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
                         break
-            print('Epoch : ', str(epoch), 'loss', loss.item(), 'acc', np.array(accs).mean())
+            print('Epoch : ', str(epoch), 'loss', 'acc_label', np.array(accs).mean(), 'acc', np.array(accs).mean())
 
 
             if stop_sign == 1:
@@ -150,6 +190,8 @@ def main(args, checkpoint_path=""
         MODEL_NUMBER += 1
         print('save to:',model_path)
         torch.save({'model_state_dict': classifier.state_dict()},
+                   model_path)
+        torch.save({'model_state_dict_label': label_classifier_instance.state_dict()},
                    model_path)
         gc.collect()
 

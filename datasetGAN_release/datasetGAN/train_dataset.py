@@ -26,16 +26,23 @@ import cv2
 
 class trainData(Dataset):
 
-    def __init__(self, X_data, y_data, labels ):
+    def __init__(self, X_data, y_data ):
         self.X_data = X_data
         self.y_data = y_data
+
+    def __getitem__(self, index):
+        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
+
+    def __len__(self):
+        return len(self.X_data)
+    
+class labelData(Dataset):
+    def __init__(self, X_data, labels ):
+        self.X_data = X_data
         self.labels = labels
 
     def __getitem__(self, index):
-        print(self.X_data.shape)
-        print(self.y_data.shape)
-        print(self.labels)
-        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
+        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
 
     def __len__(self):
         return len(self.X_data)
@@ -71,9 +78,9 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
     for MODEL_NUMBER in range(args['model_num']):
         print('MODEL_NUMBER', MODEL_NUMBER)
 
-        classifier = label_classifier(numpy_class=args['number_class']
-                                      , dim=args['dim'][-1])
-        classifier =  nn.DataParallel(classifier, device_ids=device_ids).to(device)
+        classifier = label_classifier(args['number_class']
+                                      , args['dim'][-1])
+        classifier =  nn.DataParallel(classifier).to(device)
 
         checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
@@ -283,8 +290,6 @@ def prepare_data(args, palette):
     #latent_all = np.concatenate((latent_all, latent_classification), axis=0)
     # 3. Generate ALL training data for training pixel classifier
     #all_feature_maps_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all), args['dim'][2]), dtype=np.float16)
-    print('dssksksj', args['dim'][0] * args['dim'][1] * len(latent_all))
-    all_mask_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all),), dtype=np.float16)
     all_feature_maps_train_list = []
     vis = []
     all_mask_train_list = []
@@ -296,10 +301,7 @@ def prepare_data(args, palette):
 
         img, feature_maps = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
                                             return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'])
-        if args['dim'][0]  != args['dim'][1]:
-            # only for car
-            img = img[:, 64:448]
-            feature_maps = feature_maps[:, :, 64:448]
+
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
         print(feature_maps.shape)
@@ -320,11 +322,11 @@ def prepare_data(args, palette):
         curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
         vis.append( curr_vis )
     all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
-    all_feature_maps_train_list = torch.concat(all_mask_train_list, axis=0)
+    all_feature_maps_train = torch.concat(all_mask_train_list, axis=0)
     vis = np.concatenate(vis, 1)
     import imageio
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
 
-    return all_feature_maps_train, all_mask_train, num_data, np.array(label_list)
+    return all_feature_maps_train_list, all_mask_train_list, num_data, np.array(label_list)
 
