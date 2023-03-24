@@ -49,17 +49,18 @@ import torch.optim as optim
 import argparse
 import glob
 from torch.utils.data import Dataset, DataLoader
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
 import cv2
 
 class trainData(Dataset):
 
-    def __init__(self, X_data, y_data):
+    def __init__(self, X_data, y_data, labels ):
         self.X_data = X_data
         self.y_data = y_data
+        self.labels = labels
 
     def __getitem__(self, index):
-        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
+        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
 
     def __len__(self):
         return len(self.X_data)
@@ -151,7 +152,7 @@ def prepare_stylegan(args):
             resolution = 256
             max_layer = 7
         elif args['category'] == "xray":
-            resolution = 256
+            resolution = 1024
             max_layer = 7
         else:
             assert "Not implementated!"
@@ -174,12 +175,12 @@ def prepare_stylegan(args):
             new_key = new_key.replace('blocks.3.', 'blocks.64x64.').replace('blocks.2.', 'blocks.32x32.')
             new_key = new_key.replace('blocks.4.', 'blocks.128x128.').replace('blocks.6.', 'blocks.512x512.')
             new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
-            new_key = new_key.replace("g_synthesis.to_rgb.6.", "g_synthesis.torgb.")
+            new_key = new_key.replace("g_synthesis.to_rgb.", "g_synthesis.torgb.")
             ckpt[new_key] = ckpt.pop(key)
 
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
-        g_all = nn.DataParallel(g_all, device_ids=device_ids).cuda()
+        g_all = nn.DataParallel(g_all, device_ids=device_ids).to(device)
 
     else:
         assert "Not implementated error"
@@ -246,7 +247,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
         classifier = label_classifier(numpy_class=args['number_class']
                                       , dim=args['dim'][-1])
-        classifier =  nn.DataParallel(classifier, device_ids=device_ids).cuda()
+        classifier =  nn.DataParallel(classifier, device_ids=device_ids).to(device)
         print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -381,16 +382,37 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
 
 def prepare_data(args, palette):
+    few_shot_classes = {"None": 0,
+    'NoduleMass': 1,
+    'Infiltration': 2,
+    'LungOpacity': 3,
+    'Consolidation': 4,
+    'Pleuralthickening': 5,
+    'ILD': 6,
+    'Cardiomegaly': 7,
+    'Pulmonaryfibrosis': 8,
+    'Aorticenlargement': 9,
+    'Otherlesion': 10,
+    'Pleuraleffusion': 11,
+    'Calcification': 12,
+    'Atelectasis': 13,
+    'Pneumothorax': 14,
+    'Nofinding': 15}
+
     g_all, avg_latent, upsamplers = prepare_stylegan(args)
     latent_all = np.load(args['annotation_image_latent_path'])
+    print(latent_all.shape)
+    latent_classification = np.load(args['annotation_image_latent_path'])
     
-    latent_all = torch.from_numpy(latent_all).cuda()
-    print("gere", latent_all.shape)
+    latent_all = torch.from_numpy(latent_all).to(device)
+    latent_classification = torch.from_numpy(latent_classification).to(device)
 
     # load annotated mask
     mask_list = []
     im_list = []
+    label_list = []
     latent_all = latent_all[:args['max_training']]
+    latent_classification = latent_classification[:args['max_training']]
     num_data = len(latent_all)
 
     for i in range(len(latent_all)):
@@ -412,17 +434,31 @@ def prepare_data(args, palette):
         img = img.resize((args['dim'][1], args['dim'][0]))
 
         im_list.append(np.array(img))
-    print("gere1")
+        label_list.append(few_shot_classes["None"])
+
+    '''image_names_classification = os.listdir(args['annotation_image_path_classification'])
+    for i, imagename in enumerate(image_names_classification):
+        
+        if i >= args['max_training']:
+            break
+        
+        im_name = os.path.join(args['annotation_image_path_classification'], imagename)
+        img = Image.open(im_name)
+        img = img.resize((args['dim'][1], args['dim'][0]))
+        mask_list.append(np.zeros((np.array(img).shape)))  
+        im_list.append(np.array(img))
+        label_list.append(few_shot_classes[imagename.split("_")[0]])
     # delete small annotation error
     for i in range(len(mask_list)):  # clean up artifacts in the annotation, must do
+        if mask_list[i] == None: continue 
         for target in range(1, 50):
             if (mask_list[i] == target).sum() < 30:
-                mask_list[i][mask_list[i] == target] = 0
+                mask_list[i][mask_list[i] == target] = 0'''
 
 
     all_mask = np.stack(mask_list)
 
-    
+    #latent_all = np.concatenate((latent_all, latent_classification), axis=0)
     # 3. Generate ALL training data for training pixel classifier
     all_feature_maps_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all), args['dim'][2]), dtype=np.float16)
     all_mask_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all),), dtype=np.float16)
@@ -468,7 +504,7 @@ def prepare_data(args, palette):
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
 
-    return all_feature_maps_train, all_mask_train, num_data
+    return all_feature_maps_train, all_mask_train, num_data, np.array(label_list)
 
 
 def main(args, checkpoint_path=""
@@ -487,12 +523,12 @@ def main(args, checkpoint_path=""
 
 
         
-    all_feature_maps_train_all, all_mask_train_all, num_data = prepare_data(args, palette)
+    all_feature_maps_train_all, all_mask_train_all, num_data, labels = prepare_data(args, palette)
     print('all_feature_maps_train_all', all_feature_maps_train_all.shape, all_mask_train_all.shape)
 
     print('pdata')
     train_data = trainData(all_feature_maps_train_all,
-                           all_mask_train_all)
+                           all_mask_train_all, labels)
 
 
     count_dict = get_label_stas(train_data)
@@ -515,11 +551,6 @@ def main(args, checkpoint_path=""
         gc.collect()
 
         classifier = label_classifier(numpy_class=(max_label+1), dim=args['dim'][-1])
-
-        
-
-        
-
         print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         if checkpoint_path != "":
@@ -531,10 +562,6 @@ def main(args, checkpoint_path=""
             classifier.train()
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters(), lr=0.001)
-        
-
-
-
 
         iteration = 0
         break_count = 0
@@ -617,7 +644,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_sample', type=int,  default=2000)
 
     args = parser.parse_args()
-
+    print(args.exp)
     opts = json.load(open(args.exp, 'r'))
     print("Opt", opts)
 

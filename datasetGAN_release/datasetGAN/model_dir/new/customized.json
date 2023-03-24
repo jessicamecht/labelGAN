@@ -14,7 +14,7 @@
   "testing_path": "",
   "average_latent": "./generations/avg_latent_stylegan1.npy",
   "annotation_image_latent_path": "./generations/latent_stylegan1.npy",
-  "stylegan_checkpoint": "/home/jechterh/teams/group-9/checkpoints/styleGAN/GAN_GEN_6.pth",
+  "stylegan_checkpoint": "/data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_6.pth",
   "model_num": 1,
   "upsample_mode":"bilinear"
 }

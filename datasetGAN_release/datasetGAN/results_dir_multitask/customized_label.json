@@ -3,8 +3,8 @@
   "batch_size": 1,
   "category": "xray",
   "debug": false,
-  "dim": [256, 256, 4992],
-  "deeplab_res": 256,
+  "dim": [1024, 1024, 4992],
+  "deeplab_res": 1024,
   "number_class": 2,
   "testing_data_number_class": 2,
   "max_training": 6,
@@ -14,7 +14,8 @@
   "testing_path": "",
   "average_latent": "./generations/avg_latent_stylegan1.npy",
   "annotation_image_latent_path": "./generations/latent_stylegan1.npy",
-  "stylegan_checkpoint": "/home/jechterh/teams/group-9/checkpoints/styleGAN/GAN_GEN_6.pth",
+  "annotation_image_latent_path_classification": "/home/jessica/labelGAN/Image2StyleGAN/images/generated_latents_from_class_distr",
+  "stylegan_checkpoint": "/data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_8.pth",
   "model_num": 1,
   "upsample_mode":"bilinear"
 }

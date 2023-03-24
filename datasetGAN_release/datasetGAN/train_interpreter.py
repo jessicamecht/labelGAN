@@ -49,7 +49,7 @@ import torch.optim as optim
 import argparse
 import glob
 from torch.utils.data import Dataset, DataLoader
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 import cv2
 
 class trainData(Dataset):
@@ -184,7 +184,7 @@ def prepare_stylegan(args):
 
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
-        g_all = nn.DataParallel(g_all, device_ids=device_ids).cuda()
+        g_all = nn.DataParallel(g_all, device_ids=device_ids).to(device)
 
     else:
         assert "Not implementated error"
@@ -251,7 +251,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
         classifier = pixel_classifier(numpy_class=args['number_class']
                                       , dim=args['dim'][-1])
-        classifier =  nn.DataParallel(classifier, device_ids=device_ids).cuda()
+        classifier =  nn.DataParallel(classifier, device_ids=device_ids).to(device)
         print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -388,7 +388,7 @@ def prepare_data(args, palette):
     g_all, avg_latent, upsamplers = prepare_stylegan(args)
     latent_all = np.load(args['annotation_image_latent_path'])
     
-    latent_all = torch.from_numpy(latent_all).cuda()[15:30]
+    latent_all = torch.from_numpy(latent_all).to(device)[15:30]
     print("gere", latent_all.shape)
 
     # load annotated mask
