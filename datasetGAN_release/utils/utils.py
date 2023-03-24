@@ -24,7 +24,7 @@ import torch
 from PIL import Image
 import numpy as np
 from torch import nn
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 
 
 class Interpolate(nn.Module):
@@ -66,7 +66,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
     print('v', latents.shape)
     if not use_style_latents:
         # generate style_latents from latents
-        l = g_all.module.g_mapping(latents)
+        l = g_all.module.g_mapping(latents.to(device))
         style_latents = g_all.module.truncation(l)
         style_latents = style_latents.clone()  # make different layers non-alias
 
@@ -76,7 +76,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # style_latents = latents
     if return_stylegan_latent:
         return  style_latents
-    print('style_latents', style_latents)
+    print('style_latents', style_latents.shape)
     img_list, affine_layers = g_all.module.g_synthesis(style_latents)
 
     if return_only_im:
@@ -94,8 +94,8 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         #if i%6==0:
         number_feautre += item.shape[1]
 
-
-    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim).to(device)
+    
+    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim)
     if return_upsampled_layers:
 
         start_channel_index = 0

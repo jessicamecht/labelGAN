@@ -49,7 +49,7 @@ import torch.optim as optim
 import argparse
 import glob
 from torch.utils.data import Dataset, DataLoader
-device = 'cuda:1' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 import cv2
 
 class trainData(Dataset):
@@ -181,6 +181,7 @@ def prepare_stylegan(args):
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
         g_all = nn.DataParallel(g_all, device_ids=device_ids).to(device)
+        
 
     else:
         assert "Not implementated error"
@@ -248,7 +249,6 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
         classifier = label_classifier(numpy_class=args['number_class']
                                       , dim=args['dim'][-1])
         classifier =  nn.DataParallel(classifier, device_ids=device_ids).to(device)
-        print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
@@ -257,7 +257,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
         classifier.eval()
         classifier_list.append(classifier)
-
+    
     softmax_f = nn.Softmax(dim=1)
     with torch.no_grad():
         latent_cache = []
@@ -271,7 +271,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
 
         print( "num_sample: ", num_sample)
-
+        
         for i in range(num_sample):
             if i % 100 == 0:
                 print("Generate", i, "Out of:", num_sample)
@@ -285,9 +285,10 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
 
             latent = torch.from_numpy(latent).type(torch.FloatTensor).to(device)
             latent_cache.append(latent)
-
+            
             img, affine_layers = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
                                                      return_upsampled_layers=True)
+            exit(0)
 
             if args['dim'][0] != args['dim'][1]:
                 img = img[:, 64:448][0]
@@ -306,10 +307,8 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
             mean_seg = None
 
             seg_mode_ensemble = []
-            print("test")
             for MODEL_NUMBER in range(args['model_num']):
                 classifier = classifier_list[MODEL_NUMBER]
-                print('affine_layers.shape', affine_layers.shape)
                 img_seg = classifier(affine_layers)
 
                 img_seg = img_seg.squeeze()
@@ -401,11 +400,10 @@ def prepare_data(args, palette):
 
     g_all, avg_latent, upsamplers = prepare_stylegan(args)
     latent_all = np.load(args['annotation_image_latent_path'])
-    print(latent_all.shape)
     latent_classification = np.load(args['annotation_image_latent_path'])
     
-    latent_all = torch.from_numpy(latent_all).to(device)
-    latent_classification = torch.from_numpy(latent_classification).to(device)
+    latent_all = torch.from_numpy(latent_all)
+    latent_classification = torch.from_numpy(latent_classification)
 
     # load annotated mask
     mask_list = []
@@ -417,6 +415,7 @@ def prepare_data(args, palette):
 
     for i in range(len(latent_all)):
 
+        if i == 3: continue
         if i >= args['max_training']:
             break
         name = 'image_%0d.png' % i
@@ -463,9 +462,8 @@ def prepare_data(args, palette):
     all_feature_maps_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all), args['dim'][2]), dtype=np.float16)
     all_mask_train = np.zeros((args['dim'][0] * args['dim'][1] * len(latent_all),), dtype=np.float16)
 
-    print("gere0")
     vis = []
-    for i in range(len(latent_all) ):
+    for i in range(len(latent_all)):
 
         gc.collect()
 
@@ -479,6 +477,7 @@ def prepare_data(args, palette):
             feature_maps = feature_maps[:, :, 64:448]
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
+        print(feature_maps.shape)
         feature_maps = feature_maps.reshape(-1, args['dim'][2])
         new_mask =  np.squeeze(mask)
 
@@ -494,11 +493,9 @@ def prepare_data(args, palette):
         
         img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
 
-        curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0 )
-        print("geres")
+        curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
         vis.append( curr_vis )
 
-    print("gere2")
     vis = np.concatenate(vis, 1)
     import imageio
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
@@ -526,7 +523,6 @@ def main(args, checkpoint_path=""
     all_feature_maps_train_all, all_mask_train_all, num_data, labels = prepare_data(args, palette)
     print('all_feature_maps_train_all', all_feature_maps_train_all.shape, all_mask_train_all.shape)
 
-    print('pdata')
     train_data = trainData(all_feature_maps_train_all,
                            all_mask_train_all, labels)
 
@@ -551,7 +547,6 @@ def main(args, checkpoint_path=""
         gc.collect()
 
         classifier = label_classifier(numpy_class=(max_label+1), dim=args['dim'][-1])
-        print(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
 
         if checkpoint_path != "":
             checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -569,8 +564,8 @@ def main(args, checkpoint_path=""
         stop_sign = 0
         accs = []
         for epoch in range(50):
-            for X_batch, y_batch in train_loader:
-                X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            for X_batch, y_batch, label in train_loader:
+                X_batch, y_batch,label = X_batch.to(device), y_batch.to(device)
                 y_batch = y_batch.type(torch.long)
                 y_batch = y_batch.type(torch.long)
 

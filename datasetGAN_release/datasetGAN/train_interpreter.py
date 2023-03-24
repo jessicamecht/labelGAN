@@ -49,7 +49,7 @@ import torch.optim as optim
 import argparse
 import glob
 from torch.utils.data import Dataset, DataLoader
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 import cv2
 
 class trainData(Dataset):
@@ -399,6 +399,7 @@ def prepare_data(args, palette):
 
     for i in range(len(latent_all)):
 
+        if i == 3: continue
         if i >= args['max_training']:
             break
         name = 'image_%0d.png' % i
@@ -447,6 +448,7 @@ def prepare_data(args, palette):
             feature_maps = feature_maps[:, :, 64:448]
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
+        print(feature_maps.shape)
         feature_maps = feature_maps.reshape(-1, args['dim'][2])
         new_mask =  np.squeeze(mask)
 
