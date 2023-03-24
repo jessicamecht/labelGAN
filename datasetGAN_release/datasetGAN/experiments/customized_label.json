@@ -3,7 +3,7 @@
   "batch_size": 1,
   "category": "xray",
   "debug": false,
-  "dim": [1024, 1024, 4992],
+  "dim": [1024, 1024, 5088],
   "deeplab_res": 1024,
   "number_class": 2,
   "testing_data_number_class": 2,
