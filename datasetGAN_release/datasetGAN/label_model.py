@@ -104,7 +104,6 @@ class label_classifier(nn.Module):
                 nn.ReLU(),
                 nn.BatchNorm1d(num_features=32),
                 nn.Linear(32, label_class),
-                torch.flatten(start_dim=0, end_dim=-2),
             )
 
     def init_weights(self, init_type='normal', gain=0.02):

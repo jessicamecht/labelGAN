@@ -104,6 +104,7 @@ def main(args, checkpoint_path=""
         accs, accs_label = [], []
         for epoch in range(50):
             for X_batch, label in label_loader:
+                print(X_batch.shape, label.shape)
                 X_batch, label = X_batch.to(device), label.to(device)
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)

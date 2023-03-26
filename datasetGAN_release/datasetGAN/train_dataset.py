@@ -40,6 +40,7 @@ class labelData(Dataset):
     def __init__(self, X_data, labels ):
         self.X_data = X_data
         self.labels = labels
+        print('X_data', X_data.shape, labels.shape)
 
     def __getitem__(self, index):
         return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
