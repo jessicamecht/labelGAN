@@ -32,12 +32,23 @@ def main(args, checkpoint_path=""
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif = prepare_data(args, palette, device)
+    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers = prepare_data(args, palette, device)
     #all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
    
     train_data = trainData(all_feature_maps_train_list,
                            all_mask_train_all, args)
     print("number of classif instances", len(imagenames_classif))
+    resize = torch.nn.Upsample(size=(16, 16), mode='bilinear')
+    affine_layers_upsamples = []
+    for i in range(0, len(affine_layers), 2):
+        resized = resize(affine_layers[i])
+        affine_layers_upsamples.append(resized)
+    print(affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape)
+    affine_layers_upsamples = torch.concat(affine_layers_upsamples, axis=1)
+    print(affine_layers_upsamples.shape)
+    exit(0)
+
+
     label_data = labelData(imagenames_classif, args)
 
     count_dict = get_label_stas(train_data)
@@ -79,11 +90,12 @@ def main(args, checkpoint_path=""
         best_loss = 10000000
         stop_sign = 0
         accs, accs_label = [], []
-        for epoch in tqdm(range(50)):
+        for epoch in tqdm(range(250)):
             for X_batch, label in train_loader_classif:
                 X_batch, label = X_batch.to(device).reshape(args['batch_size'], -1), label.type(torch.LongTensor).to(device).squeeze()
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
+                #print(y_pred.argmax(-1), label)
                 loss = criterion(y_pred, label)
                 acc = multi_acc(y_pred, label)
                 
@@ -95,7 +107,7 @@ def main(args, checkpoint_path=""
                 if iteration % 50 == 0:
                     print('Epoch classif: ', str(epoch), 'iteration', iteration, 'loss', loss.item(), 'acc', acc)
                     gc.collect()
-                if iteration % 50000 == 0:
+                if iteration % 50 == 0:
                     model_path = os.path.join(args['exp_dir'],
                                               'model_label_classif_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')                    
                     if checkpoint_path == "":
@@ -107,14 +119,19 @@ def main(args, checkpoint_path=""
                     if loss.item() < best_loss:
                         best_loss = loss.item()
                         break_count = 0
-                    else:
+                    '''else:
                         break_count += 1
 
                     if break_count > 50:
                         stop_sign = 1
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
-                        break
-
+                        break'''
+        exit(0)
+        for epoch in tqdm(range(50)):
+            iteration = 0
+            break_count = 0
+            best_loss = 10000000
+            stop_sign = 0
             for X_batch, y_batch in train_loader:
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
                 y_batch = y_batch.type(torch.long)

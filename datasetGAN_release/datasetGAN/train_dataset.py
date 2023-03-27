@@ -287,14 +287,14 @@ def prepare_data(args, palette, device):
         gc.collect()
         latent_input = latent_all[i].float()
 
-        img, feature_maps, style_latents = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
                                             return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
 
+        #print('test', feature_maps.shape)
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
         feature_maps = feature_maps.reshape(-1, args['dim'][2])
         new_mask =  np.squeeze(mask)
-
         mask = mask.reshape(-1)
         #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
         if len(mask) == 0: continue
@@ -310,5 +310,5 @@ def prepare_data(args, palette, device):
     all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
-    return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification
+    return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers
 
