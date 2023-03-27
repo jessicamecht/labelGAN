@@ -24,7 +24,6 @@ import torch
 from PIL import Image
 import numpy as np
 from torch import nn
-device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 
 
 class Interpolate(nn.Module):
@@ -59,11 +58,10 @@ def oht_to_scalar(y_pred):
     return y_pred_tags
 
 def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
-                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False):
+                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False, device="cuda"):
     '''Given a input latent code, generate corresponding image and concatenated feature maps'''
 
     # assert (len(latents) == 1)  # for GPU memory constraints
-    print('v', latents.shape)
     if not use_style_latents:
         # generate style_latents from latents
         l = g_all.module.g_mapping(latents.to(device))
@@ -76,7 +74,6 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # style_latents = latents
     if return_stylegan_latent:
         return  style_latents
-    print('style_latents', style_latents.shape)
     img_list, affine_layers = g_all.module.g_synthesis(style_latents)
 
     if return_only_im:
@@ -101,12 +98,10 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         start_channel_index = 0
         for i in range(0,len(affine_layers)):
             #if i == 0: continue
-            print(i, 'i')
             len_channel = affine_layers[i].shape[1]
             affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
                 affine_layers[i])
             start_channel_index += len_channel
-    print(affine_layers_upsamples.shape, 'affine_layers_upsamples')
     if img_list.shape[-2] != 512:
         img_list = upsamplers[-1](img_list)
 
@@ -117,7 +112,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # print('start_channel_index',start_channel_index)
 
 
-    return img_list, affine_layers_upsamples
+    return img_list, affine_layers_upsamples, style_latents
 
 
 def process_image(images):
@@ -143,7 +138,7 @@ def colorize_mask(mask, palette):
 def get_label_stas(data_loader):
     count_dict = {}
     for i in range(data_loader.__len__()):
-        x, y, label = data_loader.__getitem__(i)
+        x, y = data_loader.__getitem__(i)
         if int(y.item()) not in count_dict:
             count_dict[int(y.item())] = 1
         else:

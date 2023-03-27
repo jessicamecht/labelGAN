@@ -97,10 +97,10 @@ class label_classifier(nn.Module):
         self.label_layers = nn.Sequential(
                 nn.Linear(label_dim, 128),
                 nn.ReLU(),
-                nn.BatchNorm1d(num_features=128),
+                #nn.BatchNorm1d(num_features=128),
                 nn.Linear(128, 32),
                 nn.ReLU(),
-                nn.BatchNorm1d(num_features=32),
+                #nn.BatchNorm1d(num_features=32),
                 nn.Linear(32, label_class),
             )
 

@@ -1,25 +1,3 @@
-"""
-Copyright (C) 2021 NVIDIA Corporation.  All rights reserved.
-Licensed under The MIT License (MIT)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
 import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 import sys
@@ -30,6 +8,7 @@ torch.manual_seed(0)
 import json
 import numpy as np
 import os
+from tqdm import tqdm
 import gc
 from utils.utils import multi_acc, get_label_stas
 import torch.optim as optim
@@ -53,14 +32,13 @@ def main(args, checkpoint_path=""
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_list, num_data, labels = prepare_data(args, palette, device)
+    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif = prepare_data(args, palette, device)
     #all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
-    all_mask_train_all = torch.concat(all_mask_train_list, axis=0)
-
+   
     train_data = trainData(all_feature_maps_train_list,
                            all_mask_train_all, args)
-    print('heres')
-    label_loader = labelData(all_feature_maps_train_list, labels)
+    print("number of classif instances", len(imagenames_classif))
+    label_data = labelData(imagenames_classif, args)
 
     count_dict = get_label_stas(train_data)
 
@@ -74,13 +52,13 @@ def main(args, checkpoint_path=""
     batch_size = args['batch_size']
 
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
+    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True, drop_last=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
 
         gc.collect()
-
-        label_classifier_instance = label_classifier(len(np.unique(labels)), 128*128*5088).to(device)
+        label_classifier_instance = label_classifier(16, 18*512).to(device)
         classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
 
         if checkpoint_path != "":
@@ -101,11 +79,9 @@ def main(args, checkpoint_path=""
         best_loss = 10000000
         stop_sign = 0
         accs, accs_label = [], []
-        for epoch in range(50):
-            for X_batch, label in label_loader:
-                
-                X_batch, label = X_batch.to(device).reshape(1, -1), label.to(device)
-                print(X_batch.shape, label)
+        for epoch in tqdm(range(50)):
+            for X_batch, label in train_loader_classif:
+                X_batch, label = X_batch.to(device).reshape(args['batch_size'], -1), label.type(torch.LongTensor).to(device).squeeze()
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
                 loss = criterion(y_pred, label)
@@ -116,8 +92,8 @@ def main(args, checkpoint_path=""
                     optimizer.step()
 
                 iteration += 1
-                if iteration % 1000 == 0:
-                    print('Epoch : ', str(epoch), 'iteration', iteration, 'loss', loss.item(), 'acc', acc)
+                if iteration % 50 == 0:
+                    print('Epoch classif: ', str(epoch), 'iteration', iteration, 'loss', loss.item(), 'acc', acc)
                     gc.collect()
                 if iteration % 50000 == 0:
                     model_path = os.path.join(args['exp_dir'],
