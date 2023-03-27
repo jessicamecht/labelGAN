@@ -19,37 +19,46 @@ import pickle
 from torch.distributions import Categorical
 import scipy.stats
 from torch.utils.data import Dataset
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
+import torchvision.transforms as transforms
 import cv2
 
 class trainData(Dataset):
 
-    def __init__(self, X_data, y_data ):
+    def __init__(self, X_data, y_data, args):
         self.X_data = X_data
         self.y_data = y_data
+        self.args = args
 
     def __getitem__(self, index):
-        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
+        x = torch.tensor(self.X_data[index])
+        x = x.reshape(-1, self.args['dim'][2])
+        return x.type(torch.FloatTensor), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
 
     def __len__(self):
         return len(self.X_data)
     
 class labelData(Dataset):
     def __init__(self, X_data, labels ):
+        print(X_data.shape)
         self.X_data = X_data
-        self.labels = labels
-        print('X_data', X_data.shape, labels.shape)
+        self.labels = torch.tensor(labels)
+        self.resize = transforms.Resize(128)
+        print('X_data', self.X_data.shape, self.labels.shape)
 
     def __getitem__(self, index):
-        return torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
+        x,y = torch.tensor(self.X_data[index]).type(torch.FloatTensor), torch.tensor(self.labels[index]).type(torch.FloatTensor)
+        x = self.resize(x.permute(-1, 0, 1))
+        x = x.permute(1,2,0)
+        print('dkdkdkdk', x.shape)
+        return x,y
 
     def __len__(self):
         return len(self.X_data)
     
 
-def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
+def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True, device="cuda"):
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
     elif args['category'] == 'face':
@@ -73,7 +82,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
         print('Experiment folder created at: %s' % (result_path))
 
 
-    g_all, avg_latent, upsamplers = prepare_stylegan(args)
+    g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
 
     classifier_list = []
     for MODEL_NUMBER in range(args['model_num']):
@@ -120,7 +129,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
             latent_cache.append(latent)
             
             img, affine_layers = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
-                                                     return_upsampled_layers=True)
+                                                     return_upsampled_layers=True, device=device)
             
             if args['dim'][0] != args['dim'][1]:
                 img = img[:, 64:448][0]
@@ -211,7 +220,7 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True):
         with open(os.path.join(result_path, str(num_sample) + "_" + str(start_step) + '.pickle'), 'wb') as f:
             pickle.dump(results, f)
 
-def prepare_data(args, palette):
+def prepare_data(args, palette, device):
     few_shot_classes = {"None": 0,
     'NoduleMass': 1,
     'Infiltration': 2,
@@ -229,7 +238,7 @@ def prepare_data(args, palette):
     'Pneumothorax': 14,
     'Nofinding': 15}
 
-    g_all, avg_latent, upsamplers = prepare_stylegan(args)
+    g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
     latent_all = np.load(args['annotation_image_latent_path'])
     latent_classification = np.load(args['annotation_image_latent_path'])
     
@@ -301,12 +310,12 @@ def prepare_data(args, palette):
         latent_input = latent_all[i].float()
 
         img, feature_maps = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
-                                            return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'])
+                                            return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
 
         mask = all_mask[i:i + 1]
         feature_maps = feature_maps.permute(0, 2, 3, 1)
-        print(feature_maps.shape)
-        feature_maps = feature_maps.reshape(-1, args['dim'][2])
+        print('ddd', feature_maps.shape)
+        #feature_maps = feature_maps.reshape(-1, args['dim'][2])
         new_mask =  np.squeeze(mask)
 
         mask = mask.reshape(-1)
@@ -322,12 +331,13 @@ def prepare_data(args, palette):
 
         curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
         vis.append( curr_vis )
-    all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
-    all_feature_maps_train = torch.concat(all_mask_train_list, axis=0)
+    all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=1)
+    #all_feature_maps_train = torch.concat(all_mask_train_list, axis=1)
+    print(all_feature_maps_train.shape, 'all_feature_maps_train')
     vis = np.concatenate(vis, 1)
     import imageio
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
 
-    return all_feature_maps_train_list, all_mask_train_list, num_data, np.array(label_list)
+    return all_feature_maps_train, all_mask_train_list, num_data, np.array(label_list)
 

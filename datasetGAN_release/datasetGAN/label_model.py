@@ -12,10 +12,8 @@ import numpy as np
 import os
 from models.stylegan1 import G_mapping,Truncation,G_synthesis
 from utils.utils import  Interpolate
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 
-def prepare_stylegan(args):
-
+def prepare_stylegan(args, device):
     if args['stylegan_ver'] == "1":
         if args['category'] == "car":
             resolution = 512

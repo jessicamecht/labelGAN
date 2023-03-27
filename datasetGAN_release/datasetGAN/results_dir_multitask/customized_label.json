@@ -7,7 +7,7 @@
   "deeplab_res": 1024,
   "number_class": 2,
   "testing_data_number_class": 2,
-  "max_training": 4,
+  "max_training": 1,
   "stylegan_ver": "1",
   "annotation_data_from_w": false,
   "annotation_mask_path": "./generations",

@@ -53,15 +53,14 @@ def main(args, checkpoint_path=""
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_list, num_data, labels = prepare_data(args, palette)
-    print('torch.tensor(all_feature_maps_train_list', torch.stack(all_feature_maps_train_list).shape)
-    all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
+    all_feature_maps_train_list, all_mask_train_list, num_data, labels = prepare_data(args, palette, device)
+    #all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
     all_mask_train_all = torch.concat(all_mask_train_list, axis=0)
 
-    train_data = trainData(all_feature_maps_train_all,
-                           all_mask_train_all)
-    
-    label_loader = labelData(torch.stack(all_feature_maps_train_list), labels)
+    train_data = trainData(all_feature_maps_train_list,
+                           all_mask_train_all, args)
+    print('heres')
+    label_loader = labelData(all_feature_maps_train_list, labels)
 
     count_dict = get_label_stas(train_data)
 
@@ -81,8 +80,8 @@ def main(args, checkpoint_path=""
 
         gc.collect()
 
-        label_classifier_instance = label_classifier(len(np.unique(labels)), 18*512)
-        classifier = segm_classifier((max_label+1), args['dim'][-1])
+        label_classifier_instance = label_classifier(len(np.unique(labels)), 128*128*5088).to(device)
+        classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
 
         if checkpoint_path != "":
             checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -104,8 +103,9 @@ def main(args, checkpoint_path=""
         accs, accs_label = [], []
         for epoch in range(50):
             for X_batch, label in label_loader:
-                print(X_batch.shape, label.shape)
-                X_batch, label = X_batch.to(device), label.to(device)
+                
+                X_batch, label = X_batch.to(device).reshape(1, -1), label.to(device)
+                print(X_batch.shape, label)
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
                 loss = criterion(y_pred, label)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     if args.eval_interp:
         main(opts, checkpoint_path=args.resume)
     if args.generate_data:
-        generate_data(opts, args.resume, args.num_sample, vis=args.save_vis, start_step=args.start_step)
+        generate_data(opts, args.resume, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
     else:
         main(opts)
 
