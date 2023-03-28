@@ -18,8 +18,7 @@ device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
 
-def main(args, checkpoint_path=""
-         ):
+def main(args, checkpoint_path=""):
 
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
@@ -32,24 +31,15 @@ def main(args, checkpoint_path=""
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers = prepare_data(args, palette, device)
+    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
     #all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
    
     train_data = trainData(all_feature_maps_train_list,
                            all_mask_train_all, args)
     print("number of classif instances", len(imagenames_classif))
-    resize = torch.nn.Upsample(size=(16, 16), mode='bilinear')
-    affine_layers_upsamples = []
-    for i in range(0, len(affine_layers), 2):
-        resized = resize(affine_layers[i])
-        affine_layers_upsamples.append(resized)
-    print(affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape)
-    affine_layers_upsamples = torch.concat(affine_layers_upsamples, axis=1)
-    print(affine_layers_upsamples.shape)
-    exit(0)
+    print('affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape', len(affine_layers), len(labels))
 
-
-    label_data = labelData(imagenames_classif, args)
+    label_data = labelData(affine_layers, labels, args)
 
     count_dict = get_label_stas(train_data)
 
@@ -63,13 +53,13 @@ def main(args, checkpoint_path=""
     batch_size = args['batch_size']
 
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True, drop_last=True)
+    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True)#, drop_last=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
 
         gc.collect()
-        label_classifier_instance = label_classifier(16, 18*512).to(device)
+        label_classifier_instance = label_classifier(16, 16*16*16).to(device)#StyleGANClassifier(16).to(device)
         classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
 
         if checkpoint_path != "":
@@ -79,8 +69,8 @@ def main(args, checkpoint_path=""
         else:
             classifier.init_weights()
             classifier.train()
-            label_classifier_instance.init_weights()
-            label_classifier_instance.train()
+            #label_classifier_instance.init_weights()
+        label_classifier_instance.train()
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters() , lr=0.001)
         optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.001)
@@ -89,32 +79,38 @@ def main(args, checkpoint_path=""
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        accs, accs_label = [], []
+        print(';lkjh', len(train_loader_classif))
         for epoch in tqdm(range(250)):
+            all_preds = []
+            all_labels = []
+            accs = []
+            losses = []
             for X_batch, label in train_loader_classif:
-                X_batch, label = X_batch.to(device).reshape(args['batch_size'], -1), label.type(torch.LongTensor).to(device).squeeze()
+                X_batch = X_batch.to(device)#.reshape(args['batch_size'], -1), 
+                label = label.type(torch.LongTensor).to(device).squeeze(0)
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
                 #print(y_pred.argmax(-1), label)
+                
                 loss = criterion(y_pred, label)
                 acc = multi_acc(y_pred, label)
-                
-                if checkpoint_path == "":
-                    loss.backward()
-                    optimizer.step()
+                all_preds.append(y_pred.argmax(-1).item())
+                all_labels.append(label.item())
+                losses.append(loss.item())
+                accs.append(acc.cpu())
+                loss.backward()
+                optimizer_label.step()
 
                 iteration += 1
                 if iteration % 50 == 0:
-                    print('Epoch classif: ', str(epoch), 'iteration', iteration, 'loss', loss.item(), 'acc', acc)
+                    print(torch.log_softmax(y_pred, dim=1).argmax(-1).item(), label)
                     gc.collect()
-                if iteration % 50 == 0:
                     model_path = os.path.join(args['exp_dir'],
                                               'model_label_classif_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')                    
                     if checkpoint_path == "":
                         torch.save({'model_state_dict_label': label_classifier_instance.state_dict()},
                                    model_path)
 
-                accs_label.append(acc.item())
                 if epoch > 3:
                     if loss.item() < best_loss:
                         best_loss = loss.item()
@@ -126,6 +122,8 @@ def main(args, checkpoint_path=""
                         stop_sign = 1
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
                         break'''
+            print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
+
         exit(0)
         for epoch in tqdm(range(50)):
             iteration = 0

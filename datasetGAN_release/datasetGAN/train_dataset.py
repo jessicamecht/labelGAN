@@ -60,16 +60,16 @@ class trainData(Dataset):
         return len(self.X_data)
     
 class labelData(Dataset):
-    def __init__(self, imagenames, args):
+    def __init__(self, imagenames, labels, args):
         self.imagenames = imagenames
-        self.resize = transforms.Resize(128)
         self.args = args
+        self.labels = labels
 
     def __getitem__(self, index):
-        imagename = self.imagenames[index]
-        im_name = os.path.join(self.args['annotation_image_path_classification'], imagename)
-        x = torch.tensor(np.load(im_name)).type(torch.FloatTensor)
-        y = torch.tensor([few_shot_classes[imagename.split("_")[0]]])
+        x = self.imagenames[index]
+        #im_name = os.path.join(self.args['annotation_image_path_classification'], x)
+        #x = torch.tensor(np.load(im_name)).type(torch.FloatTensor)
+        y = self.labels[index]#torch.tensor([few_shot_classes[imagename.split("_")[0]]])
         return x,y
 
     def __len__(self):
@@ -271,6 +271,16 @@ def prepare_data(args, palette, device):
 
         im_list.append(np.array(img))
     image_names_classification = os.listdir(args['annotation_image_path_classification'])
+    affine_layers_list = []
+    labels = []
+    for x in image_names_classification[:3]:
+        im_name = os.path.join(args['annotation_image_path_classification'], x)
+        label = torch.tensor([few_shot_classes[x.split("_")[0]]])
+        latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
+        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+                                            return_upsampled_layers=True, use_style_latents=True, device=device)
+        affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
+        labels.extend([label] * len(affine_layers))
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
     '''for i in range(len(mask_list)):  # clean up artifacts in the annotation, must do
@@ -299,6 +309,7 @@ def prepare_data(args, palette, device):
         #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
         if len(mask) == 0: continue
         all_feature_maps_train_list.append(feature_maps.cpu().detach())
+        
 
         #all_mask_train[start:end] = (mask == 143).astype(np.float16)
         all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
@@ -310,5 +321,5 @@ def prepare_data(args, palette, device):
     all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
-    return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers
+    return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers_list, labels
 
