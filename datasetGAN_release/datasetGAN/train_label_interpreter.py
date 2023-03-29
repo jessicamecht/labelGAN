@@ -18,7 +18,7 @@ device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
 
-def main(args, checkpoint_path=""):
+def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
 
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
@@ -32,8 +32,7 @@ def main(args, checkpoint_path=""):
         from utils.data_util import xray_palette as palette
 
     all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
-    #all_feature_maps_train_all = torch.concat(all_feature_maps_train_list, axis=0)
-   
+
     train_data = trainData(all_feature_maps_train_list,
                            all_mask_train_all, args)
     print("number of classif instances", len(imagenames_classif))
@@ -45,10 +44,7 @@ def main(args, checkpoint_path=""):
 
     max_label = max([*count_dict])
     print(" *********************** max_label " + str(max_label) + " ***********************")
-
-
     print(" *********************** Current number data " + str(num_data) + " ***********************")
-
 
     batch_size = args['batch_size']
 
@@ -57,20 +53,26 @@ def main(args, checkpoint_path=""):
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
-
         gc.collect()
-        label_classifier_instance = label_classifier(16, 16*16*16).to(device)#StyleGANClassifier(16).to(device)
+        feat_size = args['classification_map_size']*args['classification_map_size']*args['classification_channels']
+        label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)#StyleGANClassifier(16).to(device)
         classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
 
-        if checkpoint_path != "":
-            checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
+        if checkpoint_path_segm != "":
+            checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
             classifier.load_state_dict(checkpoint['model_state_dict'])
             classifier.eval()
         else:
             classifier.init_weights()
             classifier.train()
             #label_classifier_instance.init_weights()
-        label_classifier_instance.train()
+        if checkpoint_path_label != "":
+            checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
+            label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
+            label_classifier_instance.eval()
+        else:
+            label_classifier_instance.train()
+
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters() , lr=0.001)
         optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.001)
@@ -79,18 +81,16 @@ def main(args, checkpoint_path=""):
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        print(';lkjh', len(train_loader_classif))
         for epoch in tqdm(range(250)):
             all_preds = []
             all_labels = []
             accs = []
             losses = []
             for X_batch, label in train_loader_classif:
-                X_batch = X_batch.to(device)#.reshape(args['batch_size'], -1), 
+                X_batch = X_batch.to(device)
                 label = label.type(torch.LongTensor).to(device).squeeze(0)
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
-                #print(y_pred.argmax(-1), label)
                 
                 loss = criterion(y_pred, label)
                 acc = multi_acc(y_pred, label)
@@ -102,13 +102,12 @@ def main(args, checkpoint_path=""):
                 optimizer_label.step()
 
                 iteration += 1
-                if iteration % 50 == 0:
-                    print(torch.log_softmax(y_pred, dim=1).argmax(-1).item(), label)
+                if iteration % 50000 == 0:
                     gc.collect()
                     model_path = os.path.join(args['exp_dir'],
                                               'model_label_classif_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')                    
-                    if checkpoint_path == "":
-                        torch.save({'model_state_dict_label': label_classifier_instance.state_dict()},
+                    if checkpoint_path_label == "":
+                        torch.save({'model_state_dict': label_classifier_instance.state_dict()},
                                    model_path)
 
                 if epoch > 3:
@@ -123,8 +122,6 @@ def main(args, checkpoint_path=""):
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
                         break'''
             print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
-
-        exit(0)
         for epoch in tqdm(range(50)):
             iteration = 0
             break_count = 0
@@ -139,7 +136,7 @@ def main(args, checkpoint_path=""):
                 loss = criterion(y_pred, y_batch)
                 acc = multi_acc(y_pred, y_batch)
                 
-                if checkpoint_path == "":
+                if checkpoint_path_segm == "":
                     loss.backward()
                     optimizer.step()
 
@@ -151,10 +148,10 @@ def main(args, checkpoint_path=""):
 
                 if iteration % 50000 == 0:
                     model_path = os.path.join(args['exp_dir'],
-                                              'model_label_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')
+                                              'model_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')
                     #print('Save checkpoint, Epoch : ', str(epoch), ' Path: ', model_path)
                     
-                    if checkpoint_path == "":
+                    if checkpoint_path_segm == "":
                         torch.save({'model_state_dict': classifier.state_dict()},
                                    model_path)
 
@@ -203,6 +200,7 @@ if __name__ == '__main__':
     parser.add_argument('--eval_interp', type=bool, default=False)
 
     parser.add_argument('--resume', type=str,  default="")
+    parser.add_argument('--resume_label', type=str,  default="")
     parser.add_argument('--num_sample', type=int,  default=2000)
 
     args = parser.parse_args()
@@ -224,9 +222,9 @@ if __name__ == '__main__':
     os.system('cp %s %s' % (args.exp, opts['exp_dir']))
 
     if args.eval_interp:
-        main(opts, checkpoint_path=args.resume)
+        main(opts, checkpoint_path_segm=args.resumes, checkpoint_path_label=args.resume_label)
     if args.generate_data:
-        generate_data(opts, args.resume, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
+        generate_data(opts, args.resume, args.resume_label, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
     else:
         main(opts)
 

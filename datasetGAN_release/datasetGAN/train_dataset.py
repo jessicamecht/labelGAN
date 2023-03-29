@@ -76,7 +76,7 @@ class labelData(Dataset):
         return len(self.imagenames)
     
 
-def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True, device="cuda"):
+def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample, start_step=0, vis=True, device="cuda"):
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
     elif args['category'] == 'face':
@@ -90,9 +90,9 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True, dev
     else:
         assert False
     if not vis:
-        result_path = os.path.join(checkpoint_path, 'samples' )
+        result_path = os.path.join(checkpoint_path_segm, 'samples' )
     else:
-        result_path = os.path.join(checkpoint_path, 'vis_%d'%num_sample)
+        result_path = os.path.join(checkpoint_path_segm, 'vis_%d'%num_sample)
     if os.path.exists(result_path):
         pass
     else:
@@ -103,20 +103,29 @@ def generate_data(args, checkpoint_path, num_sample, start_step=0, vis=True, dev
     g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
 
     classifier_list = []
+    classifier_list_label = []
     for MODEL_NUMBER in range(args['model_num']):
         print('MODEL_NUMBER', MODEL_NUMBER)
 
-        classifier = label_classifier(args['number_class']
+        classifier = segm_classifier(args['number_class']
                                       , args['dim'][-1])
         classifier =  nn.DataParallel(classifier).to(device)
 
-        checkpoint = torch.load(os.path.join(checkpoint_path, 'model_' + str(MODEL_NUMBER) + '.pth'))
+        feat_size = args['classification_map_size']*args['classification_map_size']*args['classification_channels']
+        label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)
+        label_classifier_instance =  nn.DataParallel(label_classifier_instance).to(device)
 
+        checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
         classifier.load_state_dict(checkpoint['model_state_dict'])
+    
+        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
+        label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
 
 
         classifier.eval()
+        label_classifier_instance.eval()
         classifier_list.append(classifier)
+        classifier_list_label.append(label_classifier_instance)
     
     softmax_f = nn.Softmax(dim=1)
     with torch.no_grad():
@@ -273,7 +282,7 @@ def prepare_data(args, palette, device):
     image_names_classification = os.listdir(args['annotation_image_path_classification'])
     affine_layers_list = []
     labels = []
-    for x in image_names_classification[:3]:
+    for x in image_names_classification:
         im_name = os.path.join(args['annotation_image_path_classification'], x)
         label = torch.tensor([few_shot_classes[x.split("_")[0]]])
         latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()

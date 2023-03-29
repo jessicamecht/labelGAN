@@ -1,5 +1,5 @@
 {
-  "exp_dir": "results_dir_multitask",
+  "exp_dir": "results_dir_multitask_generation",
   "batch_size": 1,
   "category": "xray",
   "debug": false,
@@ -7,6 +7,9 @@
   "deeplab_res": 1024,
   "number_class": 2,
   "testing_data_number_class": 2,
+  "number_class_classification": 16,
+  "classification_channels": 16,
+  "classification_map_size": 16,
   "annotation_image_path_classification": "/home/jessica/labelGAN/Image2StyleGAN/images/generated_latents_from_class_distr/",
   "max_training": 2,
   "stylegan_ver": "1",

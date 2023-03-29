@@ -6,72 +6,11 @@ sys.path.append('..')
 import torch
 import torch.nn as nn
 torch.manual_seed(0)
-import json
 from collections import OrderedDict
 import numpy as np
 import os
 from models.stylegan1 import G_mapping,Truncation,G_synthesis
 from utils.utils import  Interpolate
-
-import torch.nn as nn
-
-class StyleGANClassifier(nn.Module):
-    def __init__(self, num_classes):
-        super(StyleGANClassifier, self).__init__()
-        
-        # Define the convolutional layers for each block output
-        self.c1 = 512
-        self.c2 = 256
-        self.c3 = 128
-        self.c4 = 64
-        self.conv1 = nn.Conv2d(self.c1, 64, kernel_size=1)
-        self.conv2 = nn.Conv2d(self.c2, 64, kernel_size=1)
-        self.conv3 = nn.Conv2d(self.c3, 64, kernel_size=1)
-        self.conv4 = nn.Conv2d(self.c4, 64, kernel_size=1)
-        
-        # Define the fully connected layers for classification
-        self.resize = torch.nn.Upsample(size=(16, 16), mode='bilinear')
-        self.fc1 = nn.Linear(64 * 16 * 16, 256)
-        self.fc2 = nn.Linear(256, num_classes)
-        
-        # Define the activation function
-        self.relu = nn.ReLU(inplace=True)
-        
-    def forward(self, x1):
-        # Pass the block outputs through their respective convolutional layers
-        x1=x1.squeeze(0)
-        print(x1.shape, 'sslkjuyftgyukil;')
-        if self.c1 == x1.shape[0]:
-            x = self.conv1(x1)
-        if self.c2 == x1.shape[0]:
-            x = self.conv2(x1)
-        if self.c3 == x1.shape[0]:
-            x = self.conv3(x1)
-        if self.c4 == x1.shape[0]:
-            x = self.conv4(x1)
-        print(x.shape, 'sss')
-        
-        # Concatenate the block outputs along the channel dimension
-        #x = torch.cat([x1, x2, x3, x4], dim=1)
-        
-        # Flatten the output for the fully connected layers
-        x = self.resize(x)
-        print(x.shape)
-        x = x.view(x.size(0), -1)
-        print(x.shape)
-        
-        
-        # Pass the output through the fully connected layers and activation function
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.fc2(x)
-        print(x.shape)
-        
-        # Apply softmax activation to produce class probabilities
-        return x#nn.functional.softmax(x, dim=1)
-
-
-
 
 def prepare_stylegan(args, device):
     if args['stylegan_ver'] == "1":
@@ -163,10 +102,8 @@ class label_classifier(nn.Module):
         self.lin = nn.Linear(label_dim, 128)
         self.label_layers = nn.Sequential(
                 nn.ReLU(),
-                #nn.BatchNorm1d(num_features=128),
                 nn.Linear(128, 32),
                 nn.ReLU(),
-                #nn.BatchNorm1d(num_features=32),
                 nn.Linear(32, label_class),
             )
 
@@ -176,7 +113,7 @@ class label_classifier(nn.Module):
     def forward(self, x):
         x = x.squeeze(0)
         x = self.resize(x)
-        #print(x.shape)
+
         if 512 == x.shape[1]:
             x = self.conv1(x)
         if 256 == x.shape[1]:
@@ -187,9 +124,9 @@ class label_classifier(nn.Module):
             x = self.conv4(x)
         if 32 == x.shape[1]:
             x = self.conv5(x)
-        #print(x.shape)
+            
         x = x.reshape(x.shape[0], -1)
-        #print(x.shape)
+        
         x = self.lin(x)
         return self.label_layers(x)
     
