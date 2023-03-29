@@ -26,7 +26,7 @@ from label_model import *
 import torchvision.transforms as transforms
 import cv2
 
-few_shot_classes = {"None": 0,
+few_shot_classes = {"Nofinding": 0,
     'NoduleMass': 1,
     'Infiltration': 2,
     'LungOpacity': 3,
@@ -40,8 +40,7 @@ few_shot_classes = {"None": 0,
     'Pleuraleffusion': 11,
     'Calcification': 12,
     'Atelectasis': 13,
-    'Pneumothorax': 14,
-    'Nofinding': 15}
+    'Pneumothorax': 14}
 
 
 class trainData(Dataset):
@@ -262,7 +261,7 @@ def prepare_data(args, palette, device):
     
     num_data = len(latent_all)
 
-    for i in range(len(latent_all)):
+    for i in tqdm(range(len(latent_all))):
 
         if i == 3: continue
         if i >= args['max_training']:
@@ -280,16 +279,28 @@ def prepare_data(args, palette, device):
 
         im_list.append(np.array(img))
     image_names_classification = os.listdir(args['annotation_image_path_classification'])
+    mask = ["tophat" not in elem for elem in image_names_classification]
+    image_names_classification = np.array(image_names_classification)[mask]
     affine_layers_list = []
     labels = []
-    for x in image_names_classification:
-        im_name = os.path.join(args['annotation_image_path_classification'], x)
-        label = torch.tensor([few_shot_classes[x.split("_")[0]]])
-        latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
-        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+    if not os.path.isfile("./affine_layers_list.pkl"):
+        for x in tqdm(image_names_classification):
+            im_name = os.path.join(args['annotation_image_path_classification'], x)
+            label = torch.tensor([few_shot_classes[x.split("_")[0]]])
+            latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
+            img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
                                             return_upsampled_layers=True, use_style_latents=True, device=device)
-        affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
-        labels.extend([label] * len(affine_layers))
+            affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
+            labels.extend([label] * len(affine_layers))
+    if not os.path.isfile("./affine_layers_list.pkl"): 
+        with open('affine_layers_list.pkl', 'wb') as f:
+            pickle.dump(affine_layers_list, f)
+        with open('affine_layers_labels.pkl', 'wb') as f:
+            pickle.dump(labels, f)
+    else:
+        affine_layers_list = pickle.load('affine_layers_list.pkl')
+        labels = pickle.load('affine_layers_labels.pkl')
+
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
     '''for i in range(len(mask_list)):  # clean up artifacts in the annotation, must do
