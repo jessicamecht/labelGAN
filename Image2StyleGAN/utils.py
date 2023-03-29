@@ -42,7 +42,7 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id):
   #MSE loss object
   MSE_loss = nn.MSELoss(reduction="mean")
   #since the synthesis network expects 18 w vectors of size 1x512 thus we take latent vector of the same size
-  latents = torch.zeros((1, 512), requires_grad = True, device = device)#torch.zeros((1,18,512), requires_grad = True, device = device)
+  latents = torch.zeros((1,18,512), requires_grad = True, device = device)
   #Optimizer to change latent code in each backward step
   optimizer = optim.Adam({latents},lr=0.01,betas=(0.9,0.999),eps=1e-8)
 
@@ -69,6 +69,7 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id):
   save_image(syn_img.clamp(0,1),f"./images/generated/{image_id}.png".format(e+1))
   #np.save("loss_list.npy",loss_)
   np.save(f"./images/latents/latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
+  np.save(f"./images/latents/512_latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
 
   #plt.plot(loss_, label = 'Loss = MSELoss + Perceptual')
   #plt.plot(loss_psnr, label = 'PSNR')

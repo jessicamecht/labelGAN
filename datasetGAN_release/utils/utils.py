@@ -99,20 +99,20 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         for i in range(0,len(affine_layers)):
             #if i == 0: continue
             len_channel = affine_layers[i].shape[1]
-            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
-                affine_layers[i])
+            elem = upsamplers[i](affine_layers[i])
+            #print('elem', affine_layers[i].shape)
+            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = elem
             start_channel_index += len_channel
     if img_list.shape[-2] != 512:
         img_list = upsamplers[-1](img_list)
-
     if process_out:
         img_list = img_list.cpu().detach().numpy()
         img_list = process_image(img_list)
         img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
         # print('start_channel_index',start_channel_index)
+   
 
-
-    return img_list, affine_layers_upsamples, style_latents
+    return img_list, affine_layers_upsamples, style_latents, affine_layers
 
 
 def process_image(images):
