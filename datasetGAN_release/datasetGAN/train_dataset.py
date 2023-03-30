@@ -136,8 +136,6 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         np.random.seed(start_step)
         count_step = start_step
 
-
-
         print( "num_sample: ", num_sample)
         
         for i in range(num_sample):
@@ -298,8 +296,10 @@ def prepare_data(args, palette, device):
         with open('affine_layers_labels.pkl', 'wb') as f:
             pickle.dump(labels, f)
     else:
-        affine_layers_list = pickle.load('affine_layers_list.pkl')
-        labels = pickle.load('affine_layers_labels.pkl')
+        file = open("affine_layers_list.pkl",'rb')
+        file1 = open("affine_layers_labels.pkl",'rb')
+        affine_layers_list = pickle.load(file)
+        labels = pickle.load(file1)
 
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
@@ -313,33 +313,46 @@ def prepare_data(args, palette, device):
     all_feature_maps_train_list = []
     vis = []
     all_mask_train_list = []
-    for i in tqdm(range(len(latent_all))):
-        gc.collect()
-        latent_input = latent_all[i].float()
+    if not os.path.isfile("./image_feature_list.pkl"):
+        for i in tqdm(range(len(latent_all))):
+            gc.collect()
+            latent_input = latent_all[i].float()
 
-        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
-                                            return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
+            img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+                                                return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
 
-        #print('test', feature_maps.shape)
-        mask = all_mask[i:i + 1]
-        feature_maps = feature_maps.permute(0, 2, 3, 1)
-        feature_maps = feature_maps.reshape(-1, args['dim'][2])
-        new_mask =  np.squeeze(mask)
-        mask = mask.reshape(-1)
-        #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
-        if len(mask) == 0: continue
-        all_feature_maps_train_list.append(feature_maps.cpu().detach())
-        
+            #print('test', feature_maps.shape)
+            mask = all_mask[i:i + 1]
+            feature_maps = feature_maps.permute(0, 2, 3, 1)
+            feature_maps = feature_maps.reshape(-1, args['dim'][2])
+            new_mask =  np.squeeze(mask)
+            mask = mask.reshape(-1)
+            #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
+            if len(mask) == 0: continue
+            all_feature_maps_train_list.append(feature_maps.cpu().detach())
+            
 
-        #all_mask_train[start:end] = (mask == 143).astype(np.float16)
-        all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
-        img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
-        curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
-        vis.append( curr_vis )
-    all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
-    vis = np.concatenate(vis, 1)
-    all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
-    imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
+            #all_mask_train[start:end] = (mask == 143).astype(np.float16)
+            all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
+            img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
+            curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
+            vis.append( curr_vis )
+    if not os.path.isfile("./image_feature_list.pkl"): 
+        all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
+        vis = np.concatenate(vis, 1)
+        all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
+        with open('image_feature_list.pkl', 'wb') as f:
+            pickle.dump(all_feature_maps_train, f)
+        with open('all_mask_train_list.pkl', 'wb') as f:
+            pickle.dump(all_mask_train_list, f)
+        imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
+    else:
+        file = open("image_feature_list.pkl",'rb')
+        file1 = open("all_mask_train_list.pkl",'rb')
+        all_feature_maps_train = pickle.load(file)
+        all_mask_train_list = pickle.load(file1)
+    
+    
     return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers_list, labels
 
