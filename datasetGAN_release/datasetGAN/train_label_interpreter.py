@@ -31,32 +31,40 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
+    g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
 
-    train_data = trainData(all_feature_maps_train_list,
-                           all_mask_train_all, args)
+    latent_all = np.load(args['annotation_image_latent_path'])
+    
+    latent_all = torch.from_numpy(latent_all)
+
+    all_mask_train_all, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device, g_all, upsamplers=upsamplers, latent_all=latent_all)
+    #all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
+
+    train_data = trainDataOptimized(latent_all, all_mask_train_all, g_all, upsamplers, args, device)
+    #train_data = trainData(all_feature_maps_train_list,
+    #                       all_mask_train_all, args)
     print("number of classif instances", len(imagenames_classif))
     print('affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape', len(affine_layers), len(labels))
 
     label_data = labelData(affine_layers, labels, args)
 
-    count_dict = get_label_stas(train_data)
+    '''count_dict = get_label_stas(train_data)
 
     max_label = max([*count_dict])
     print(" *********************** max_label " + str(max_label) + " ***********************")
-    print(" *********************** Current number data " + str(num_data) + " ***********************")
+    print(" *********************** Current number data " + str(num_data) + " ***********************")'''
 
     batch_size = args['batch_size']
 
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True)#, drop_last=True)
+    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size)#, drop_last=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
         gc.collect()
-        feat_size = args['classification_map_size']*args['classification_map_size']*args['classification_channels']
+        feat_size = args['classification_map_size']
         label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)#StyleGANClassifier(16).to(device)
-        classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
+        classifier = segm_classifier(2, args['dim'][-1]).to(device)
 
         if checkpoint_path_segm != "":
             checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
@@ -65,7 +73,7 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
         else:
             classifier.init_weights()
             classifier.train()
-            #label_classifier_instance.init_weights()
+            label_classifier_instance.init_weights()
         if checkpoint_path_label != "":
             checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
             label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
@@ -75,7 +83,7 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters() , lr=0.001)
-        optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.001)
+        optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.01)
 
         iteration = 0
         break_count = 0
@@ -91,7 +99,8 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
                 label = label.type(torch.LongTensor).to(device).squeeze(0)
                 optimizer_label.zero_grad()
                 y_pred = label_classifier_instance(X_batch)
-                
+
+                #print(torch.softmax(y_pred, axis=-1).argmax(axis=1), label)
                 loss = criterion(y_pred, label)
                 acc = multi_acc(y_pred, label)
                 all_preds.append(y_pred.argmax(-1).item())

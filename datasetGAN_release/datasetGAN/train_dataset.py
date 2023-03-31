@@ -1,5 +1,4 @@
 import torch 
-import os 
 import torch.nn as nn 
 import numpy as np 
 from utils.utils import colorize_mask, latent_to_image, oht_to_scalar
@@ -8,6 +7,7 @@ import sys
 sys.path.append('..')
 import imageio
 from tqdm import tqdm
+from collections import Counter
 import torch
 import torch.nn as nn
 import imageio
@@ -42,6 +42,36 @@ few_shot_classes = {"Nofinding": 0,
     'Atelectasis': 13,
     'Pneumothorax': 14}
 
+def find_majority(votes):
+    vote_count = Counter(votes)
+    top_two = vote_count.most_common(2)
+    if len(top_two)>1 and top_two[0][1] == top_two[1][1]:
+        # It is a tie
+        return 0
+    return top_two[0][0]
+
+class trainDataOptimized(Dataset):
+    def __init__(self, latent_all, masks, g_all, upsamplers, args, device):
+        self.latent_all = latent_all
+        self.g_all = g_all
+        self.upsamplers = upsamplers
+        self.all_mask = masks
+        self.args = args
+        self.device = device
+    def __getitem__(self, i):
+        latent_input = self.latent_all[i].float()
+        mask = self.all_mask[i:i + 1]
+        feature_map = get_style_latent(self.g_all, self.upsamplers, latent_input, self.args, self.device)
+        mask = torch.tensor((mask == 143).astype(np.float16))
+        #new_mask =  np.squeeze(mask)
+        mask = mask.reshape(-1)
+        #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
+        '''if len(mask) == 0: continue
+        img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
+        curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)'''
+        return feature_map, mask
+    def __len__(self):
+        return len(self.latent_all)
 
 class trainData(Dataset):
 
@@ -137,8 +167,103 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         count_step = start_step
 
         print( "num_sample: ", num_sample)
-        
-        for i in range(num_sample):
+        image_names_classification = os.listdir(args['annotation_image_path_classification'])
+        mask = ["tophat" in elem for elem in image_names_classification]
+        image_names_classification = np.array(image_names_classification)[mask]
+        affine_layers_list = []
+        labels = []
+        for i, x in tqdm(enumerate(image_names_classification)):
+            im_name = os.path.join(args['annotation_image_path_classification'], x)
+            label = torch.tensor([few_shot_classes[x.split("_")[0]]])
+            latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
+            img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+                                            return_upsampled_layers=True, use_style_latents=True, device=device)
+            affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
+            labels.extend([label] * len(affine_layers))
+            image_cache.append(img)
+            latent_cache.append(latent_input)
+
+            labels_from_model = []
+            all_seg = []
+            all_entropy = []
+            mean_seg = None
+            curr_result = {}
+            seg_mode_ensemble = []
+            for MODEL_NUMBER in range(args['model_num']):
+                classifier = classifier_list[MODEL_NUMBER]
+                label_classifier_instance = classifier_list_label[MODEL_NUMBER]
+                img_seg = classifier(affine_layers)
+
+                img_seg = img_seg.squeeze()
+                y_preds = []
+                for X_batch in affine_layers_list:
+                    y_pred = label_classifier_instance(X_batch)
+                    y_preds.append(torch.softmax(y_pred, axis=-1).item())
+
+                label = find_majority(y_preds)
+                entropy = Categorical(logits=img_seg).entropy()
+                all_entropy.append(entropy)
+
+                all_seg.append(img_seg)
+                if mean_seg is None:
+                    mean_seg = softmax_f(img_seg)
+                else:
+                    mean_seg += softmax_f(img_seg)
+
+                img_seg_final = oht_to_scalar(img_seg)
+                img_seg_final = img_seg_final.reshape(args['dim'][0], args['dim'][1], 1)
+                img_seg_final = img_seg_final.cpu().detach().numpy()
+
+                seg_mode_ensemble.append(img_seg_final)
+                labels_from_model.append(label)
+
+            mean_seg = mean_seg / len(all_seg)
+
+            full_entropy = Categorical(mean_seg).entropy()
+
+            js = full_entropy - torch.mean(torch.stack(all_entropy), 0)
+
+            top_k = js.sort()[0][- int(js.shape[0] / 10):].mean()
+            entropy_calculate.append(top_k)
+
+            img_seg_final = np.concatenate(seg_mode_ensemble, axis=-1)
+            img_seg_final = scipy.stats.mode(img_seg_final, 2)[0].reshape(args['dim'][0], args['dim'][1])
+            del (affine_layers)
+            if vis:
+                color_mask = colorize_mask(img_seg_final, palette) #+ 0.3 * img
+                
+                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + f'{label}_mask.jpg'),
+                                  color_mask.astype(np.uint8))
+                
+                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + f'{label}_image.jpg'),
+                                  img.astype(np.uint8))
+
+            else:
+                seg_cache.append(img_seg_final)
+                curr_result['uncertrainty_score'] = top_k.item()
+                image_label_name = os.path.join(result_path, 'label_' + str(count_step) + '.png')
+                image_name = os.path.join(result_path,  str(count_step) + '.png')
+
+                js_name = os.path.join(result_path, str(count_step) + '.npy')
+                img = Image.fromarray(img)
+                img_seg = Image.fromarray(img_seg_final.astype('uint8'))
+                js = js.cpu().numpy().reshape(args['dim'][0], args['dim'][1])
+                img.save(image_name)
+                img_seg.save(image_label_name)
+                np.save(js_name, js)
+                curr_result['image_name'] = image_name
+                curr_result['image_label_name'] = image_label_name
+                curr_result['js_name'] = js_name
+                count_step += 1
+
+
+                results.append(curr_result)
+                if i % 1000 == 0 and i != 0:
+                    with open(os.path.join(result_path, str(i) + "_" + str(start_step) + '.pickle'), 'wb') as f:
+                        pickle.dump(results, f)
+
+
+        '''for i in range(num_sample):
             if i % 100 == 0:
                 print("Generate", i, "Out of:", num_sample)
 
@@ -239,17 +364,12 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
                 results.append(curr_result)
                 if i % 1000 == 0 and i != 0:
                     with open(os.path.join(result_path, str(i) + "_" + str(start_step) + '.pickle'), 'wb') as f:
-                        pickle.dump(results, f)
+                        pickle.dump(results, f)'''
 
         with open(os.path.join(result_path, str(num_sample) + "_" + str(start_step) + '.pickle'), 'wb') as f:
             pickle.dump(results, f)
 
-def prepare_data(args, palette, device):
-
-    g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
-    latent_all = np.load(args['annotation_image_latent_path'])
-    
-    latent_all = torch.from_numpy(latent_all)
+def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
     
 
     # load annotated mask
@@ -282,7 +402,7 @@ def prepare_data(args, palette, device):
     affine_layers_list = []
     labels = []
     if not os.path.isfile("./affine_layers_list.pkl"):
-        for x in tqdm(image_names_classification):
+        for x in tqdm(image_names_classification[:10]):
             im_name = os.path.join(args['annotation_image_path_classification'], x)
             label = torch.tensor([few_shot_classes[x.split("_")[0]]])
             latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
@@ -290,16 +410,16 @@ def prepare_data(args, palette, device):
                                             return_upsampled_layers=True, use_style_latents=True, device=device)
             affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
             labels.extend([label] * len(affine_layers))
-    if not os.path.isfile("./affine_layers_list.pkl"): 
-        with open('affine_layers_list.pkl', 'wb') as f:
+    '''if not os.path.isfile("./affine_layers_list_1.pkl"): 
+        with open('./affine_layers_list_1.pkl', 'wb') as f:
             pickle.dump(affine_layers_list, f)
-        with open('affine_layers_labels.pkl', 'wb') as f:
+        with open('./affine_layers_labels_1.pkl', 'wb') as f:
             pickle.dump(labels, f)
     else:
-        file = open("affine_layers_list.pkl",'rb')
-        file1 = open("affine_layers_labels.pkl",'rb')
+        file = open("./affine_layers_list_2.pkl",'rb')
+        file1 = open("./affine_layers_labels_2.pkl",'rb')
         affine_layers_list = pickle.load(file)
-        labels = pickle.load(file1)
+        labels = pickle.load(file1)'''
 
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
@@ -310,33 +430,27 @@ def prepare_data(args, palette, device):
                 mask_list[i][mask_list[i] == target] = 0'''
 
     all_mask = np.stack(mask_list)
+    '''
     all_feature_maps_train_list = []
     vis = []
     all_mask_train_list = []
+    
     if not os.path.isfile("./image_feature_list.pkl"):
         for i in tqdm(range(len(latent_all))):
             gc.collect()
             latent_input = latent_all[i].float()
-
-            img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
-                                                return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
-
-            #print('test', feature_maps.shape)
             mask = all_mask[i:i + 1]
-            feature_maps = feature_maps.permute(0, 2, 3, 1)
-            feature_maps = feature_maps.reshape(-1, args['dim'][2])
+            feature_map = get_style_latent(g_all, upsamplers, latent_input, args, device)
+            all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
             new_mask =  np.squeeze(mask)
             mask = mask.reshape(-1)
             #all_feature_maps_train[start:end] = feature_maps.cpu().detach().numpy().astype(np.float16)
             if len(mask) == 0: continue
-            all_feature_maps_train_list.append(feature_maps.cpu().detach())
-            
-
-            #all_mask_train[start:end] = (mask == 143).astype(np.float16)
-            all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
             img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
             curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
             vis.append( curr_vis )
+            all_feature_maps_train_list.append(feature_map)
+            
     if not os.path.isfile("./image_feature_list.pkl"): 
         all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
         vis = np.concatenate(vis, 1)
@@ -352,7 +466,16 @@ def prepare_data(args, palette, device):
         file1 = open("all_mask_train_list.pkl",'rb')
         all_feature_maps_train = pickle.load(file)
         all_mask_train_list = pickle.load(file1)
-    
-    
+    '''
+    return all_mask, image_names_classification, affine_layers_list, labels
     return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers_list, labels
 
+def get_style_latent(g_all, upsamplers, latent_input, args, device):
+    img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+                                                return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
+
+    feature_maps = feature_maps.permute(0, 2, 3, 1)
+    feature_maps = feature_maps.reshape(-1, args['dim'][2])
+    #all_mask_train[start:end] = (mask == 143).astype(np.float16)
+    return feature_maps.cpu().detach()
+            

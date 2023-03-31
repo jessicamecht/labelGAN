@@ -93,14 +93,17 @@ def prepare_stylegan(args, device):
 class label_classifier(nn.Module):
     def __init__(self, label_class, label_dim):
         super(label_classifier, self).__init__()
-        self.resize = torch.nn.Upsample(size=(16, 16), mode='bilinear')
-        self.conv1 = torch.nn.Conv2d(512, 16, kernel_size=1)
-        self.conv2 = torch.nn.Conv2d(256, 16, kernel_size=1)
-        self.conv3 = torch.nn.Conv2d(128, 16, kernel_size=1)
-        self.conv4 = torch.nn.Conv2d(64, 16, kernel_size=1)
-        self.conv5 = torch.nn.Conv2d(32, 16, kernel_size=1)
-        self.lin = nn.Linear(label_dim, 128)
+        self.resize = torch.nn.Upsample(size=(label_dim, label_dim), mode='bilinear')
+        self.conv1 = torch.nn.Conv2d(512, label_dim, kernel_size=1)
+        self.conv2 = torch.nn.Conv2d(256, label_dim, kernel_size=1)
+        self.conv3 = torch.nn.Conv2d(128, label_dim, kernel_size=1)
+        self.conv4 = torch.nn.Conv2d(64, label_dim, kernel_size=1)
+        self.conv5 = torch.nn.Conv2d(32, label_dim, kernel_size=1)
+        self.conv6 = torch.nn.Conv2d(16, label_dim, kernel_size=1)
+        self.lin = nn.Linear(label_dim*label_dim*label_dim, 256)
         self.label_layers = nn.Sequential(
+                nn.ReLU(),
+                nn.Linear(256, 128),
                 nn.ReLU(),
                 nn.Linear(128, 32),
                 nn.ReLU(),
@@ -124,6 +127,8 @@ class label_classifier(nn.Module):
             x = self.conv4(x)
         if 32 == x.shape[1]:
             x = self.conv5(x)
+        if 16 == x.shape[1]:
+            x = self.conv6(x)
             
         x = x.reshape(x.shape[0], -1)
         
