@@ -90,6 +90,50 @@ def prepare_stylegan(args, device):
 
     return g_all, avg_latent, upsamplers
 
+class alternative_label_classifier(nn.Module):
+    def __init__(self, label_class, label_dim):
+        super(label_classifier, self).__init__()
+        self.resize = torch.nn.Upsample(size=(label_dim, label_dim), mode='bilinear')
+        self.conv1 = torch.nn.Conv2d(512, label_dim, kernel_size=1)
+        self.conv2 = torch.nn.Conv2d(256, label_dim, kernel_size=1)
+        self.conv3 = torch.nn.Conv2d(128, label_dim, kernel_size=1)
+        self.conv4 = torch.nn.Conv2d(64, label_dim, kernel_size=1)
+        self.conv5 = torch.nn.Conv2d(32, label_dim, kernel_size=1)
+        self.conv6 = torch.nn.Conv2d(16, label_dim, kernel_size=1)
+        self.lin = nn.Linear(label_dim*label_dim*label_dim, 256)
+        self.label_layers = nn.Sequential(
+                nn.ReLU(),
+                nn.Linear(256, 128),
+                nn.ReLU(),
+                nn.Linear(128, 32),
+                nn.ReLU(),
+                nn.Linear(32, label_class),
+            )
+    def init_weights(self, init_type='normal', gain=0.02):
+        self.apply(lambda x: init_func(x, init_type, gain))
+
+    def forward(self, x):
+        x = x.squeeze(0)
+        x = self.resize(x)
+
+        if 512 == x.shape[1]:
+            x = self.conv1(x)
+        if 256 == x.shape[1]:
+            x = self.conv2(x)
+        if 128 == x.shape[1]:
+            x = self.conv3(x)
+        if 64 == x.shape[1]:
+            x = self.conv4(x)
+        if 32 == x.shape[1]:
+            x = self.conv5(x)
+        if 16 == x.shape[1]:
+            x = self.conv6(x)
+            
+        x = x.reshape(x.shape[0], -1)
+        
+        x = self.lin(x)
+        return self.label_layers(x)
+
 class label_classifier(nn.Module):
     def __init__(self, label_class, label_dim):
         super(label_classifier, self).__init__()
@@ -109,7 +153,6 @@ class label_classifier(nn.Module):
                 nn.ReLU(),
                 nn.Linear(32, label_class),
             )
-
     def init_weights(self, init_type='normal', gain=0.02):
         self.apply(lambda x: init_func(x, init_type, gain))
 

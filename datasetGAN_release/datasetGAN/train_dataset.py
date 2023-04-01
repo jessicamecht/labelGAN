@@ -81,6 +81,7 @@ class trainData(Dataset):
         self.args = args
 
     def __getitem__(self, index):
+        print(self.X_data[index].shape)
         x = torch.tensor(self.X_data[index])
         x = x.reshape(-1, self.args['dim'][2])
         return x.type(torch.FloatTensor).squeeze(), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
@@ -370,8 +371,6 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             pickle.dump(results, f)
 
 def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
-    
-
     # load annotated mask
     mask_list = []
     im_list = []
@@ -402,7 +401,7 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
     affine_layers_list = []
     labels = []
     if not os.path.isfile("./affine_layers_list.pkl"):
-        for x in tqdm(image_names_classification[:10]):
+        for x in tqdm(image_names_classification[:1]):
             im_name = os.path.join(args['annotation_image_path_classification'], x)
             label = torch.tensor([few_shot_classes[x.split("_")[0]]])
             latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
@@ -410,7 +409,7 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
                                             return_upsampled_layers=True, use_style_latents=True, device=device)
             affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
             labels.extend([label] * len(affine_layers))
-    '''if not os.path.isfile("./affine_layers_list_1.pkl"): 
+    if not os.path.isfile("./affine_layers_list_1.pkl"): 
         with open('./affine_layers_list_1.pkl', 'wb') as f:
             pickle.dump(affine_layers_list, f)
         with open('./affine_layers_labels_1.pkl', 'wb') as f:
@@ -419,7 +418,7 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
         file = open("./affine_layers_list_2.pkl",'rb')
         file1 = open("./affine_layers_labels_2.pkl",'rb')
         affine_layers_list = pickle.load(file)
-        labels = pickle.load(file1)'''
+        labels = pickle.load(file1)
 
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
@@ -430,7 +429,7 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
                 mask_list[i][mask_list[i] == target] = 0'''
 
     all_mask = np.stack(mask_list)
-    '''
+    
     all_feature_maps_train_list = []
     vis = []
     all_mask_train_list = []
@@ -455,7 +454,7 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
         all_feature_maps_train = torch.concat(all_feature_maps_train_list, axis=0)
         vis = np.concatenate(vis, 1)
         all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
-        with open('image_feature_list.pkl', 'wb') as f:
+        '''with open('image_feature_list.pkl', 'wb') as f:
             pickle.dump(all_feature_maps_train, f)
         with open('all_mask_train_list.pkl', 'wb') as f:
             pickle.dump(all_mask_train_list, f)
@@ -465,9 +464,9 @@ def prepare_data(args, palette, device, g_all, upsamplers, latent_all):
         file = open("image_feature_list.pkl",'rb')
         file1 = open("all_mask_train_list.pkl",'rb')
         all_feature_maps_train = pickle.load(file)
-        all_mask_train_list = pickle.load(file1)
-    '''
-    return all_mask, image_names_classification, affine_layers_list, labels
+        all_mask_train_list = pickle.load(file1)'''
+    
+    #return all_mask, image_names_classification, affine_layers_list, labels
     return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers_list, labels
 
 def get_style_latent(g_all, upsamplers, latent_input, args, device):

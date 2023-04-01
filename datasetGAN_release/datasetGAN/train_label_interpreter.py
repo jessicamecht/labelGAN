@@ -37,12 +37,13 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     
     latent_all = torch.from_numpy(latent_all)
 
-    all_mask_train_all, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device, g_all, upsamplers=upsamplers, latent_all=latent_all)
-    #all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
-
-    train_data = trainDataOptimized(latent_all, all_mask_train_all, g_all, upsamplers, args, device)
-    #train_data = trainData(all_feature_maps_train_list,
-    #                       all_mask_train_all, args)
+    #all_mask_train_all, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device, g_all, upsamplers=upsamplers, latent_all=latent_all)
+    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device, g_all, upsamplers, latent_all)
+    print(all_feature_maps_train_list, len(all_feature_maps_train_list))
+    #all_feature_maps_train_list = torch.concat(all_feature_maps_train_list, axis=0)
+    #train_data = trainDataOptimized(latent_all, all_mask_train_all, g_all, upsamplers, args, device)
+    train_data = trainData(all_feature_maps_train_list, all_mask_train_all, args)
+    
     print("number of classif instances", len(imagenames_classif))
     print('affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape', len(affine_layers), len(labels))
 
@@ -63,7 +64,7 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     for MODEL_NUMBER in range(args['model_num']):
         gc.collect()
         feat_size = args['classification_map_size']
-        label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)#StyleGANClassifier(16).to(device)
+        #label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)#StyleGANClassifier(16).to(device)
         classifier = segm_classifier(2, args['dim'][-1]).to(device)
 
         if checkpoint_path_segm != "":
@@ -73,23 +74,23 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
         else:
             classifier.init_weights()
             classifier.train()
-            label_classifier_instance.init_weights()
-        if checkpoint_path_label != "":
-            checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
-            label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
-            label_classifier_instance.eval()
-        else:
-            label_classifier_instance.train()
+            #label_classifier_instance.init_weights()
+        #if checkpoint_path_label != "":
+            #checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
+            #label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
+            #label_classifier_instance.eval()
+        #else:
+        #    label_classifier_instance.train()
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters() , lr=0.001)
-        optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.01)
+        #optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.01)
 
         iteration = 0
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        for epoch in tqdm(range(250)):
+        '''for epoch in tqdm(range(250)):
             all_preds = []
             all_labels = []
             accs = []
@@ -123,20 +124,22 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
                     if loss.item() < best_loss:
                         best_loss = loss.item()
                         break_count = 0
-                    '''else:
+                    else:
                         break_count += 1
 
                     if break_count > 50:
                         stop_sign = 1
                         print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
                         break'''
-            print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
+        #    #print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
         for epoch in tqdm(range(50)):
+            print('hello1')
             iteration = 0
             break_count = 0
             best_loss = 10000000
             stop_sign = 0
             for X_batch, y_batch in train_loader:
+                print('hello')
                 X_batch, y_batch = X_batch.to(device), y_batch.to(device)
                 y_batch = y_batch.type(torch.long)
 
