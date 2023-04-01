@@ -284,7 +284,7 @@ def prepare_data(args, palette, device):
     affine_layers_list = []
     labels = []
     if not os.path.isfile("./affine_layers_list.pkl"):
-        for x in tqdm(image_names_classification):
+        for x in tqdm(image_names_classification[:1]):
             im_name = os.path.join(args['annotation_image_path_classification'], x)
             label = torch.tensor([few_shot_classes[x.split("_")[0]]])
             latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
@@ -292,14 +292,14 @@ def prepare_data(args, palette, device):
                                             return_upsampled_layers=True, use_style_latents=True, device=device)
             affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
             labels.extend([label] * len(affine_layers))
-    if not os.path.isfile("./affine_layers_list.pkl"): 
+    '''if not os.path.isfile("./affine_layers_list.pkl"): 
         with open('affine_layers_list.pkl', 'wb') as f:
             pickle.dump(affine_layers_list, f)
         with open('affine_layers_labels.pkl', 'wb') as f:
             pickle.dump(labels, f)
     else:
         affine_layers_list = pickle.load('affine_layers_list.pkl')
-        labels = pickle.load('affine_layers_labels.pkl')
+        labels = pickle.load('affine_layers_labels.pkl')'''
 
     #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error

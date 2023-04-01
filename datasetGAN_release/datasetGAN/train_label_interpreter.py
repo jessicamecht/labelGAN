@@ -14,7 +14,7 @@ from utils.utils import multi_acc, get_label_stas
 import torch.optim as optim
 import argparse
 from torch.utils.data import DataLoader
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
 
@@ -49,7 +49,7 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     batch_size = args['batch_size']
 
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True)#, drop_last=True)
+    #train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True)#, drop_last=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
@@ -81,7 +81,7 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        for epoch in tqdm(range(250)):
+        '''for epoch in tqdm(range(250)):
             all_preds = []
             all_labels = []
             accs = []
@@ -114,14 +114,15 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
                     if loss.item() < best_loss:
                         best_loss = loss.item()
                         break_count = 0
-                    '''else:
-                        break_count += 1
+                    #else:
+                    #    break_count += 1
 
-                    if break_count > 50:
-                        stop_sign = 1
-                        print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
-                        break'''
-            print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
+                    #if break_count > 50:
+                    #    stop_sign = 1
+                    #    print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
+                    #    break
+            print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())'''
+        accs = []
         for epoch in tqdm(range(50)):
             iteration = 0
             break_count = 0
