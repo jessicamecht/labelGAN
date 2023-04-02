@@ -90,30 +90,22 @@ def prepare_stylegan(args, device):
 
     return g_all, avg_latent, upsamplers
 
-class label_classifier(nn.Module):
-    def __init__(self, label_class, label_dim):
-        super(label_classifier, self).__init__()
-        self.resize = torch.nn.Upsample(size=(16, 16), mode='bilinear')
-        self.conv1 = torch.nn.Conv2d(512, 16, kernel_size=1)
-        self.conv2 = torch.nn.Conv2d(256, 16, kernel_size=1)
-        self.conv3 = torch.nn.Conv2d(128, 16, kernel_size=1)
-        self.conv4 = torch.nn.Conv2d(64, 16, kernel_size=1)
-        self.conv5 = torch.nn.Conv2d(32, 16, kernel_size=1)
-        self.lin = nn.Linear(label_dim, 128)
-        self.label_layers = nn.Sequential(
-                nn.ReLU(),
-                nn.Linear(128, 32),
-                nn.ReLU(),
-                nn.Linear(32, label_class),
-            )
+class Reshaper(nn.Module):
+    def __init__(self, s, channels) -> None:
+        super(Reshaper, self).__init__()
+        self.resize = torch.nn.Upsample(size=(s, s), mode='bilinear')
+        self.conv1 = torch.nn.Conv2d(512, channels, kernel_size=1)
+        self.conv2 = torch.nn.Conv2d(256, channels, kernel_size=1)
+        self.conv3 = torch.nn.Conv2d(128, channels, kernel_size=1)
+        self.conv4 = torch.nn.Conv2d(64, channels, kernel_size=1)
+        self.conv5 = torch.nn.Conv2d(32, channels, kernel_size=1)
+        self.conv6 = torch.nn.Conv2d(16, channels, kernel_size=1)
 
     def init_weights(self, init_type='normal', gain=0.02):
         self.apply(lambda x: init_func(x, init_type, gain))
 
     def forward(self, x):
-        x = x.squeeze(0)
         x = self.resize(x)
-
         if 512 == x.shape[1]:
             x = self.conv1(x)
         if 256 == x.shape[1]:
@@ -124,7 +116,52 @@ class label_classifier(nn.Module):
             x = self.conv4(x)
         if 32 == x.shape[1]:
             x = self.conv5(x)
-            
+        if 16 == x.shape[1]:
+            x = self.conv6(x)
+
+        return x
+
+class latent_classifier(nn.Module):
+    def __init__(self, label_class):
+        super(latent_classifier, self).__init__()
+        
+        self.lin = nn.Linear(18*512, 128)
+        self.label_layers = nn.Sequential(
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, 32),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=32),
+                nn.Linear(32, label_class),
+            )
+
+    def init_weights(self, init_type='normal', gain=0.02):
+        self.apply(lambda x: init_func(x, init_type, gain))
+
+    def forward(self, x):
+        x = x.reshape(x.shape[0], -1)
+        
+        x = self.lin(x)
+        return self.label_layers(x)   
+
+class label_classifier(nn.Module):
+    def __init__(self, label_class, s, c):
+        super(label_classifier, self).__init__()
+        
+        self.lin = nn.Linear(c*s*s, 128)
+        self.label_layers = nn.Sequential(
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=128),
+                nn.Linear(128, 32),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features=32),
+                nn.Linear(32, label_class),
+            )
+
+    def init_weights(self, init_type='normal', gain=0.02):
+        self.apply(lambda x: init_func(x, init_type, gain))
+
+    def forward(self, x):
         x = x.reshape(x.shape[0], -1)
         
         x = self.lin(x)

@@ -4,7 +4,9 @@ import sys
 sys.path.append('..')
 import torch
 import torch.nn as nn
+import pandas as pd
 torch.manual_seed(0)
+from generate_data import generate_data
 import json
 import numpy as np
 import os
@@ -17,8 +19,130 @@ from torch.utils.data import DataLoader
 device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
+from collections import Counter
+import torchvision.models as models
 
-def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
+def find_majority(votes):
+    vote_count = Counter(votes)
+    top_two = vote_count.most_common(2)
+    if len(top_two)>1 and top_two[0][1] == top_two[1][1]:
+        # It is a tie
+        return 0
+    return top_two[0][0]
+
+def train_label_classif(args, checkpoint_path_label=""):
+    '''path = '/data3/jessica/data/labelGAN/pre_processed_training_data1/'
+    files = os.listdir(path)
+    files = sorted(files)
+    mask = ["Cardiomegaly" in elem or "Nofinding" in elem or 'Aorticenlargement' in elem for elem in files]
+    files = np.array(files)[mask]
+    reshaper = Reshaper(args['classification_map_size'], args['classification_channels']).to(device)'''
+    path = '/home/jessica/labelGAN/Image2StyleGAN/images/generated_latents_from_class_distr/'
+    files = os.listdir(path)
+    files = sorted(files)
+    #mask = ["Cardiomegaly" in elem or "Nofinding" in elem or 'Aorticenlargement' in elem for elem in files]
+    #files = np.array(files)[mask]
+    #label_data = labelData(files, path, reshaper, device)
+    label_data = labelDataLatent(files, path, device)
+    train_loader_classif = DataLoader(dataset=label_data, batch_size=args['batch_size'], shuffle=True)
+    '''label_classifier_instance = models.resnet50(pretrained=True)
+    num_ftrs = label_classifier_instance.fc.in_features
+    label_classifier_instance.fc = nn.Linear(num_ftrs, 15)
+    label_classifier_instance = label_classifier_instance.to(device)'''
+    #label_classifier_instance = label_classifier(args['number_class_classification'], args['classification_map_size'], args['classification_channels']).to(device)#StyleGANClassifier(16).to(device)
+    #label_classifier_instance.init_weights()
+    label_classifier_instance = latent_classifier(args['number_class_classification']).to(device)
+    if checkpoint_path_label != "":
+        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_number' + str(0) + '.pth'))
+        label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
+        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'reshaper_number' + str(0) + '.pth'))
+        reshaper.load_state_dict(checkpoint['model_state_dict'])
+        label_classifier_instance.eval()
+        reshaper.eval()
+    else:
+        label_classifier_instance.train()
+        #reshaper.train()
+        criterion = nn.CrossEntropyLoss()
+        optimizer_label = optim.Adam(label_classifier_instance.parameters(), lr=0.1, weight_decay=1e-5)
+
+        #optimizer_label = optim.Adam(list(label_classifier_instance.parameters()) + list(reshaper.parameters()), lr=0.1, weight_decay=1e-5)
+
+    iteration = 0
+    best_loss = 10000000
+    for epoch in tqdm(range(250)):
+        all_preds = []
+        all_labels = []
+        accs = []
+        losses = []
+        ids = []
+        feats = []
+        acc_major = []
+        #for X_batch, label, image_ids, fs in tqdm(train_loader_classif):
+        for X_batch, label in tqdm(train_loader_classif):
+            X_batch = X_batch.detach()
+            #print(X_batch)
+            label = label.type(torch.LongTensor).to(device).squeeze()
+            optimizer_label.zero_grad()
+            y_pred = label_classifier_instance(X_batch.squeeze())
+            loss = criterion(y_pred, label)
+            #print(loss)
+            acc = multi_acc(y_pred, label)
+            
+            loss.backward()
+            optimizer_label.step()
+
+            all_preds.extend(y_pred.argmax(-1).cpu().detach())
+            all_labels.extend(label.cpu().detach())
+            #ids.extend(image_ids)
+            losses.append(loss.item())
+            accs.append(acc.cpu())
+            #feats.extend(fs)
+
+            #majority_label = find_majority(list(y_pred.argmax(-1).cpu().detach()))
+            #acc_major.append(majority_label == label[0].cpu().detach())
+            iteration += 1
+            if iteration % 5000 == 0:
+                print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ", np.array(acc_major).mean())
+                gc.collect()
+                model_path = os.path.join(args['exp_dir'],
+                                            'model_label_classif_' +  str(iteration) + '_number_' + str(0) + '.pth')   
+                model_path_reshaper = os.path.join(args['exp_dir'],
+                                            'reshaper_' +  str(iteration) + '_number_' + str(0) + '.pth')                  
+                if checkpoint_path_label == "":
+                    torch.save({'model_state_dict': label_classifier_instance.state_dict()},
+                                model_path)
+                    #torch.save({'model_state_dict': reshaper.state_dict()},
+                    #            model_path_reshaper)
+
+            if epoch > 3:
+                if loss.item() < best_loss:
+                    best_loss = loss.item()
+                    break_count = 0
+                #else:
+                #    break_count += 1
+
+                #if break_count > 50:
+                #    stop_sign = 1
+                #    print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
+                #    break
+        df = pd.DataFrame()
+        df["labels"] = all_labels
+        df['preds'] = all_preds
+        #df['ids'] = ids
+        #df['feats'] = feats
+        df.to_csv("res.csv")
+        print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ", np.array(acc_major).mean())
+        #np.save(all_preds, f'preds_epoch_{epoch}.npy')
+        #np.save(all_labels, f'labels_epoch_{epoch}.npy')
+        #np.save(ids, f'image_ids_epoch_{epoch}.npy')
+    torch.save({'model_state_dict': label_classifier_instance.state_dict()},
+                   model_path)
+    #torch.save({'model_state_dict': reshaper.state_dict()},
+    #               model_path_reshaper)
+    gc.collect()
+
+
+def main(args, checkpoint_path_segm=""):
 
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
@@ -38,8 +162,6 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     print("number of classif instances", len(imagenames_classif))
     print('affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape', len(affine_layers), len(labels))
 
-    label_data = labelData(affine_layers, labels, args)
-
     count_dict = get_label_stas(train_data)
 
     max_label = max([*count_dict])
@@ -49,13 +171,10 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
     batch_size = args['batch_size']
 
     train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-    #train_loader_classif = DataLoader(dataset=label_data, batch_size=batch_size, shuffle=True)#, drop_last=True)
 
     print(" *********************** Current dataloader length " +  str(len(train_loader)) + " ***********************")
     for MODEL_NUMBER in range(args['model_num']):
         gc.collect()
-        feat_size = args['classification_map_size']*args['classification_map_size']*args['classification_channels']
-        label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)#StyleGANClassifier(16).to(device)
         classifier = segm_classifier((max_label+1), args['dim'][-1]).to(device)
 
         if checkpoint_path_segm != "":
@@ -65,63 +184,14 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
         else:
             classifier.init_weights()
             classifier.train()
-            #label_classifier_instance.init_weights()
-        if checkpoint_path_label != "":
-            checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
-            label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
-            label_classifier_instance.eval()
-        else:
-            label_classifier_instance.train()
 
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.Adam(classifier.parameters() , lr=0.001)
-        optimizer_label = optim.Adam(label_classifier_instance.parameters() , lr=0.001)
 
         iteration = 0
         break_count = 0
         best_loss = 10000000
         stop_sign = 0
-        '''for epoch in tqdm(range(250)):
-            all_preds = []
-            all_labels = []
-            accs = []
-            losses = []
-            for X_batch, label in train_loader_classif:
-                X_batch = X_batch.to(device)
-                label = label.type(torch.LongTensor).to(device).squeeze(0)
-                optimizer_label.zero_grad()
-                y_pred = label_classifier_instance(X_batch)
-                
-                loss = criterion(y_pred, label)
-                acc = multi_acc(y_pred, label)
-                all_preds.append(y_pred.argmax(-1).item())
-                all_labels.append(label.item())
-                losses.append(loss.item())
-                accs.append(acc.cpu())
-                loss.backward()
-                optimizer_label.step()
-
-                iteration += 1
-                if iteration % 50000 == 0:
-                    gc.collect()
-                    model_path = os.path.join(args['exp_dir'],
-                                              'model_label_classif_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')                    
-                    if checkpoint_path_label == "":
-                        torch.save({'model_state_dict': label_classifier_instance.state_dict()},
-                                   model_path)
-
-                if epoch > 3:
-                    if loss.item() < best_loss:
-                        best_loss = loss.item()
-                        break_count = 0
-                    #else:
-                    #    break_count += 1
-
-                    #if break_count > 50:
-                    #    stop_sign = 1
-                    #    print("*************** Break, Total iters,", iteration, ", at epoch", str(epoch), "***************")
-                    #    break
-            print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())'''
         accs = []
         for epoch in tqdm(range(50)):
             iteration = 0
@@ -181,10 +251,6 @@ def main(args, checkpoint_path_segm="", checkpoint_path_label=""):
         print('save to:',model_path)
         torch.save({'model_state_dict': classifier.state_dict()},
                    model_path)
-        torch.save({'model_state_dict_label': label_classifier_instance.state_dict()},
-                   model_path)
-        gc.collect()
-
 
         gc.collect()
         torch.cuda.empty_cache()    # clear cache memory on GPU
@@ -203,6 +269,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', type=str,  default="")
     parser.add_argument('--resume_label', type=str,  default="")
     parser.add_argument('--num_sample', type=int,  default=2000)
+    parser.add_argument('--train_label_classif', type=bool,  default=False)
 
     args = parser.parse_args()
     print(args.exp)
@@ -226,6 +293,8 @@ if __name__ == '__main__':
         main(opts, checkpoint_path_segm=args.resumes, checkpoint_path_label=args.resume_label)
     if args.generate_data:
         generate_data(opts, args.resume, args.resume_label, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
+    if args.train_label_classif:
+        train_label_classif(opts)
     else:
         main(opts)
 
