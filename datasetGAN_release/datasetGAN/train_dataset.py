@@ -102,42 +102,26 @@ def prepare_data(args, palette, device):
     
     num_data = len(latent_all)
 
+    annotation_mask_path_files = os.listdir(args['annotation_mask_path'])
     for i in tqdm(range(len(latent_all))):
-
         if i == 3: continue
         if i >= args['max_training']:
             break
         name = 'image_%0d.png' % i
+        mask_name = annotation_mask_path_files[i]
+        name = mask_name.replace("_mask.png", ".png")
         
-        im_frame = Image.open(os.path.join( args['annotation_mask_path'] , name)).convert('L')
+        im_frame = Image.open(os.path.join( args['annotation_mask_path'] , mask_name)).convert('L')
         mask = np.array(im_frame)
         mask = mask.squeeze()
         mask =  cv2.resize(np.float32(mask), dsize=(args['dim'][1], args['dim'][0]), interpolation=cv2.INTER_NEAREST)
         mask_list.append(mask)
-        im_name = os.path.join( args['annotation_mask_path'], 'image_%d.jpg' % i)
+        im_name = os.path.join( args['annotation_image_path'], name)
         img = Image.open(im_name)
         img = img.resize((args['dim'][1], args['dim'][0]))
 
         im_list.append(np.array(img))
-    image_names_classification = os.listdir(args['annotation_image_path_classification'])
-    mask = ["tophat" not in elem for elem in image_names_classification]
-    image_names_classification = np.array(image_names_classification)[mask]
-    affine_layers_list = []
-    labels = []
-    if not os.path.isfile("./affine_layers_list.pkl"):
-        for x in tqdm(image_names_classification[152:]):
-            im_name = os.path.join(args['annotation_image_path_classification'], x)
-            label = torch.tensor([few_shot_classes[x.split("_")[0]]])
-            latent_input = torch.tensor(np.load(im_name)).type(torch.FloatTensor).to(device).squeeze()
-            img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
-                                            return_upsampled_layers=True, use_style_latents=True, device=device)
-            affine_layers_list.extend([elem.cpu().detach()for elem in affine_layers])
-            for i, elem in enumerate(affine_layers):
-                np.save(f'/home/jessica/labelGAN/datasetGAN_release/datasetGAN/pre_processed_training_data/{x}_{i}.npy', elem.cpu().detach())
-            labels.extend([label] * len(affine_layers))
-    
 
-    #image_names_classification = image_names_classification[:args['max_training']]
     # delete small annotation error
     '''for i in range(len(mask_list)):  # clean up artifacts in the annotation, must do
         if mask_list[i] == None: continue 
@@ -148,12 +132,21 @@ def prepare_data(args, palette, device):
     all_mask = np.stack(mask_list)
     all_feature_maps_train_list = []
     vis = []
+    latent_path = args['annotation_image_latent_path_classification']
+    latent_files = np.array(os.listdir(latent_path))
     all_mask_train_list = []
     for i in tqdm(range(len(latent_all))):
         gc.collect()
-        latent_input = latent_all[i].float()
+        mask_name = annotation_mask_path_files[i]
+        name = mask_name.split("_")[1]
+        mask = [name in elem for elem in latent_files]
+        name = latent_files[mask][0]
+        
+        latent_input = torch.tensor(np.load(latent_path + name)).to(device)
 
-        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input.unsqueeze(0), dim=args['dim'][1],
+        #latent_input = latent_all[i].float().unsqueeze(0)
+
+        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input, dim=args['dim'][1],
                                             return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
 
         #print('test', feature_maps.shape)
@@ -166,9 +159,8 @@ def prepare_data(args, palette, device):
         if len(mask) == 0: continue
         all_feature_maps_train_list.append(feature_maps.cpu().detach())
         
-
         #all_mask_train[start:end] = (mask == 143).astype(np.float16)
-        all_mask_train_list.append(torch.tensor((mask == 143).astype(np.float16)))
+        all_mask_train_list.append(torch.tensor(mask.astype(np.float16)))
         img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
         curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
         vis.append( curr_vis )
@@ -177,5 +169,5 @@ def prepare_data(args, palette, device):
     all_mask_train_list = torch.concat(all_mask_train_list, axis=0)
     imageio.imwrite(os.path.join(args['exp_dir'], "train_data.jpg"),
                       vis)
-    return all_feature_maps_train, all_mask_train_list, num_data, image_names_classification, affine_layers_list, labels
+    return all_feature_maps_train, all_mask_train_list, num_data
 

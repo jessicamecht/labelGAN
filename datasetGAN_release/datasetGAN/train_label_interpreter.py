@@ -40,8 +40,9 @@ def train_label_classif(args, checkpoint_path_label=""):
     path = '/home/jessica/labelGAN/Image2StyleGAN/images/generated_latents_from_class_distr/'
     files = os.listdir(path)
     files = sorted(files)
+    mask = ["tophat" not in elem for elem in files]
     #mask = ["Cardiomegaly" in elem or "Nofinding" in elem or 'Aorticenlargement' in elem for elem in files]
-    #files = np.array(files)[mask]
+    files = np.array(files)[mask]
     #label_data = labelData(files, path, reshaper, device)
     label_data = labelDataLatent(files, path, device)
     train_loader_classif = DataLoader(dataset=label_data, batch_size=args['batch_size'], shuffle=True)
@@ -66,7 +67,7 @@ def train_label_classif(args, checkpoint_path_label=""):
         optimizer_label = optim.Adam(label_classifier_instance.parameters(), lr=0.1, weight_decay=1e-5)
 
         #optimizer_label = optim.Adam(list(label_classifier_instance.parameters()) + list(reshaper.parameters()), lr=0.1, weight_decay=1e-5)
-
+    sm = nn.Softmax(dim=1)
     iteration = 0
     best_loss = 10000000
     for epoch in tqdm(range(250)):
@@ -75,6 +76,7 @@ def train_label_classif(args, checkpoint_path_label=""):
         accs = []
         losses = []
         ids = []
+        all_probs = []
         feats = []
         acc_major = []
         #for X_batch, label, image_ids, fs in tqdm(train_loader_classif):
@@ -91,7 +93,8 @@ def train_label_classif(args, checkpoint_path_label=""):
             loss.backward()
             optimizer_label.step()
 
-            all_preds.extend(y_pred.argmax(-1).cpu().detach())
+            all_preds.extend(sm(y_pred).argmax(-1).cpu().detach())
+            all_probs.extend(torch.max(sm(y_pred), dim=-1).values.cpu().detach())
             all_labels.extend(label.cpu().detach())
             #ids.extend(image_ids)
             losses.append(loss.item())
@@ -128,6 +131,7 @@ def train_label_classif(args, checkpoint_path_label=""):
         df = pd.DataFrame()
         df["labels"] = all_labels
         df['preds'] = all_preds
+        df['probs'] = all_probs
         #df['ids'] = ids
         #df['feats'] = feats
         df.to_csv("res.csv")
@@ -155,12 +159,10 @@ def main(args, checkpoint_path_segm=""):
     elif args['category'] == 'xray':
         from utils.data_util import xray_palette as palette
 
-    all_feature_maps_train_list, all_mask_train_all, num_data, imagenames_classif, affine_layers, labels = prepare_data(args, palette, device)
+    all_feature_maps_train_list, all_mask_train_all, num_data = prepare_data(args, palette, device)
 
     train_data = trainData(all_feature_maps_train_list,
                            all_mask_train_all, args)
-    print("number of classif instances", len(imagenames_classif))
-    print('affine_layers_upsamples[1].shape, affine_layers_upsamples[2].shape', len(affine_layers), len(labels))
 
     count_dict = get_label_stas(train_data)
 
@@ -217,7 +219,7 @@ def main(args, checkpoint_path_segm=""):
                     gc.collect()
 
 
-                if iteration % 50000 == 0:
+                if iteration % 5000 == 0:
                     model_path = os.path.join(args['exp_dir'],
                                               'model_' +  str(iteration) + '_number_' + str(MODEL_NUMBER) + '.pth')
                     #print('Save checkpoint, Epoch : ', str(epoch), ' Path: ', model_path)
@@ -244,12 +246,11 @@ def main(args, checkpoint_path_segm=""):
             if stop_sign == 1:
                 break
 
-        gc.collect()
-        model_path = os.path.join(args['exp_dir'],
+            model_path = os.path.join(args['exp_dir'],
                                   'model_' + str(MODEL_NUMBER) + '.pth')
-        MODEL_NUMBER += 1
-        print('save to:',model_path)
-        torch.save({'model_state_dict': classifier.state_dict()},
+            MODEL_NUMBER += 1
+            print('save to:',model_path)
+            torch.save({'model_state_dict': classifier.state_dict()},
                    model_path)
 
         gc.collect()
@@ -290,7 +291,7 @@ if __name__ == '__main__':
     os.system('cp %s %s' % (args.exp, opts['exp_dir']))
 
     if args.eval_interp:
-        main(opts, checkpoint_path_segm=args.resumes, checkpoint_path_label=args.resume_label)
+        main(opts, checkpoint_path_segm=args.resume, checkpoint_path_label=args.resume_label)
     if args.generate_data:
         generate_data(opts, args.resume, args.resume_label, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
     if args.train_label_classif:

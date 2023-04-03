@@ -15,7 +15,7 @@ import scipy.stats
 from train_dataset import *
 from label_model import *
 
-def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample, start_step=0, vis=True, device="cuda"):
+def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample, style_latents=False, start_step=0, vis=True, device="cuda"):
     if args['category'] == 'car':
         from utils.data_util import car_20_palette as palette
     elif args['category'] == 'face':
@@ -51,13 +51,14 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         classifier =  nn.DataParallel(classifier).to(device)
 
         feat_size = args['classification_map_size']*args['classification_map_size']*args['classification_channels']
-        label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)
+        #label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)
+        label_classifier_instance = latent_classifier(args['number_class_classification']).to(device)
         label_classifier_instance =  nn.DataParallel(label_classifier_instance).to(device)
 
         checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
         classifier.load_state_dict(checkpoint['model_state_dict'])
     
-        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_' + str(MODEL_NUMBER) + '.pth'))
+        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_20000_number_0.pth'))
         label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
 
 
@@ -79,14 +80,23 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
 
 
         print( "num_sample: ", num_sample)
+
+        if style_latents: 
+            p = args['annotation_image_path_classification']
+            files = os.listdir(p)
+            mask = ["tophat" in elem for elem in files]
+            files = np.array(files)[mask]
+            num_sample = len(files)
         
         for i in range(num_sample):
             if i % 100 == 0:
                 print("Generate", i, "Out of:", num_sample)
 
             curr_result = {}
-
-            latent = np.random.randn(1, 512)
+            if style_latents:
+                latent = np.load(files[i])
+            else: 
+                latent = np.random.randn(1, 512)
 
             curr_result['latent'] = latent
 
@@ -95,16 +105,16 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             latent_cache.append(latent)
             
             img, affine_layers, style_latents = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
-                                                     return_upsampled_layers=True, device=device)
+                                                     style_latents=style_latents, return_upsampled_layers=True, device=device)
             
             if args['dim'][0] != args['dim'][1]:
-                img = img[:, 64:448][0]
+                img = img[0]#img[:, 64:448][0]
             else:
                 img = img[0]
 
             image_cache.append(img)
-            if args['dim'][0] != args['dim'][1]:
-                affine_layers = affine_layers[:, :, 64:448]
+            #if args['dim'][0] != args['dim'][1]:
+            #    affine_layers = affine_layers[:, :, 64:448]
             affine_layers = affine_layers[0]
 
             affine_layers = affine_layers.reshape(args['dim'][-1], -1).transpose(1, 0)
@@ -118,8 +128,12 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
                 classifier = classifier_list[MODEL_NUMBER]
                 img_seg = classifier(affine_layers)
 
-                img_seg = img_seg.squeeze()
+                classifier_label = classifier_list_label[MODEL_NUMBER]
 
+                label = classifier_label(latent)
+                label = softmax_f(label).argmax(-1).squeeze()
+
+                img_seg = img_seg.squeeze()
 
                 entropy = Categorical(logits=img_seg).entropy()
                 all_entropy.append(entropy)
@@ -150,13 +164,12 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             img_seg_final = scipy.stats.mode(img_seg_final, 2)[0].reshape(args['dim'][0], args['dim'][1])
             del (affine_layers)
             if vis:
-
                 color_mask = colorize_mask(img_seg_final, palette) #+ 0.3 * img
                 
-                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + '_mask.jpg'),
+                imageio.imwrite(os.path.join(result_path, f"vis_{label}_" + str(i) + '_mask.jpg'),
                                   color_mask.astype(np.uint8))
                 
-                imageio.imwrite(os.path.join(result_path, "vis_" + str(i) + '_image.jpg'),
+                imageio.imwrite(os.path.join(result_path, f"vis_{label}_" + str(i) + '_image.jpg'),
                                   img.astype(np.uint8))
 
             else:
