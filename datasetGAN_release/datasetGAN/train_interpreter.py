@@ -44,13 +44,82 @@ import copy
 from numpy.random import choice
 from torch.distributions import Categorical
 import scipy.stats
-from utils.utils import multi_acc, colorize_mask, get_label_stas, latent_to_image, oht_to_scalar, Interpolate
+from utils.utils import multi_acc, colorize_mask, get_label_stas, oht_to_scalar, Interpolate#latent_to_image
 import torch.optim as optim
 import argparse
 import glob
 from torch.utils.data import Dataset, DataLoader
 device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 import cv2
+
+def process_image(images):
+    drange = [-1, 1]
+    scale = 255 / (drange[1] - drange[0])
+    images = images * scale + (0.5 - drange[0] * scale)
+
+    images = images.astype(int)
+    images[images > 255] = 255
+    images[images < 0] = 0
+
+    return images.astype(int)
+
+def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
+                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False):
+    '''Given a input latent code, generate corresponding image and concatenated feature maps'''
+
+    # assert (len(latents) == 1)  # for GPU memory constraints
+    if not use_style_latents:
+        # generate style_latents from latents
+        style_latents = g_all.module.truncation(g_all.module.g_mapping(latents))
+        style_latents = style_latents.clone()  # make different layers non-alias
+
+    else:
+        style_latents = latents
+
+        # style_latents = latents
+    if return_stylegan_latent:
+
+        return  style_latents
+    img_list, affine_layers = g_all.module.g_synthesis(style_latents)
+
+    if return_only_im:
+        if process_out:
+            if img_list.shape[-2] > 512:
+                img_list = upsamplers[-1](img_list)
+
+            img_list = img_list.cpu().detach().numpy()
+            img_list = process_image(img_list)
+            img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        return img_list, style_latents
+
+    number_feautre = 0
+
+    for item in affine_layers:
+        number_feautre += item.shape[1]
+
+
+    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim).cuda()
+    if return_upsampled_layers:
+
+        start_channel_index = 0
+        for i in range(len(affine_layers)):
+            len_channel = affine_layers[i].shape[1]
+            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
+                affine_layers[i])
+            start_channel_index += len_channel
+
+    if img_list.shape[-2] != 512:
+        img_list = upsamplers[-1](img_list)
+
+    if process_out:
+        img_list = img_list.cpu().detach().numpy()
+        img_list = process_image(img_list)
+        img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        # print('start_channel_index',start_channel_index)
+
+
+    return img_list, affine_layers_upsamples
+
 
 class trainData(Dataset):
 

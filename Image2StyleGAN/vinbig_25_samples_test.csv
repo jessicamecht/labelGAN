@@ -1,0 +1,368 @@
+,image_id,class_name,class_id,rad_id,x_min,y_min,x_max,y_max,path
+0,50a418190bc3fb1ef1633bf9678929b3,No finding,14,R11,,,,,/data3/jessica/data/labelGAN/vinbig/train50a418190bc3fb1ef1633bf9678929b3.dicom
+1,50a418190bc3fb1ef1633bf9678929b3,No finding,14,R15,,,,,/data3/jessica/data/labelGAN/vinbig/train50a418190bc3fb1ef1633bf9678929b3.dicom
+2,50a418190bc3fb1ef1633bf9678929b3,No finding,14,R16,,,,,/data3/jessica/data/labelGAN/vinbig/train50a418190bc3fb1ef1633bf9678929b3.dicom
+3,5550a493b1c4554da469a072fdfab974,No finding,14,R9,,,,,/data3/jessica/data/labelGAN/vinbig/train5550a493b1c4554da469a072fdfab974.dicom
+4,5550a493b1c4554da469a072fdfab974,No finding,14,R8,,,,,/data3/jessica/data/labelGAN/vinbig/train5550a493b1c4554da469a072fdfab974.dicom
+5,5550a493b1c4554da469a072fdfab974,No finding,14,R10,,,,,/data3/jessica/data/labelGAN/vinbig/train5550a493b1c4554da469a072fdfab974.dicom
+20,5576d293dfccbc926d92d3ec0d20b9af,No finding,14,R12,,,,,/data3/jessica/data/labelGAN/vinbig/train5576d293dfccbc926d92d3ec0d20b9af.dicom
+21,5576d293dfccbc926d92d3ec0d20b9af,No finding,14,R11,,,,,/data3/jessica/data/labelGAN/vinbig/train5576d293dfccbc926d92d3ec0d20b9af.dicom
+22,5576d293dfccbc926d92d3ec0d20b9af,No finding,14,R14,,,,,/data3/jessica/data/labelGAN/vinbig/train5576d293dfccbc926d92d3ec0d20b9af.dicom
+32,565f761092a0cbc6f85c8195de091343,No finding,14,R14,,,,,/data3/jessica/data/labelGAN/vinbig/train565f761092a0cbc6f85c8195de091343.dicom
+33,565f761092a0cbc6f85c8195de091343,No finding,14,R13,,,,,/data3/jessica/data/labelGAN/vinbig/train565f761092a0cbc6f85c8195de091343.dicom
+34,565f761092a0cbc6f85c8195de091343,No finding,14,R11,,,,,/data3/jessica/data/labelGAN/vinbig/train565f761092a0cbc6f85c8195de091343.dicom
+35,56a0fef52403bf8a7bfb6ce0500e8da4,No finding,14,R2,,,,,/data3/jessica/data/labelGAN/vinbig/train56a0fef52403bf8a7bfb6ce0500e8da4.dicom
+36,56a0fef52403bf8a7bfb6ce0500e8da4,No finding,14,R4,,,,,/data3/jessica/data/labelGAN/vinbig/train56a0fef52403bf8a7bfb6ce0500e8da4.dicom
+37,56a0fef52403bf8a7bfb6ce0500e8da4,No finding,14,R7,,,,,/data3/jessica/data/labelGAN/vinbig/train56a0fef52403bf8a7bfb6ce0500e8da4.dicom
+51,3e300793e970e7916c36a57fe350f688,No finding,14,R1,,,,,/data3/jessica/data/labelGAN/vinbig/train3e300793e970e7916c36a57fe350f688.dicom
+52,3e300793e970e7916c36a57fe350f688,No finding,14,R7,,,,,/data3/jessica/data/labelGAN/vinbig/train3e300793e970e7916c36a57fe350f688.dicom
+53,3e300793e970e7916c36a57fe350f688,No finding,14,R5,,,,,/data3/jessica/data/labelGAN/vinbig/train3e300793e970e7916c36a57fe350f688.dicom
+54,19092706cfc4df42ae8f3302eb73bbd3,No finding,14,R16,,,,,/data3/jessica/data/labelGAN/vinbig/train19092706cfc4df42ae8f3302eb73bbd3.dicom
+55,19092706cfc4df42ae8f3302eb73bbd3,No finding,14,R10,,,,,/data3/jessica/data/labelGAN/vinbig/train19092706cfc4df42ae8f3302eb73bbd3.dicom
+56,19092706cfc4df42ae8f3302eb73bbd3,No finding,14,R14,,,,,/data3/jessica/data/labelGAN/vinbig/train19092706cfc4df42ae8f3302eb73bbd3.dicom
+57,012969950fbdd28bb50cfa447877cd4e,No finding,14,R1,,,,,/data3/jessica/data/labelGAN/vinbig/train012969950fbdd28bb50cfa447877cd4e.dicom
+58,012969950fbdd28bb50cfa447877cd4e,No finding,14,R5,,,,,/data3/jessica/data/labelGAN/vinbig/train012969950fbdd28bb50cfa447877cd4e.dicom
+59,012969950fbdd28bb50cfa447877cd4e,No finding,14,R17,,,,,/data3/jessica/data/labelGAN/vinbig/train012969950fbdd28bb50cfa447877cd4e.dicom
+60,23ed5844d016867059889d56e64df1b9,No finding,14,R2,,,,,/data3/jessica/data/labelGAN/vinbig/train23ed5844d016867059889d56e64df1b9.dicom
+6,56923ac65e4a3bf6e8ec0af530c4a205,Pulmonary fibrosis,13,R10,583.0,696.0,850.0,874.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+7,56923ac65e4a3bf6e8ec0af530c4a205,Pulmonary fibrosis,13,R8,588.0,663.0,876.0,926.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+47,5156d69e540648eb952371ec5c80bc81,Pulmonary fibrosis,13,R8,530.0,1289.0,890.0,2085.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+50,5156d69e540648eb952371ec5c80bc81,Pulmonary fibrosis,13,R9,624.0,1786.0,856.0,2074.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+77,511e8b50c9a7ecee4e1a8621f262e9ad,Pulmonary fibrosis,13,R9,1743.0,1889.0,1869.0,1945.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+81,543c0591a8706112a0e71620509a398f,Pulmonary fibrosis,13,R9,2048.0,673.0,2127.0,747.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+86,543c0591a8706112a0e71620509a398f,Pulmonary fibrosis,13,R8,625.0,745.0,1066.0,1111.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+87,543c0591a8706112a0e71620509a398f,Pulmonary fibrosis,13,R8,2038.0,666.0,2255.0,1106.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+167,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R8,700.0,471.0,1291.0,1099.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+169,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R8,1868.0,544.0,2423.0,1558.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+170,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R9,702.0,389.0,1314.0,870.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+173,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R10,807.0,607.0,867.0,670.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+174,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R10,769.0,1360.0,843.0,1510.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+179,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R10,891.0,437.0,1228.0,880.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+182,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R10,724.0,770.0,814.0,853.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+184,56e12dd250d23cb2199f1f90eb5a337f,Pulmonary fibrosis,13,R9,1851.0,580.0,2403.0,1505.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+355,1b90f72310730c8e045e85e8b60c308d,Pulmonary fibrosis,13,R10,1044.0,332.0,1387.0,899.0,/data3/jessica/data/labelGAN/vinbig/train1b90f72310730c8e045e85e8b60c308d.dicom
+356,1b90f72310730c8e045e85e8b60c308d,Pulmonary fibrosis,13,R8,1058.0,363.0,1397.0,884.0,/data3/jessica/data/labelGAN/vinbig/train1b90f72310730c8e045e85e8b60c308d.dicom
+358,1b90f72310730c8e045e85e8b60c308d,Pulmonary fibrosis,13,R9,1060.0,358.0,1347.0,739.0,/data3/jessica/data/labelGAN/vinbig/train1b90f72310730c8e045e85e8b60c308d.dicom
+386,02617da0a33fe0446a508186417c2646,Pulmonary fibrosis,13,R10,417.0,872.0,528.0,957.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+390,02617da0a33fe0446a508186417c2646,Pulmonary fibrosis,13,R9,429.0,877.0,528.0,957.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+392,02617da0a33fe0446a508186417c2646,Pulmonary fibrosis,13,R8,421.0,870.0,519.0,943.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+464,498ac0c4815a890629cf509446a47238,Pulmonary fibrosis,13,R9,2264.0,1023.0,2309.0,1138.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+479,498ac0c4815a890629cf509446a47238,Pulmonary fibrosis,13,R9,2375.0,1487.0,2430.0,1617.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+489,498ac0c4815a890629cf509446a47238,Pulmonary fibrosis,13,R9,1337.0,721.0,1398.0,1014.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+8,56923ac65e4a3bf6e8ec0af530c4a205,Consolidation,4,R8,1575.0,651.0,2122.0,1610.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+235,54fa20d07ac42e467ab67a87cf8563a3,Consolidation,4,R8,155.0,1519.0,1023.0,2335.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+239,54fa20d07ac42e467ab67a87cf8563a3,Consolidation,4,R9,153.0,1489.0,946.0,2002.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+316,54122627c6aeed581fde506562a73b2e,Consolidation,4,R9,713.0,1336.0,1008.0,1676.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+318,54122627c6aeed581fde506562a73b2e,Consolidation,4,R9,631.0,917.0,825.0,1072.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+324,54122627c6aeed581fde506562a73b2e,Consolidation,4,R8,2027.0,1237.0,2314.0,1816.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+327,54122627c6aeed581fde506562a73b2e,Consolidation,4,R9,1955.0,1230.0,2238.0,1737.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+433,09b9674023305cb9a0acb367600efffa,Consolidation,4,R10,968.0,1020.0,1331.0,1385.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+669,5268b1ff61505e50ac05fd430cc45276,Consolidation,4,R8,456.0,1179.0,679.0,1395.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+671,5268b1ff61505e50ac05fd430cc45276,Consolidation,4,R8,1548.0,1259.0,2026.0,1885.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+777,151893dad65d5077f5a377fc9d0e6881,Consolidation,4,R9,385.0,1067.0,606.0,1282.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+785,151893dad65d5077f5a377fc9d0e6881,Consolidation,4,R8,617.0,1317.0,910.0,1562.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+786,151893dad65d5077f5a377fc9d0e6881,Consolidation,4,R9,297.0,1513.0,697.0,1822.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+1100,56dd85ec693c65d811902a9054610f8b,Consolidation,4,R9,496.0,1279.0,876.0,1847.0,/data3/jessica/data/labelGAN/vinbig/train56dd85ec693c65d811902a9054610f8b.dicom
+1107,56dd85ec693c65d811902a9054610f8b,Consolidation,4,R8,529.0,1107.0,857.0,1782.0,/data3/jessica/data/labelGAN/vinbig/train56dd85ec693c65d811902a9054610f8b.dicom
+1274,5714aea8b5a2d9b030196646842a6d47,Consolidation,4,R8,1244.0,756.0,1551.0,1272.0,/data3/jessica/data/labelGAN/vinbig/train5714aea8b5a2d9b030196646842a6d47.dicom
+1722,3156b5feb62ed8cfdafef21f1f82a6c1,Consolidation,4,R10,783.0,1005.0,1289.0,1350.0,/data3/jessica/data/labelGAN/vinbig/train3156b5feb62ed8cfdafef21f1f82a6c1.dicom
+1756,56dac092c516acffda2ffac85f90e9cc,Consolidation,4,R8,1954.0,1549.0,2411.0,1952.0,/data3/jessica/data/labelGAN/vinbig/train56dac092c516acffda2ffac85f90e9cc.dicom
+1759,56dac092c516acffda2ffac85f90e9cc,Consolidation,4,R9,1855.0,1519.0,2385.0,1948.0,/data3/jessica/data/labelGAN/vinbig/train56dac092c516acffda2ffac85f90e9cc.dicom
+2281,51cce256c4d5b81a6b65a24cfe7b3ba2,Consolidation,4,R8,457.0,1336.0,1082.0,2000.0,/data3/jessica/data/labelGAN/vinbig/train51cce256c4d5b81a6b65a24cfe7b3ba2.dicom
+2287,51cce256c4d5b81a6b65a24cfe7b3ba2,Consolidation,4,R9,465.0,1365.0,1131.0,1987.0,/data3/jessica/data/labelGAN/vinbig/train51cce256c4d5b81a6b65a24cfe7b3ba2.dicom
+2695,4f3f5460ae80ab6ec1bf00b33087a828,Consolidation,4,R9,696.0,1702.0,875.0,1946.0,/data3/jessica/data/labelGAN/vinbig/train4f3f5460ae80ab6ec1bf00b33087a828.dicom
+2759,2461ca359068b06237e93aae140a25f3,Consolidation,4,R9,465.0,482.0,1042.0,1211.0,/data3/jessica/data/labelGAN/vinbig/train2461ca359068b06237e93aae140a25f3.dicom
+2760,2461ca359068b06237e93aae140a25f3,Consolidation,4,R8,562.0,507.0,1007.0,1161.0,/data3/jessica/data/labelGAN/vinbig/train2461ca359068b06237e93aae140a25f3.dicom
+2765,2461ca359068b06237e93aae140a25f3,Consolidation,4,R10,578.0,532.0,1009.0,1068.0,/data3/jessica/data/labelGAN/vinbig/train2461ca359068b06237e93aae140a25f3.dicom
+9,56923ac65e4a3bf6e8ec0af530c4a205,Infiltration,6,R10,1621.0,759.0,2127.0,1553.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+240,54fa20d07ac42e467ab67a87cf8563a3,Infiltration,6,R9,153.0,1489.0,946.0,2002.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+312,54122627c6aeed581fde506562a73b2e,Infiltration,6,R9,512.0,850.0,1111.0,1764.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+321,54122627c6aeed581fde506562a73b2e,Infiltration,6,R8,520.0,872.0,1148.0,1668.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+329,54122627c6aeed581fde506562a73b2e,Infiltration,6,R10,379.0,853.0,1048.0,1966.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+586,046ad82db74a4155eaff3586b0d1e068,Infiltration,6,R9,452.0,554.0,997.0,1327.0,/data3/jessica/data/labelGAN/vinbig/train046ad82db74a4155eaff3586b0d1e068.dicom
+587,046ad82db74a4155eaff3586b0d1e068,Infiltration,6,R9,1652.0,627.0,2031.0,1321.0,/data3/jessica/data/labelGAN/vinbig/train046ad82db74a4155eaff3586b0d1e068.dicom
+656,5268b1ff61505e50ac05fd430cc45276,Infiltration,6,R9,1627.0,1156.0,2165.0,1787.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+662,5268b1ff61505e50ac05fd430cc45276,Infiltration,6,R9,400.0,1132.0,772.0,2019.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+710,36e495b7888099453ba79ff57a2c4334,Infiltration,6,R9,1270.0,1175.0,1743.0,1761.0,/data3/jessica/data/labelGAN/vinbig/train36e495b7888099453ba79ff57a2c4334.dicom
+713,36e495b7888099453ba79ff57a2c4334,Infiltration,6,R9,544.0,1303.0,774.0,1573.0,/data3/jessica/data/labelGAN/vinbig/train36e495b7888099453ba79ff57a2c4334.dicom
+787,151893dad65d5077f5a377fc9d0e6881,Infiltration,6,R8,443.0,1075.0,608.0,1256.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+965,07d82e7e5749cbc21633134f489a7fbf,Infiltration,6,R10,340.0,1903.0,524.0,2067.0,/data3/jessica/data/labelGAN/vinbig/train07d82e7e5749cbc21633134f489a7fbf.dicom
+1147,57415c4992802274b5a54930019c30f1,Infiltration,6,R9,759.0,306.0,1002.0,531.0,/data3/jessica/data/labelGAN/vinbig/train57415c4992802274b5a54930019c30f1.dicom
+1271,5714aea8b5a2d9b030196646842a6d47,Infiltration,6,R10,1324.0,773.0,1561.0,1170.0,/data3/jessica/data/labelGAN/vinbig/train5714aea8b5a2d9b030196646842a6d47.dicom
+1402,2f4573aa154b6ee5f4ba4dc90626f5ec,Infiltration,6,R8,1862.0,655.0,2416.0,2059.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1407,2f4573aa154b6ee5f4ba4dc90626f5ec,Infiltration,6,R8,894.0,630.0,1311.0,958.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1409,2f4573aa154b6ee5f4ba4dc90626f5ec,Infiltration,6,R10,1904.0,652.0,2402.0,2000.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1411,2f4573aa154b6ee5f4ba4dc90626f5ec,Infiltration,6,R10,805.0,603.0,1337.0,1869.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1412,2f4573aa154b6ee5f4ba4dc90626f5ec,Infiltration,6,R9,1806.0,635.0,2256.0,1617.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1438,522dea0833b59836405679f464299eac,Infiltration,6,R8,735.0,309.0,1398.0,1829.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1440,522dea0833b59836405679f464299eac,Infiltration,6,R8,1709.0,336.0,2323.0,1952.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1441,522dea0833b59836405679f464299eac,Infiltration,6,R9,741.0,113.0,2382.0,2048.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1560,57036d99900dabe66e5294251e3f56de,Infiltration,6,R10,760.0,359.0,1106.0,778.0,/data3/jessica/data/labelGAN/vinbig/train57036d99900dabe66e5294251e3f56de.dicom
+1607,145691883baff4df3e4863ca6354c44e,Infiltration,6,R9,1926.0,329.0,2593.0,1011.0,/data3/jessica/data/labelGAN/vinbig/train145691883baff4df3e4863ca6354c44e.dicom
+10,56923ac65e4a3bf6e8ec0af530c4a205,Lung Opacity,7,R9,1701.0,786.0,2095.0,1562.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+11,56923ac65e4a3bf6e8ec0af530c4a205,Lung Opacity,7,R10,1621.0,759.0,2127.0,1553.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+12,56923ac65e4a3bf6e8ec0af530c4a205,Lung Opacity,7,R8,1575.0,651.0,2122.0,1610.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+42,5156d69e540648eb952371ec5c80bc81,Lung Opacity,7,R9,2199.0,1926.0,2417.0,2138.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+172,56e12dd250d23cb2199f1f90eb5a337f,Lung Opacity,7,R10,2161.0,1235.0,2344.0,1464.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+181,56e12dd250d23cb2199f1f90eb5a337f,Lung Opacity,7,R10,1957.0,599.0,2161.0,1099.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+234,54fa20d07ac42e467ab67a87cf8563a3,Lung Opacity,7,R8,155.0,1519.0,1023.0,2335.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+236,54fa20d07ac42e467ab67a87cf8563a3,Lung Opacity,7,R9,153.0,1489.0,946.0,2002.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+238,54fa20d07ac42e467ab67a87cf8563a3,Lung Opacity,7,R10,194.0,1452.0,818.0,1848.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+280,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R9,495.0,1382.0,1141.0,2282.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+281,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R9,340.0,1860.0,475.0,1988.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+287,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R9,413.0,1148.0,690.0,1346.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+289,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R10,518.0,1707.0,1146.0,2291.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+290,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R10,1843.0,1998.0,2340.0,2480.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+299,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R9,1408.0,1530.0,1955.0,2084.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+305,53e93d9f8cf885a55e00079256595a86,Lung Opacity,7,R9,1836.0,1939.0,2383.0,2463.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+313,54122627c6aeed581fde506562a73b2e,Lung Opacity,7,R10,1913.0,1098.0,2368.0,1931.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+319,54122627c6aeed581fde506562a73b2e,Lung Opacity,7,R9,1955.0,1230.0,2238.0,1737.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+320,54122627c6aeed581fde506562a73b2e,Lung Opacity,7,R10,379.0,853.0,1048.0,1966.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+326,54122627c6aeed581fde506562a73b2e,Lung Opacity,7,R9,512.0,850.0,1111.0,1764.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+366,5450f21b06e8ee3fcdc1375711bc28ee,Lung Opacity,7,R8,373.0,1231.0,979.0,1693.0,/data3/jessica/data/labelGAN/vinbig/train5450f21b06e8ee3fcdc1375711bc28ee.dicom
+430,09b9674023305cb9a0acb367600efffa,Lung Opacity,7,R9,922.0,896.0,1358.0,1483.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+435,09b9674023305cb9a0acb367600efffa,Lung Opacity,7,R10,968.0,1020.0,1331.0,1385.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+598,046ad82db74a4155eaff3586b0d1e068,Lung Opacity,7,R9,473.0,2139.0,797.0,2359.0,/data3/jessica/data/labelGAN/vinbig/train046ad82db74a4155eaff3586b0d1e068.dicom
+657,5268b1ff61505e50ac05fd430cc45276,Lung Opacity,7,R8,384.0,1323.0,819.0,2120.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+13,56923ac65e4a3bf6e8ec0af530c4a205,Pleural thickening,11,R10,1500.0,335.0,1760.0,401.0,/data3/jessica/data/labelGAN/vinbig/train56923ac65e4a3bf6e8ec0af530c4a205.dicom
+26,53d0c95f346e365f81fb95c5c6a6d027,Pleural thickening,11,R9,1786.0,1435.0,1848.0,1649.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+28,53d0c95f346e365f81fb95c5c6a6d027,Pleural thickening,11,R9,705.0,203.0,902.0,245.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+30,53d0c95f346e365f81fb95c5c6a6d027,Pleural thickening,11,R9,1244.0,173.0,1468.0,204.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+41,5156d69e540648eb952371ec5c80bc81,Pleural thickening,11,R9,2502.0,2257.0,2588.0,2406.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+48,5156d69e540648eb952371ec5c80bc81,Pleural thickening,11,R10,380.0,2113.0,475.0,2430.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+49,5156d69e540648eb952371ec5c80bc81,Pleural thickening,11,R9,354.0,2213.0,496.0,2362.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+73,511e8b50c9a7ecee4e1a8621f262e9ad,Pleural thickening,11,R9,1358.0,436.0,1723.0,540.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+76,511e8b50c9a7ecee4e1a8621f262e9ad,Pleural thickening,11,R9,525.0,396.0,920.0,485.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+85,543c0591a8706112a0e71620509a398f,Pleural thickening,11,R9,1724.0,440.0,2042.0,536.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+89,543c0591a8706112a0e71620509a398f,Pleural thickening,11,R9,754.0,490.0,1182.0,600.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+134,53b1a490cd7e3a30e94014bdfd314d14,Pleural thickening,11,R9,461.0,466.0,688.0,681.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+138,566150c4fe08a31a5a17d9d9f6c5f21f,Pleural thickening,11,R9,213.0,1776.0,297.0,1926.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+165,56e12dd250d23cb2199f1f90eb5a337f,Pleural thickening,11,R10,366.0,2086.0,569.0,2282.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+166,56e12dd250d23cb2199f1f90eb5a337f,Pleural thickening,11,R8,422.0,1972.0,570.0,2225.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+175,56e12dd250d23cb2199f1f90eb5a337f,Pleural thickening,11,R8,2595.0,2307.0,2683.0,2436.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+180,56e12dd250d23cb2199f1f90eb5a337f,Pleural thickening,11,R10,730.0,351.0,1164.0,527.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+183,56e12dd250d23cb2199f1f90eb5a337f,Pleural thickening,11,R9,399.0,1990.0,572.0,2259.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+245,54d7976f3b2da92eafd691971f78ea2b,Pleural thickening,11,R9,743.0,317.0,1047.0,456.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+249,54d7976f3b2da92eafd691971f78ea2b,Pleural thickening,11,R10,1645.0,327.0,1849.0,486.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+251,54d7976f3b2da92eafd691971f78ea2b,Pleural thickening,11,R10,690.0,327.0,915.0,482.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+310,54122627c6aeed581fde506562a73b2e,Pleural thickening,11,R8,367.0,819.0,604.0,1952.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+311,54122627c6aeed581fde506562a73b2e,Pleural thickening,11,R8,1532.0,303.0,2134.0,590.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+314,54122627c6aeed581fde506562a73b2e,Pleural thickening,11,R9,1840.0,364.0,2144.0,610.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+317,54122627c6aeed581fde506562a73b2e,Pleural thickening,11,R9,673.0,303.0,1238.0,671.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+14,51a8d7259a0a6deac20b7c4979a7e847,Aortic enlargement,0,R14,841.0,510.0,1446.0,888.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+16,51a8d7259a0a6deac20b7c4979a7e847,Aortic enlargement,0,R12,689.0,468.0,1440.0,1221.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+27,53d0c95f346e365f81fb95c5c6a6d027,Aortic enlargement,0,R9,1142.0,461.0,1419.0,741.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+29,53d0c95f346e365f81fb95c5c6a6d027,Aortic enlargement,0,R8,1167.0,473.0,1412.0,799.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+31,53d0c95f346e365f81fb95c5c6a6d027,Aortic enlargement,0,R10,1188.0,467.0,1423.0,711.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+74,511e8b50c9a7ecee4e1a8621f262e9ad,Aortic enlargement,0,R10,1131.0,839.0,1328.0,1086.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+88,543c0591a8706112a0e71620509a398f,Aortic enlargement,0,R9,1425.0,911.0,1734.0,1314.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+177,56e12dd250d23cb2199f1f90eb5a337f,Aortic enlargement,0,R10,1585.0,624.0,1913.0,983.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+246,54d7976f3b2da92eafd691971f78ea2b,Aortic enlargement,0,R9,1300.0,634.0,1629.0,969.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+250,54d7976f3b2da92eafd691971f78ea2b,Aortic enlargement,0,R8,1325.0,625.0,1632.0,1024.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+253,54d7976f3b2da92eafd691971f78ea2b,Aortic enlargement,0,R10,1317.0,648.0,1620.0,905.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+292,53e93d9f8cf885a55e00079256595a86,Aortic enlargement,0,R9,1431.0,851.0,1704.0,1122.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+354,1b90f72310730c8e045e85e8b60c308d,Aortic enlargement,0,R10,1649.0,664.0,1929.0,1032.0,/data3/jessica/data/labelGAN/vinbig/train1b90f72310730c8e045e85e8b60c308d.dicom
+384,02617da0a33fe0446a508186417c2646,Aortic enlargement,0,R8,1177.0,724.0,1514.0,1123.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+389,02617da0a33fe0446a508186417c2646,Aortic enlargement,0,R10,1164.0,712.0,1492.0,1079.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+394,02617da0a33fe0446a508186417c2646,Aortic enlargement,0,R9,1183.0,715.0,1500.0,1031.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+411,0b630100496870b457008b0f7dae1ea5,Aortic enlargement,0,R10,1276.0,756.0,1545.0,1000.0,/data3/jessica/data/labelGAN/vinbig/train0b630100496870b457008b0f7dae1ea5.dicom
+412,0b630100496870b457008b0f7dae1ea5,Aortic enlargement,0,R8,1297.0,757.0,1535.0,1069.0,/data3/jessica/data/labelGAN/vinbig/train0b630100496870b457008b0f7dae1ea5.dicom
+419,5480af204701170956ce3d98f363a3c2,Aortic enlargement,0,R9,1031.0,655.0,1275.0,960.0,/data3/jessica/data/labelGAN/vinbig/train5480af204701170956ce3d98f363a3c2.dicom
+420,5480af204701170956ce3d98f363a3c2,Aortic enlargement,0,R8,1067.0,675.0,1269.0,926.0,/data3/jessica/data/labelGAN/vinbig/train5480af204701170956ce3d98f363a3c2.dicom
+421,5480af204701170956ce3d98f363a3c2,Aortic enlargement,0,R10,1061.0,665.0,1263.0,843.0,/data3/jessica/data/labelGAN/vinbig/train5480af204701170956ce3d98f363a3c2.dicom
+428,09b9674023305cb9a0acb367600efffa,Aortic enlargement,0,R9,1549.0,942.0,1870.0,1259.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+431,09b9674023305cb9a0acb367600efffa,Aortic enlargement,0,R10,1621.0,936.0,1864.0,1206.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+432,09b9674023305cb9a0acb367600efffa,Aortic enlargement,0,R8,1572.0,943.0,1849.0,1306.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+458,2a335bf71ad32a097557e379b6113ce9,Aortic enlargement,0,R9,1586.0,733.0,1896.0,1089.0,/data3/jessica/data/labelGAN/vinbig/train2a335bf71ad32a097557e379b6113ce9.dicom
+15,51a8d7259a0a6deac20b7c4979a7e847,Calcification,2,R15,1361.0,589.0,1473.0,739.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+252,54d7976f3b2da92eafd691971f78ea2b,Calcification,2,R9,1415.0,766.0,1545.0,840.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+474,498ac0c4815a890629cf509446a47238,Calcification,2,R8,2202.0,1715.0,2291.0,1762.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+480,498ac0c4815a890629cf509446a47238,Calcification,2,R10,2368.0,1473.0,2439.0,1617.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+482,498ac0c4815a890629cf509446a47238,Calcification,2,R10,2192.0,1718.0,2301.0,1767.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+484,498ac0c4815a890629cf509446a47238,Calcification,2,R9,2199.0,1726.0,2284.0,1758.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+496,498ac0c4815a890629cf509446a47238,Calcification,2,R8,2383.0,1472.0,2450.0,1640.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+499,498ac0c4815a890629cf509446a47238,Calcification,2,R9,1644.0,728.0,1801.0,954.0,/data3/jessica/data/labelGAN/vinbig/train498ac0c4815a890629cf509446a47238.dicom
+556,50f315c754b3530ac3c9bac3e96b22ac,Calcification,2,R9,1096.0,857.0,1167.0,965.0,/data3/jessica/data/labelGAN/vinbig/train50f315c754b3530ac3c9bac3e96b22ac.dicom
+560,50f315c754b3530ac3c9bac3e96b22ac,Calcification,2,R10,1103.0,850.0,1169.0,977.0,/data3/jessica/data/labelGAN/vinbig/train50f315c754b3530ac3c9bac3e96b22ac.dicom
+800,23f29659e174d2c4651857bf304a5d75,Calcification,2,R13,1383.0,576.0,1672.0,790.0,/data3/jessica/data/labelGAN/vinbig/train23f29659e174d2c4651857bf304a5d75.dicom
+801,23f29659e174d2c4651857bf304a5d75,Calcification,2,R11,978.0,399.0,1672.0,948.0,/data3/jessica/data/labelGAN/vinbig/train23f29659e174d2c4651857bf304a5d75.dicom
+963,07d82e7e5749cbc21633134f489a7fbf,Calcification,2,R9,1766.0,2019.0,1811.0,2180.0,/data3/jessica/data/labelGAN/vinbig/train07d82e7e5749cbc21633134f489a7fbf.dicom
+1021,3ff22a602b26d804863daaf6b7230d47,Calcification,2,R9,1233.0,882.0,1312.0,961.0,/data3/jessica/data/labelGAN/vinbig/train3ff22a602b26d804863daaf6b7230d47.dicom
+1218,56fc900d3d2f8bfec66a7b5577cf2b59,Calcification,2,R11,218.0,713.0,406.0,879.0,/data3/jessica/data/labelGAN/vinbig/train56fc900d3d2f8bfec66a7b5577cf2b59.dicom
+1223,56fc900d3d2f8bfec66a7b5577cf2b59,Calcification,2,R11,1272.0,798.0,1414.0,1027.0,/data3/jessica/data/labelGAN/vinbig/train56fc900d3d2f8bfec66a7b5577cf2b59.dicom
+1305,51b168d29879c8972aa29d9f31f4b00c,Calcification,2,R9,728.0,1040.0,804.0,1106.0,/data3/jessica/data/labelGAN/vinbig/train51b168d29879c8972aa29d9f31f4b00c.dicom
+1626,152cc961492edc9e778b6c337f971258,Calcification,2,R8,577.0,944.0,646.0,1022.0,/data3/jessica/data/labelGAN/vinbig/train152cc961492edc9e778b6c337f971258.dicom
+1628,152cc961492edc9e778b6c337f971258,Calcification,2,R8,901.0,955.0,982.0,1020.0,/data3/jessica/data/labelGAN/vinbig/train152cc961492edc9e778b6c337f971258.dicom
+1630,152cc961492edc9e778b6c337f971258,Calcification,2,R10,554.0,944.0,651.0,1070.0,/data3/jessica/data/labelGAN/vinbig/train152cc961492edc9e778b6c337f971258.dicom
+1708,3f7f3d2e14e41602ac1f5909ce5e4be0,Calcification,2,R9,1221.0,1150.0,1502.0,1415.0,/data3/jessica/data/labelGAN/vinbig/train3f7f3d2e14e41602ac1f5909ce5e4be0.dicom
+1796,2b658b536fb15c22f623c3d6672b64d0,Calcification,2,R9,2236.0,1405.0,2459.0,1741.0,/data3/jessica/data/labelGAN/vinbig/train2b658b536fb15c22f623c3d6672b64d0.dicom
+1808,1f80202df9f9ee45002ea22f2f29d31f,Calcification,2,R10,1981.0,1290.0,2027.0,1408.0,/data3/jessica/data/labelGAN/vinbig/train1f80202df9f9ee45002ea22f2f29d31f.dicom
+1913,21d0e0bb639ebec0b2a2ce0c5c805344,Calcification,2,R9,690.0,1775.0,868.0,1905.0,/data3/jessica/data/labelGAN/vinbig/train21d0e0bb639ebec0b2a2ce0c5c805344.dicom
+1919,21d0e0bb639ebec0b2a2ce0c5c805344,Calcification,2,R8,698.0,1763.0,842.0,1890.0,/data3/jessica/data/labelGAN/vinbig/train21d0e0bb639ebec0b2a2ce0c5c805344.dicom
+17,51a8d7259a0a6deac20b7c4979a7e847,Cardiomegaly,3,R14,716.0,1051.0,1778.0,1607.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+18,51a8d7259a0a6deac20b7c4979a7e847,Cardiomegaly,3,R12,667.0,890.0,1831.0,1725.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+25,53d0c95f346e365f81fb95c5c6a6d027,Cardiomegaly,3,R9,862.0,1212.0,1675.0,1476.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+45,5156d69e540648eb952371ec5c80bc81,Cardiomegaly,3,R8,1115.0,1617.0,2307.0,2194.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+72,511e8b50c9a7ecee4e1a8621f262e9ad,Cardiomegaly,3,R8,786.0,1580.0,1705.0,2034.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+75,511e8b50c9a7ecee4e1a8621f262e9ad,Cardiomegaly,3,R10,792.0,1683.0,1718.0,2092.0,/data3/jessica/data/labelGAN/vinbig/train511e8b50c9a7ecee4e1a8621f262e9ad.dicom
+171,56e12dd250d23cb2199f1f90eb5a337f,Cardiomegaly,3,R10,1146.0,1812.0,2251.0,2171.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+244,54d7976f3b2da92eafd691971f78ea2b,Cardiomegaly,3,R9,1002.0,1332.0,2012.0,1728.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+248,54d7976f3b2da92eafd691971f78ea2b,Cardiomegaly,3,R10,1007.0,1412.0,1983.0,1676.0,/data3/jessica/data/labelGAN/vinbig/train54d7976f3b2da92eafd691971f78ea2b.dicom
+323,54122627c6aeed581fde506562a73b2e,Cardiomegaly,3,R10,1062.0,1450.0,2117.0,1905.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+325,54122627c6aeed581fde506562a73b2e,Cardiomegaly,3,R8,1036.0,1357.0,2106.0,1813.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+387,02617da0a33fe0446a508186417c2646,Cardiomegaly,3,R9,835.0,1461.0,1841.0,1805.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+395,02617da0a33fe0446a508186417c2646,Cardiomegaly,3,R10,817.0,1522.0,1922.0,1793.0,/data3/jessica/data/labelGAN/vinbig/train02617da0a33fe0446a508186417c2646.dicom
+413,0b630100496870b457008b0f7dae1ea5,Cardiomegaly,3,R10,884.0,1622.0,1959.0,1933.0,/data3/jessica/data/labelGAN/vinbig/train0b630100496870b457008b0f7dae1ea5.dicom
+414,0b630100496870b457008b0f7dae1ea5,Cardiomegaly,3,R9,869.0,1575.0,1991.0,1908.0,/data3/jessica/data/labelGAN/vinbig/train0b630100496870b457008b0f7dae1ea5.dicom
+418,5480af204701170956ce3d98f363a3c2,Cardiomegaly,3,R10,853.0,1262.0,1638.0,1581.0,/data3/jessica/data/labelGAN/vinbig/train5480af204701170956ce3d98f363a3c2.dicom
+457,2a335bf71ad32a097557e379b6113ce9,Cardiomegaly,3,R8,1180.0,1604.0,2248.0,1990.0,/data3/jessica/data/labelGAN/vinbig/train2a335bf71ad32a097557e379b6113ce9.dicom
+460,2a335bf71ad32a097557e379b6113ce9,Cardiomegaly,3,R10,1171.0,1630.0,2256.0,1995.0,/data3/jessica/data/labelGAN/vinbig/train2a335bf71ad32a097557e379b6113ce9.dicom
+506,22d7fb75b2d533f5fda002cd41721884,Cardiomegaly,3,R8,804.0,1501.0,1765.0,1966.0,/data3/jessica/data/labelGAN/vinbig/train22d7fb75b2d533f5fda002cd41721884.dicom
+508,22d7fb75b2d533f5fda002cd41721884,Cardiomegaly,3,R10,767.0,1667.0,1760.0,1997.0,/data3/jessica/data/labelGAN/vinbig/train22d7fb75b2d533f5fda002cd41721884.dicom
+537,27ae5a2982f9ef772cccfbd14332f965,Cardiomegaly,3,R8,1302.0,1478.0,2383.0,1737.0,/data3/jessica/data/labelGAN/vinbig/train27ae5a2982f9ef772cccfbd14332f965.dicom
+540,27ae5a2982f9ef772cccfbd14332f965,Cardiomegaly,3,R9,1288.0,1409.0,2332.0,1788.0,/data3/jessica/data/labelGAN/vinbig/train27ae5a2982f9ef772cccfbd14332f965.dicom
+546,4f6ce4d52f883da96b68389f0c86a3f5,Cardiomegaly,3,R10,975.0,1747.0,2057.0,2009.0,/data3/jessica/data/labelGAN/vinbig/train4f6ce4d52f883da96b68389f0c86a3f5.dicom
+547,4f6ce4d52f883da96b68389f0c86a3f5,Cardiomegaly,3,R9,986.0,1702.0,2066.0,2011.0,/data3/jessica/data/labelGAN/vinbig/train4f6ce4d52f883da96b68389f0c86a3f5.dicom
+551,50f315c754b3530ac3c9bac3e96b22ac,Cardiomegaly,3,R9,798.0,1449.0,1621.0,1851.0,/data3/jessica/data/labelGAN/vinbig/train50f315c754b3530ac3c9bac3e96b22ac.dicom
+19,51a8d7259a0a6deac20b7c4979a7e847,Other lesion,9,R15,10.0,1203.0,521.0,2202.0,/data3/jessica/data/labelGAN/vinbig/train51a8d7259a0a6deac20b7c4979a7e847.dicom
+23,53d0c95f346e365f81fb95c5c6a6d027,Other lesion,9,R10,991.0,435.0,1151.0,1221.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+39,5156d69e540648eb952371ec5c80bc81,Other lesion,9,R9,1304.0,784.0,1669.0,2171.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+43,5156d69e540648eb952371ec5c80bc81,Other lesion,9,R9,2199.0,1926.0,2417.0,2138.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+118,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R8,1930.0,780.0,1987.0,852.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+119,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,612.0,1446.0,674.0,1490.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+120,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,2327.0,787.0,2371.0,857.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+121,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,800.0,407.0,878.0,450.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+122,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R8,601.0,1438.0,693.0,1490.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+123,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,2268.0,770.0,2379.0,1674.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+124,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R8,1623.0,632.0,1717.0,758.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+125,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,1625.0,649.0,1714.0,757.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+126,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R8,794.0,384.0,888.0,469.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+127,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,229.0,805.0,272.0,873.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+128,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,1623.0,647.0,1691.0,749.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+129,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,163.0,1503.0,295.0,1908.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+130,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R8,176.0,1497.0,291.0,1898.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+131,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,1922.0,770.0,1981.0,863.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+132,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R9,2268.0,1244.0,2311.0,1679.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+133,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,611.0,1449.0,679.0,1492.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+135,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,1916.0,786.0,1971.0,851.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+136,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,234.0,810.0,271.0,866.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+137,53b1a490cd7e3a30e94014bdfd314d14,Other lesion,9,R10,182.0,1508.0,284.0,1893.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+139,566150c4fe08a31a5a17d9d9f6c5f21f,Other lesion,9,R9,1632.0,743.0,2055.0,1691.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+142,566150c4fe08a31a5a17d9d9f6c5f21f,Other lesion,9,R9,383.0,839.0,829.0,1665.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+24,53d0c95f346e365f81fb95c5c6a6d027,Pleural effusion,10,R9,1786.0,1435.0,1848.0,1649.0,/data3/jessica/data/labelGAN/vinbig/train53d0c95f346e365f81fb95c5c6a6d027.dicom
+38,5156d69e540648eb952371ec5c80bc81,Pleural effusion,10,R9,354.0,2213.0,496.0,2362.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+46,5156d69e540648eb952371ec5c80bc81,Pleural effusion,10,R9,2502.0,2257.0,2588.0,2406.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+168,56e12dd250d23cb2199f1f90eb5a337f,Pleural effusion,10,R10,366.0,2086.0,569.0,2282.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+176,56e12dd250d23cb2199f1f90eb5a337f,Pleural effusion,10,R9,399.0,1990.0,572.0,2259.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+237,54fa20d07ac42e467ab67a87cf8563a3,Pleural effusion,10,R10,68.0,1524.0,824.0,2148.0,/data3/jessica/data/labelGAN/vinbig/train54fa20d07ac42e467ab67a87cf8563a3.dicom
+309,54122627c6aeed581fde506562a73b2e,Pleural effusion,10,R9,318.0,1582.0,731.0,2053.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+315,54122627c6aeed581fde506562a73b2e,Pleural effusion,10,R9,2025.0,1163.0,2329.0,1910.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+322,54122627c6aeed581fde506562a73b2e,Pleural effusion,10,R10,387.0,305.0,1220.0,2033.0,/data3/jessica/data/labelGAN/vinbig/train54122627c6aeed581fde506562a73b2e.dicom
+365,5450f21b06e8ee3fcdc1375711bc28ee,Pleural effusion,10,R8,242.0,1470.0,600.0,1820.0,/data3/jessica/data/labelGAN/vinbig/train5450f21b06e8ee3fcdc1375711bc28ee.dicom
+367,5450f21b06e8ee3fcdc1375711bc28ee,Pleural effusion,10,R9,262.0,1279.0,1126.0,2023.0,/data3/jessica/data/labelGAN/vinbig/train5450f21b06e8ee3fcdc1375711bc28ee.dicom
+368,5450f21b06e8ee3fcdc1375711bc28ee,Pleural effusion,10,R10,259.0,1243.0,715.0,1854.0,/data3/jessica/data/labelGAN/vinbig/train5450f21b06e8ee3fcdc1375711bc28ee.dicom
+591,046ad82db74a4155eaff3586b0d1e068,Pleural effusion,10,R10,223.0,2271.0,351.0,2482.0,/data3/jessica/data/labelGAN/vinbig/train046ad82db74a4155eaff3586b0d1e068.dicom
+594,046ad82db74a4155eaff3586b0d1e068,Pleural effusion,10,R9,191.0,2153.0,364.0,2600.0,/data3/jessica/data/labelGAN/vinbig/train046ad82db74a4155eaff3586b0d1e068.dicom
+660,5268b1ff61505e50ac05fd430cc45276,Pleural effusion,10,R8,2250.0,1917.0,2385.0,2144.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+663,5268b1ff61505e50ac05fd430cc45276,Pleural effusion,10,R9,2251.0,1880.0,2374.0,2175.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+668,5268b1ff61505e50ac05fd430cc45276,Pleural effusion,10,R8,89.0,2088.0,352.0,2375.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+673,5268b1ff61505e50ac05fd430cc45276,Pleural effusion,10,R10,2230.0,1917.0,2342.0,2067.0,/data3/jessica/data/labelGAN/vinbig/train5268b1ff61505e50ac05fd430cc45276.dicom
+719,21f596b4f75fd3d0ff54f55ad760272b,Pleural effusion,10,R9,2248.0,1985.0,2418.0,2340.0,/data3/jessica/data/labelGAN/vinbig/train21f596b4f75fd3d0ff54f55ad760272b.dicom
+721,21f596b4f75fd3d0ff54f55ad760272b,Pleural effusion,10,R9,159.0,2221.0,293.0,2378.0,/data3/jessica/data/labelGAN/vinbig/train21f596b4f75fd3d0ff54f55ad760272b.dicom
+773,151893dad65d5077f5a377fc9d0e6881,Pleural effusion,10,R10,1671.0,1972.0,1958.0,2412.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+776,151893dad65d5077f5a377fc9d0e6881,Pleural effusion,10,R9,1662.0,1817.0,1991.0,2346.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+779,151893dad65d5077f5a377fc9d0e6881,Pleural effusion,10,R9,200.0,1404.0,775.0,2187.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+781,151893dad65d5077f5a377fc9d0e6881,Pleural effusion,10,R8,202.0,1517.0,865.0,2070.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+784,151893dad65d5077f5a377fc9d0e6881,Pleural effusion,10,R10,199.0,1478.0,712.0,2105.0,/data3/jessica/data/labelGAN/vinbig/train151893dad65d5077f5a377fc9d0e6881.dicom
+40,5156d69e540648eb952371ec5c80bc81,ILD,5,R9,624.0,1786.0,856.0,2074.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+44,5156d69e540648eb952371ec5c80bc81,ILD,5,R10,584.0,1296.0,978.0,2133.0,/data3/jessica/data/labelGAN/vinbig/train5156d69e540648eb952371ec5c80bc81.dicom
+140,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R10,1487.0,500.0,2056.0,1813.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+141,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R9,1632.0,743.0,2055.0,1691.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+143,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R9,383.0,839.0,829.0,1665.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+144,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R10,262.0,833.0,801.0,1660.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+145,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R8,239.0,548.0,867.0,1713.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+146,566150c4fe08a31a5a17d9d9f6c5f21f,ILD,5,R8,1606.0,548.0,2071.0,1840.0,/data3/jessica/data/labelGAN/vinbig/train566150c4fe08a31a5a17d9d9f6c5f21f.dicom
+429,09b9674023305cb9a0acb367600efffa,ILD,5,R9,616.0,1248.0,1097.0,2131.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+695,2a96255deafcf2f24bf9f266e1c12633,ILD,5,R15,149.0,192.0,1034.0,2040.0,/data3/jessica/data/labelGAN/vinbig/train2a96255deafcf2f24bf9f266e1c12633.dicom
+697,2a96255deafcf2f24bf9f266e1c12633,ILD,5,R15,1290.0,220.0,2198.0,2078.0,/data3/jessica/data/labelGAN/vinbig/train2a96255deafcf2f24bf9f266e1c12633.dicom
+699,2a96255deafcf2f24bf9f266e1c12633,ILD,5,R17,1299.0,122.0,2237.0,2082.0,/data3/jessica/data/labelGAN/vinbig/train2a96255deafcf2f24bf9f266e1c12633.dicom
+700,2a96255deafcf2f24bf9f266e1c12633,ILD,5,R17,126.0,192.0,1071.0,1988.0,/data3/jessica/data/labelGAN/vinbig/train2a96255deafcf2f24bf9f266e1c12633.dicom
+718,21f596b4f75fd3d0ff54f55ad760272b,ILD,5,R8,1752.0,838.0,2347.0,2123.0,/data3/jessica/data/labelGAN/vinbig/train21f596b4f75fd3d0ff54f55ad760272b.dicom
+720,21f596b4f75fd3d0ff54f55ad760272b,ILD,5,R10,1672.0,576.0,2470.0,2142.0,/data3/jessica/data/labelGAN/vinbig/train21f596b4f75fd3d0ff54f55ad760272b.dicom
+725,21f596b4f75fd3d0ff54f55ad760272b,ILD,5,R9,1893.0,900.0,2337.0,2067.0,/data3/jessica/data/labelGAN/vinbig/train21f596b4f75fd3d0ff54f55ad760272b.dicom
+1087,44ff83f86f81c54ed2540ccddcc68263,ILD,5,R9,2068.0,757.0,2396.0,1798.0,/data3/jessica/data/labelGAN/vinbig/train44ff83f86f81c54ed2540ccddcc68263.dicom
+1088,44ff83f86f81c54ed2540ccddcc68263,ILD,5,R9,220.0,523.0,561.0,1587.0,/data3/jessica/data/labelGAN/vinbig/train44ff83f86f81c54ed2540ccddcc68263.dicom
+1403,2f4573aa154b6ee5f4ba4dc90626f5ec,ILD,5,R8,802.0,1031.0,1261.0,1927.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1414,2f4573aa154b6ee5f4ba4dc90626f5ec,ILD,5,R8,1862.0,655.0,2416.0,2059.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1429,522dea0833b59836405679f464299eac,ILD,5,R10,713.0,369.0,1351.0,1719.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1439,522dea0833b59836405679f464299eac,ILD,5,R10,1703.0,419.0,2312.0,1634.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1508,258b0025af766aa2a485e3221da4b46e,ILD,5,R9,435.0,791.0,953.0,1162.0,/data3/jessica/data/labelGAN/vinbig/train258b0025af766aa2a485e3221da4b46e.dicom
+1606,145691883baff4df3e4863ca6354c44e,ILD,5,R8,764.0,327.0,1395.0,1215.0,/data3/jessica/data/labelGAN/vinbig/train145691883baff4df3e4863ca6354c44e.dicom
+1608,145691883baff4df3e4863ca6354c44e,ILD,5,R8,1926.0,201.0,2536.0,960.0,/data3/jessica/data/labelGAN/vinbig/train145691883baff4df3e4863ca6354c44e.dicom
+82,543c0591a8706112a0e71620509a398f,Nodule/Mass,8,R10,1902.0,863.0,2042.0,996.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+83,543c0591a8706112a0e71620509a398f,Nodule/Mass,8,R8,1901.0,850.0,2050.0,985.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+84,543c0591a8706112a0e71620509a398f,Nodule/Mass,8,R9,1909.0,860.0,2057.0,992.0,/data3/jessica/data/labelGAN/vinbig/train543c0591a8706112a0e71620509a398f.dicom
+117,53b1a490cd7e3a30e94014bdfd314d14,Nodule/Mass,8,R9,1625.0,649.0,1714.0,757.0,/data3/jessica/data/labelGAN/vinbig/train53b1a490cd7e3a30e94014bdfd314d14.dicom
+178,56e12dd250d23cb2199f1f90eb5a337f,Nodule/Mass,8,R10,807.0,607.0,867.0,670.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+185,56e12dd250d23cb2199f1f90eb5a337f,Nodule/Mass,8,R10,724.0,770.0,814.0,853.0,/data3/jessica/data/labelGAN/vinbig/train56e12dd250d23cb2199f1f90eb5a337f.dicom
+278,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,346.0,1901.0,464.0,1974.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+282,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R9,1408.0,1530.0,1955.0,2084.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+283,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R8,510.0,1374.0,1100.0,2268.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+284,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,236.0,2085.0,304.0,2197.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+285,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,2190.0,1465.0,2274.0,1551.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+286,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,518.0,1707.0,1146.0,2291.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+288,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,1843.0,1998.0,2340.0,2480.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+291,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,524.0,1392.0,945.0,1816.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+293,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R8,1426.0,1506.0,2017.0,2138.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+294,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R9,495.0,1382.0,1141.0,2282.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+295,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R8,443.0,1099.0,694.0,1391.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+296,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,415.0,1114.0,724.0,1398.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+297,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,1853.0,2009.0,2111.0,2384.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+298,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R9,413.0,1148.0,690.0,1346.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+300,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R10,1507.0,1590.0,1965.0,2096.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+302,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R9,1836.0,1939.0,2383.0,2463.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+303,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R8,1838.0,1972.0,2143.0,2349.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+304,53e93d9f8cf885a55e00079256595a86,Nodule/Mass,8,R8,1905.0,2118.0,2401.0,2432.0,/data3/jessica/data/labelGAN/vinbig/train53e93d9f8cf885a55e00079256595a86.dicom
+434,09b9674023305cb9a0acb367600efffa,Nodule/Mass,8,R8,956.0,1010.0,1349.0,1374.0,/data3/jessica/data/labelGAN/vinbig/train09b9674023305cb9a0acb367600efffa.dicom
+848,54e6184c63c75a9695d7effc17969ad0,Pneumothorax,12,R10,244.0,521.0,896.0,1392.0,/data3/jessica/data/labelGAN/vinbig/train54e6184c63c75a9695d7effc17969ad0.dicom
+3076,4308b795084095f21117491e3b07f2a7,Pneumothorax,12,R9,340.0,442.0,1024.0,887.0,/data3/jessica/data/labelGAN/vinbig/train4308b795084095f21117491e3b07f2a7.dicom
+4174,54f9194379210945be0ed72fac357456,Pneumothorax,12,R10,449.0,482.0,1013.0,994.0,/data3/jessica/data/labelGAN/vinbig/train54f9194379210945be0ed72fac357456.dicom
+4176,54f9194379210945be0ed72fac357456,Pneumothorax,12,R8,436.0,369.0,1018.0,866.0,/data3/jessica/data/labelGAN/vinbig/train54f9194379210945be0ed72fac357456.dicom
+4678,305e4add9c72c91e9984305bf4e85aee,Pneumothorax,12,R10,384.0,498.0,993.0,854.0,/data3/jessica/data/labelGAN/vinbig/train305e4add9c72c91e9984305bf4e85aee.dicom
+4679,305e4add9c72c91e9984305bf4e85aee,Pneumothorax,12,R9,404.0,521.0,989.0,851.0,/data3/jessica/data/labelGAN/vinbig/train305e4add9c72c91e9984305bf4e85aee.dicom
+4683,305e4add9c72c91e9984305bf4e85aee,Pneumothorax,12,R8,394.0,518.0,975.0,842.0,/data3/jessica/data/labelGAN/vinbig/train305e4add9c72c91e9984305bf4e85aee.dicom
+4698,4e3a3b03cf00a9060ac139f57843a241,Pneumothorax,12,R10,1584.0,347.0,2345.0,820.0,/data3/jessica/data/labelGAN/vinbig/train4e3a3b03cf00a9060ac139f57843a241.dicom
+4699,4e3a3b03cf00a9060ac139f57843a241,Pneumothorax,12,R8,1652.0,418.0,2286.0,868.0,/data3/jessica/data/labelGAN/vinbig/train4e3a3b03cf00a9060ac139f57843a241.dicom
+4704,4e3a3b03cf00a9060ac139f57843a241,Pneumothorax,12,R9,1647.0,416.0,2228.0,946.0,/data3/jessica/data/labelGAN/vinbig/train4e3a3b03cf00a9060ac139f57843a241.dicom
+6605,32c05ef69ce090ebbdaa6741c21afc01,Pneumothorax,12,R8,533.0,313.0,988.0,627.0,/data3/jessica/data/labelGAN/vinbig/train32c05ef69ce090ebbdaa6741c21afc01.dicom
+6606,32c05ef69ce090ebbdaa6741c21afc01,Pneumothorax,12,R9,396.0,301.0,960.0,644.0,/data3/jessica/data/labelGAN/vinbig/train32c05ef69ce090ebbdaa6741c21afc01.dicom
+6607,32c05ef69ce090ebbdaa6741c21afc01,Pneumothorax,12,R10,453.0,277.0,967.0,1085.0,/data3/jessica/data/labelGAN/vinbig/train32c05ef69ce090ebbdaa6741c21afc01.dicom
+14585,3479c81736f275a848b74d952ebfab29,Pneumothorax,12,R10,341.0,1886.0,474.0,2099.0,/data3/jessica/data/labelGAN/vinbig/train3479c81736f275a848b74d952ebfab29.dicom
+14771,0e21abbef40e569be72ab0ad90544f87,Pneumothorax,12,R9,103.0,465.0,901.0,1655.0,/data3/jessica/data/labelGAN/vinbig/train0e21abbef40e569be72ab0ad90544f87.dicom
+14773,0e21abbef40e569be72ab0ad90544f87,Pneumothorax,12,R10,96.0,546.0,969.0,1660.0,/data3/jessica/data/labelGAN/vinbig/train0e21abbef40e569be72ab0ad90544f87.dicom
+14774,0e21abbef40e569be72ab0ad90544f87,Pneumothorax,12,R8,106.0,513.0,928.0,1656.0,/data3/jessica/data/labelGAN/vinbig/train0e21abbef40e569be72ab0ad90544f87.dicom
+849,54e6184c63c75a9695d7effc17969ad0,Atelectasis,1,R10,568.0,374.0,882.0,561.0,/data3/jessica/data/labelGAN/vinbig/train54e6184c63c75a9695d7effc17969ad0.dicom
+863,54e6184c63c75a9695d7effc17969ad0,Atelectasis,1,R9,558.0,475.0,873.0,897.0,/data3/jessica/data/labelGAN/vinbig/train54e6184c63c75a9695d7effc17969ad0.dicom
+1415,2f4573aa154b6ee5f4ba4dc90626f5ec,Atelectasis,1,R9,1806.0,635.0,2256.0,1617.0,/data3/jessica/data/labelGAN/vinbig/train2f4573aa154b6ee5f4ba4dc90626f5ec.dicom
+1447,522dea0833b59836405679f464299eac,Atelectasis,1,R10,1703.0,419.0,2312.0,1634.0,/data3/jessica/data/labelGAN/vinbig/train522dea0833b59836405679f464299eac.dicom
+1611,145691883baff4df3e4863ca6354c44e,Atelectasis,1,R10,851.0,144.0,1367.0,571.0,/data3/jessica/data/labelGAN/vinbig/train145691883baff4df3e4863ca6354c44e.dicom
+2279,51cce256c4d5b81a6b65a24cfe7b3ba2,Atelectasis,1,R10,469.0,1308.0,1041.0,2013.0,/data3/jessica/data/labelGAN/vinbig/train51cce256c4d5b81a6b65a24cfe7b3ba2.dicom
+2701,4f3f5460ae80ab6ec1bf00b33087a828,Atelectasis,1,R9,387.0,648.0,1006.0,1461.0,/data3/jessica/data/labelGAN/vinbig/train4f3f5460ae80ab6ec1bf00b33087a828.dicom
+2940,19da7247b897983617e17c69636620ad,Atelectasis,1,R10,303.0,572.0,975.0,1095.0,/data3/jessica/data/labelGAN/vinbig/train19da7247b897983617e17c69636620ad.dicom
+2942,19da7247b897983617e17c69636620ad,Atelectasis,1,R8,334.0,648.0,959.0,1216.0,/data3/jessica/data/labelGAN/vinbig/train19da7247b897983617e17c69636620ad.dicom
+3122,053cf0f0a75926ebd53f0265bad6aee4,Atelectasis,1,R9,311.0,346.0,893.0,1224.0,/data3/jessica/data/labelGAN/vinbig/train053cf0f0a75926ebd53f0265bad6aee4.dicom
+3766,4fa30afdf5d4bbfcfd9071e2a56e7a4b,Atelectasis,1,R10,498.0,436.0,1057.0,1977.0,/data3/jessica/data/labelGAN/vinbig/train4fa30afdf5d4bbfcfd9071e2a56e7a4b.dicom
+4169,54f9194379210945be0ed72fac357456,Atelectasis,1,R8,291.0,807.0,924.0,1806.0,/data3/jessica/data/labelGAN/vinbig/train54f9194379210945be0ed72fac357456.dicom
+4370,2be93a3c2bd9a086a39c3806e1811356,Atelectasis,1,R10,1354.0,412.0,2462.0,2670.0,/data3/jessica/data/labelGAN/vinbig/train2be93a3c2bd9a086a39c3806e1811356.dicom
+4684,305e4add9c72c91e9984305bf4e85aee,Atelectasis,1,R10,154.0,1581.0,927.0,2144.0,/data3/jessica/data/labelGAN/vinbig/train305e4add9c72c91e9984305bf4e85aee.dicom
+4850,3cdce1131cdbbbc959330bb08be55a3d,Atelectasis,1,R10,1143.0,334.0,1735.0,683.0,/data3/jessica/data/labelGAN/vinbig/train3cdce1131cdbbbc959330bb08be55a3d.dicom
+5327,05c0c802db4f100de8e2a9fa4aa62d14,Atelectasis,1,R10,718.0,1601.0,1340.0,2030.0,/data3/jessica/data/labelGAN/vinbig/train05c0c802db4f100de8e2a9fa4aa62d14.dicom
+5419,55e39b1282cde6796b82c6b5019a1fb8,Atelectasis,1,R10,1207.0,75.0,2144.0,485.0,/data3/jessica/data/labelGAN/vinbig/train55e39b1282cde6796b82c6b5019a1fb8.dicom
+5938,508083b00dfef2ea10fe2aebee580990,Atelectasis,1,R10,537.0,492.0,1007.0,875.0,/data3/jessica/data/labelGAN/vinbig/train508083b00dfef2ea10fe2aebee580990.dicom
+7005,49ded6fae1ab18e9200f9d9cbf26e884,Atelectasis,1,R10,1184.0,394.0,1984.0,2255.0,/data3/jessica/data/labelGAN/vinbig/train49ded6fae1ab18e9200f9d9cbf26e884.dicom
+7007,49ded6fae1ab18e9200f9d9cbf26e884,Atelectasis,1,R9,1339.0,657.0,2014.0,1572.0,/data3/jessica/data/labelGAN/vinbig/train49ded6fae1ab18e9200f9d9cbf26e884.dicom
+7010,49ded6fae1ab18e9200f9d9cbf26e884,Atelectasis,1,R8,1364.0,667.0,1979.0,1262.0,/data3/jessica/data/labelGAN/vinbig/train49ded6fae1ab18e9200f9d9cbf26e884.dicom
+8454,53e2a10eb9969b0e336a51d11dda17f9,Atelectasis,1,R10,1925.0,574.0,2559.0,1264.0,/data3/jessica/data/labelGAN/vinbig/train53e2a10eb9969b0e336a51d11dda17f9.dicom
+8552,41ebb4e4b4434bb495434e6a4026c9d7,Atelectasis,1,R10,2001.0,569.0,2506.0,878.0,/data3/jessica/data/labelGAN/vinbig/train41ebb4e4b4434bb495434e6a4026c9d7.dicom
+8555,41ebb4e4b4434bb495434e6a4026c9d7,Atelectasis,1,R9,2037.0,583.0,2606.0,1400.0,/data3/jessica/data/labelGAN/vinbig/train41ebb4e4b4434bb495434e6a4026c9d7.dicom
+10166,41bce02542a90273d79a8cc6d214170d,Atelectasis,1,R10,573.0,300.0,1097.0,509.0,/data3/jessica/data/labelGAN/vinbig/train41bce02542a90273d79a8cc6d214170d.dicom

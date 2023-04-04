@@ -24,6 +24,7 @@ import torch
 from PIL import Image
 import numpy as np
 from torch import nn
+from torchvision.utils import save_image
 
 
 class Interpolate(nn.Module):
@@ -64,19 +65,19 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
     # assert (len(latents) == 1)  # for GPU memory constraints
     if not use_style_latents:
         # generate style_latents from latents
-        l = g_all.module.g_mapping(latents.to(device))
-        style_latents = g_all.module.truncation(l)
+        style_latents = g_all.g_mapping(latents.to(device))
+        style_latents = g_all.truncation(style_latents)
         style_latents = style_latents.clone()  # make different layers non-alias
-
     else:
         style_latents = latents
 
         # style_latents = latents
     if return_stylegan_latent:
         return  style_latents
-    img_list, affine_layers = g_all.module.g_synthesis(style_latents)
+    img_list, affine_layers = g_all.g_synthesis(style_latents)
+    save_image(img_list[0].detach(),"/home/jessica/labelGAN/datasetGAN_release/utils/test.png")
 
-    if return_only_im:
+    '''if return_only_im:
         if process_out:
             if img_list.shape[-2] > 512:
                 img_list = upsamplers[-1](img_list)
@@ -84,7 +85,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
             img_list = img_list.cpu().detach().numpy()
             img_list = process_image(img_list)
             img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
-        return img_list, style_latents
+        return img_list, style_latents'''
 
     number_feautre = 0
     for i, item in enumerate(affine_layers):
@@ -103,8 +104,8 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
             #print('elem', affine_layers[i].shape)
             affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = elem
             start_channel_index += len_channel
-    if img_list.shape[-2] != 512:
-        img_list = upsamplers[-1](img_list)
+    '''if img_list.shape[-2] != 512:
+        img_list = upsamplers[-1](img_list)'''
     if process_out:
         img_list = img_list.cpu().detach().numpy()
         img_list = process_image(img_list)

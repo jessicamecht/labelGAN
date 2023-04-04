@@ -12,8 +12,6 @@ torch.manual_seed(0)
 from PIL import Image
 import gc
 from torch.utils.data import Dataset
-from train_dataset import *
-from label_model import *
 import cv2
 
 few_shot_classes = {"Nofinding": 0,
@@ -41,7 +39,7 @@ class trainData(Dataset):
         self.args = args
 
     def __getitem__(self, index):
-        x = torch.tensor(self.X_data[index])
+        x = torch.tensor(self.X_data[index]).detach()
         x = x.reshape(-1, self.args['dim'][2])
         return x.type(torch.FloatTensor).squeeze(), torch.tensor(self.y_data[index]).type(torch.FloatTensor)
 
@@ -87,9 +85,8 @@ class labelData(Dataset):
         return len(self.files)
     
 
-def prepare_data(args, palette, device):
+def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
 
-    g_all, avg_latent, upsamplers = prepare_stylegan(args, device)
     latent_all = np.load(args['annotation_image_latent_path'])
     
     latent_all = torch.from_numpy(latent_all)
@@ -98,7 +95,7 @@ def prepare_data(args, palette, device):
     # load annotated mask
     mask_list = []
     im_list = []
-    latent_all = latent_all[:args['max_training']]
+    latent_all = latent_all[i:i+args['max_training']]
     
     num_data = len(latent_all)
 
@@ -159,8 +156,8 @@ def prepare_data(args, palette, device):
         if len(mask) == 0: continue
         all_feature_maps_train_list.append(feature_maps.cpu().detach())
         
-        #all_mask_train[start:end] = (mask == 143).astype(np.float16)
-        all_mask_train_list.append(torch.tensor(mask.astype(np.float16)))
+        #all_mask_train[start:end] = 
+        all_mask_train_list.append(torch.tensor((mask == 255).astype(np.float16)))
         img_show =  cv2.resize(np.squeeze(img[0]), dsize=(args['dim'][1], args['dim'][1]), interpolation=cv2.INTER_NEAREST)
         curr_vis = np.concatenate( [im_list[i], img_show, colorize_mask(new_mask, palette)], 0)
         vis.append( curr_vis )
