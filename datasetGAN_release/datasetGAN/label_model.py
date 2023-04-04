@@ -28,7 +28,7 @@ def prepare_stylegan(args, device):
             max_layer = 7
         elif args['category'] == "xray":
             resolution = 1024
-            max_layer = 7
+            max_layer = 9
         else:
             assert "Not implementated!"
 
@@ -36,14 +36,11 @@ def prepare_stylegan(args, device):
         avg_latent = torch.from_numpy(avg_latent).type(torch.FloatTensor).to(device)
         
 
-        g_all = nn.Sequential(OrderedDict([
-            ('g_mapping', G_mapping()),
-            ('truncation', Truncation(avg_latent,max_layer=max_layer, device=device, threshold=0.7)),
-            ('g_synthesis', G_synthesis( resolution=resolution))
-        ]))
-        
-        ckpt = torch.load(args['stylegan_checkpoint'], map_location=device)
-        
+        g_all = nn.Sequential(OrderedDict([('g_mapping', G_mapping()),
+        ('truncation', Truncation(avg_latent)),
+        ('g_synthesis', G_synthesis(resolution=1024))    
+            ]))
+        ckpt = torch.load('/data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_8.pth', map_location=device)
         for key in list(ckpt.keys()):
             new_key = key.replace('init_block', 'blocks.4x4').replace('blocks.0.', 'blocks.8x8.')
             new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
@@ -52,10 +49,12 @@ def prepare_stylegan(args, device):
             new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
             new_key = new_key.replace("g_synthesis.to_rgb.", "g_synthesis.torgb.")
             ckpt[new_key] = ckpt.pop(key)
-
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
-        g_all = nn.DataParallel(g_all).to(device)
+        g_mapping, g_synthesis = g_all[0], g_all[1]
+        #g_all = nn.DataParallel(g_all).to(device)
+        
+        g_all = g_all.to(device)
         
 
     else:

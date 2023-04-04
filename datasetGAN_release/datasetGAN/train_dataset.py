@@ -101,10 +101,9 @@ def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
 
     annotation_mask_path_files = os.listdir(args['annotation_mask_path'])
     for i in tqdm(range(len(latent_all))):
-        if i == 3: continue
         if i >= args['max_training']:
             break
-        name = 'image_%0d.png' % i
+        
         mask_name = annotation_mask_path_files[i]
         name = mask_name.replace("_mask.png", ".png")
         

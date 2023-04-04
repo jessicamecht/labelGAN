@@ -32,7 +32,7 @@ def save_random_generations(g_all, device):
     img = (img +1.0)/2.0
     save_image(img.clamp(0,1),"save_image/random_SG1-{}.png".format(i+1))
 
-def embedding_function(image, perceptual, g_synthesis, device, image_id):
+def embedding_function(image, perceptual, g_synthesis, device, image_id, save_path):
   upsample = torch.nn.Upsample(scale_factor = 256/1024, mode = 'bilinear')
   tr = transforms.Resize((1024, 1024))
   image = tr(image)
@@ -51,13 +51,16 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id):
   loss_ = []
   loss_psnr = []
   for e in range(1500):
+    
     optimizer.zero_grad()
     syn_img = g_synthesis(latents, depth=8)
     syn_img = (syn_img+1.0)/2.0
     mse, per_loss = loss_function(syn_img, image, img_p, MSE_loss, upsample, perceptual)
+    
     psnr = PSNR(mse, flag = 0)
     loss = per_loss +mse
     loss.backward()
+    
     optimizer.step()
     loss_np=loss.detach().cpu().numpy()
     loss_p=per_loss.detach().cpu().numpy()
@@ -66,15 +69,16 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id):
     loss_.append(loss_np)
     #if (e+1)%500==0 :
     #  print("iter{}: loss -- {},  mse_loss --{},  percep_loss --{}, psnr --{}".format(e+1,loss_np,loss_m,loss_p,psnr))
-  save_image(syn_img.clamp(0,1),f"./images/generated/{image_id}.png".format(e+1))
+  #save_image(torch.tensor(syn_img),f"./images/generated/{image_id}_.png".format(e+1))
+  save_image(syn_img.clamp(0,1),f"{save_path}/generated/{image_id}.png".format(e+1))
   #np.save("loss_list.npy",loss_)
-  np.save(f"./images/latents/latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
-  np.save(f"./images/latents/512_latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
+  np.save(f"{save_path}/generated/latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
+  np.save(f"{save_path}/generated/512_latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
 
   #plt.plot(loss_, label = 'Loss = MSELoss + Perceptual')
   #plt.plot(loss_psnr, label = 'PSNR')
   #plt.legend()
-  return latents
+  return latents, syn_img
 
 def embedding_Hierarchical(image, perceptual, g_synthesis, device):
   upsample = torch.nn.Upsample(scale_factor = 256/1024, mode = 'bilinear')
@@ -98,7 +102,7 @@ def embedding_Hierarchical(image, perceptual, g_synthesis, device):
   for e in range(1000):
     optimizer.zero_grad()
     latent_w1 = latent_w.unsqueeze(1).expand(-1, 18, -1)
-    syn_img = g_synthesis(latent_w1, depth=8)
+    syn_img = g_synthesis(latent_w1)#, depth=8)
     syn_img = (syn_img+1.0)/2.0
     mse, per_loss = loss_function(syn_img, image, img_p, MSE_loss, upsample, perceptual)
     psnr = PSNR(mse, flag = 0)
@@ -122,7 +126,7 @@ def embedding_Hierarchical(image, perceptual, g_synthesis, device):
   optimizer = optim.Adam({latent_w1},lr=0.01,betas=(0.9,0.999),eps=1e-8)
   for e in range(1000):  
     optimizer.zero_grad()
-    syn_img = g_synthesis(latent_w1, depth=8)
+    syn_img = g_synthesis(latent_w1)#, depth=8)
     syn_img = (syn_img+1.0)/2.0
     mse, per_loss = loss_function(syn_img, image, img_p, MSE_loss, upsample, perceptual)
     psnr = PSNR(mse, flag = 0)

@@ -130,10 +130,11 @@ def main(args, checkpoint_path_segm=""):
         classifier.init_weights()
         classifier.train()
 
-    criterion = nn.CrossEntropyLoss()
+    class_weights = torch.tensor([0.3, 0.7]).to(device)
+    criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(classifier.parameters() , lr=0.001)
 
-    for i in range(args['max_training']-2, 20):#can only fit 2 images into memoory at a time 
+    for i in range(args['max_training']-2, 50):#can only fit 2 images into memoory at a time 
         all_feature_maps_train_list, all_mask_train_all, num_data = prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers)
 
         train_data = trainData(all_feature_maps_train_list,
