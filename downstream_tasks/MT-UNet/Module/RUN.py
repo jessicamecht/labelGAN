@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[1]:
-
-
 import sys
 
 from hzhu_metrics_class import *
 from hzhu_metrics_saliency import *
-from hzhu_data import *
+# from hzhu_data import *
+import datasets_custom
 from hzhu_learn import *
 from hzhu_MTL_UNet import *
 from hzhu_gen import *
@@ -28,10 +25,6 @@ matplotlib.use('Agg')
 plt.rcParams['axes.facecolor'] = 'white'
 
 import argparse
-
-
-# In[2]:
-
 
 if __name__ == '__main__':
     print('torch.get_num_threads()=%d'%torch.get_num_threads())
@@ -64,12 +57,20 @@ if __name__ == '__main__':
     print(folder_string)
 
     data_timer = QuickTimer()
-    path = 'D:/Gaze Dataset/MIMIC-CXR & GAZE (master)/Data_Attention/test_down5_blur500'
+#     path = 'D:/Gaze Dataset/MIMIC-CXR & GAZE (master)/Data_Attention/test_down5_blur500'
     batch_size = 2
     epoch_max = 5
         
-    dataAll = DataMaster(path=path, batch_size=batch_size)
-    print('Data Preparing time: %fsec'%data_timer())
+#     dataAll = DataMaster(path=path, batch_size=batch_size)
+#     print('Data Preparing time: %fsec'%data_timer())
+
+    train_dataset, valid_dataset, test_dataset = datasets_custom.get_datasets(train_size,use_augmentation)
+    dataAll = {
+                "Train": DataLoader(train_dataset, batch_size=8, shuffle=True),
+                "Valid": DataLoader(valid_dataset, batch_size=8, shuffle=True)
+                "Test": DataLoader(test_dataset, batch_size=1, shuffle=True) 
+    }
+        
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     Net = Model(
