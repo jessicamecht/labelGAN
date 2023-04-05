@@ -23,18 +23,18 @@ from collections import Counter
 import torchvision.models as models
 
 def train_label_classif(args, checkpoint_path_label=""):
-    files = os.listdir(path)
+    files = os.listdir(args['annotation_image_latent_path_classification'])
     files = sorted(files)
     mask = ["tophat" not in elem for elem in files]
     files = np.array(files)[mask]
-    label_data = labelDataLatent(files, path, device)
+    print(len(files),';lkjhgf')
+    label_data = labelDataLatent(files, args['annotation_image_latent_path_classification'], device)
     train_loader_classif = DataLoader(dataset=label_data, batch_size=args['batch_size'], shuffle=True)
     label_classifier_instance = latent_classifier(args['number_class_classification']).to(device)
     if checkpoint_path_label != "":
-        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_number' + str(0) + '.pth'))
+        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_number_' + '.pth'))
         label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
         checkpoint = torch.load(os.path.join(checkpoint_path_label, 'reshaper_number' + str(0) + '.pth'))
-        reshaper.load_state_dict(checkpoint['model_state_dict'])
         label_classifier_instance.eval()
         reshaper.eval()
     else:
@@ -70,7 +70,7 @@ def train_label_classif(args, checkpoint_path_label=""):
             accs.append(acc.cpu())
             iteration += 1
             if iteration % 5000 == 0:
-                print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ", np.array(acc_major).mean())
+                print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ")
                 gc.collect()
                 model_path = os.path.join(args['exp_dir'],
                                             'model_label_classif_' +  str(iteration) + '_number_' + str(0) + '.pth')   
@@ -96,9 +96,9 @@ def train_label_classif(args, checkpoint_path_label=""):
         df['preds'] = all_preds
         df['probs'] = all_probs
         df.to_csv("res.csv")
-        print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ", np.array(acc_major).mean())
+        print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ")
 
-    model_path = os.path.join(args['exp_dir'], 'model_label_classif' + '_number_' + str(0) + '.pth')
+    model_path = os.path.join(args['exp_dir'], 'model_label_classif' + '_number_'+ '.pth')
     torch.save({'model_state_dict': label_classifier_instance.state_dict()},
                    model_path)
 
@@ -130,7 +130,7 @@ def main(args, checkpoint_path_segm=""):
         classifier.init_weights()
         classifier.train()
 
-    class_weights = torch.tensor([0.3, 0.7]).to(device)
+    class_weights = torch.tensor([0.3, 0.7]).to(device )
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(classifier.parameters() , lr=0.001)
 
@@ -203,7 +203,7 @@ def main(args, checkpoint_path_segm=""):
                     break
 
                 model_path = os.path.join(args['exp_dir'],
-                                    'model_' + str(MODEL_NUMBER) + '.pth')
+                                    'model_' + '.pth')
                 MODEL_NUMBER += 1
                 print('save to:',model_path)
                 torch.save({'model_state_dict': classifier.state_dict()},
@@ -225,6 +225,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_vis', type=bool, default=False)
     parser.add_argument('--start_step', type=int, default=0)
     parser.add_argument('--eval_interp', type=bool, default=False)
+    parser.add_argument('--train_pixel_classif', type=bool, default=False)
 
     parser.add_argument('--resume', type=str,  default="")
     parser.add_argument('--resume_label', type=str,  default="")
@@ -252,9 +253,10 @@ if __name__ == '__main__':
     if args.eval_interp:
         main(opts, checkpoint_path_segm=args.resume, checkpoint_path_label=args.resume_label)
     if args.generate_data:
+        print("GENERATE DATA")
         generate_data(opts, args.resume, args.resume_label, args.num_sample, vis=args.save_vis, start_step=args.start_step, device=device)
     if args.train_label_classif:
         train_label_classif(opts)
-    else:
+    if args.train_pixel_classif:
         main(opts)
 

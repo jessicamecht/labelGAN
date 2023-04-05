@@ -32,7 +32,7 @@ def save_random_generations(g_all, device):
     img = (img +1.0)/2.0
     save_image(img.clamp(0,1),"save_image/random_SG1-{}.png".format(i+1))
 
-def embedding_function(image, perceptual, g_synthesis, device, image_id, save_path):
+def embedding_function(image, perceptual, g_synthesis, g_mapping, avg_latent, device, image_id, save_path):
   upsample = torch.nn.Upsample(scale_factor = 256/1024, mode = 'bilinear')
   tr = transforms.Resize((1024, 1024))
   image = tr(image)
@@ -43,18 +43,25 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id, save_pa
   MSE_loss = nn.MSELoss(reduction="mean")
   #since the synthesis network expects 18 w vectors of size 1x512 thus we take latent vector of the same size
   latents = torch.zeros((1,18,512), requires_grad = True, device = device)
+
+  #latents_z = torch.zeros((1,512), requires_grad = True, device = device)
   #Optimizer to change latent code in each backward step
   optimizer = optim.Adam({latents},lr=0.01,betas=(0.9,0.999),eps=1e-8)
+
 
 
   #Loop to optimise latent vector to match the generated image to input image
   loss_ = []
   loss_psnr = []
   for e in range(1500):
-    
+    #res = g_mapping(latents_z)
+    #x = res
+    #interp = torch.lerp(avg_latent, x, 0.7).to(device)
+    #do_trunc = (torch.arange(x.size(1)) < 9).view(1, -1, 1).to(device)
+    #latents = torch.where(do_trunc, interp, x)
     optimizer.zero_grad()
-    syn_img = g_synthesis(latents, depth=8)
-    syn_img = (syn_img+1.0)/2.0
+    syn_img, _ = g_synthesis(latents)#, depth=8)
+    #syn_img = (syn_img+1.0)/2.0
     mse, per_loss = loss_function(syn_img, image, img_p, MSE_loss, upsample, perceptual)
     
     psnr = PSNR(mse, flag = 0)
@@ -73,7 +80,7 @@ def embedding_function(image, perceptual, g_synthesis, device, image_id, save_pa
   save_image(syn_img.clamp(0,1),f"{save_path}/generated/{image_id}.png".format(e+1))
   #np.save("loss_list.npy",loss_)
   np.save(f"{save_path}/generated/latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
-  np.save(f"{save_path}/generated/512_latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
+  #np.save(f"{save_path}/generated/512_latent_{image_id}.npy".format(),latents.detach().cpu().numpy())
 
   #plt.plot(loss_, label = 'Loss = MSELoss + Perceptual')
   #plt.plot(loss_psnr, label = 'PSNR')

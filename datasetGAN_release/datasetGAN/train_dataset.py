@@ -13,6 +13,7 @@ from PIL import Image
 import gc
 from torch.utils.data import Dataset
 import cv2
+import pandas as pd 
 
 few_shot_classes = {"Nofinding": 0,
     'NoduleMass': 9,
@@ -29,6 +30,8 @@ few_shot_classes = {"Nofinding": 0,
     'Calcification': 12,
     'Atelectasis': 13,
     'Pneumothorax': 14}
+
+df = pd.read_csv('/data3/jessica/data/labelGAN/vinbig/train.csv')
 
 
 class trainData(Dataset):
@@ -51,13 +54,16 @@ class labelDataLatent(Dataset):
         self.files = files
         self.path = path
         self.device = device
+        print(self.path)
 
     def __getitem__(self, index):
         imagename = self.files[index]
         x = torch.tensor(np.load(self.path + imagename)).to(self.device)
+        imid = imagename.replace(".png", "").replace("latent_", "").replace(".npy", "")
+        label_str = df[df.image_id  == imid].class_name.reset_index(drop=True)[0].replace(" ", "").replace('/', "")
         #im_name = os.path.join(self.args['annotation_image_path_classification'], x)
         #x = torch.tensor(np.load(im_name)).type(torch.FloatTensor)
-        y = torch.tensor([few_shot_classes[imagename.split("_")[0]]])
+        y = torch.tensor([few_shot_classes[label_str]])
         return x,y
 
     def __len__(self):
@@ -103,7 +109,7 @@ def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
     for i in tqdm(range(len(latent_all))):
         if i >= args['max_training']:
             break
-        
+
         mask_name = annotation_mask_path_files[i]
         name = mask_name.replace("_mask.png", ".png")
         
@@ -134,10 +140,9 @@ def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
     for i in tqdm(range(len(latent_all))):
         gc.collect()
         mask_name = annotation_mask_path_files[i]
-        name = mask_name.split("_")[1]
+        name = mask_name.split("_")[0]
         mask = [name in elem for elem in latent_files]
-        name = latent_files[mask][0]
-        
+        name = latent_files[mask][0].replace(".png", ".npy")
         latent_input = torch.tensor(np.load(latent_path + name)).to(device)
 
         #latent_input = latent_all[i].float().unsqueeze(0)

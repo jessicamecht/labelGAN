@@ -37,7 +37,7 @@ def prepare_stylegan(args, device):
         
 
         g_all = nn.Sequential(OrderedDict([('g_mapping', G_mapping()),
-        ('truncation', Truncation(avg_latent)),
+        ('truncation', Truncation(avg_latent, device)),
         ('g_synthesis', G_synthesis(resolution=1024))    
             ]))
         ckpt = torch.load('/data1/jessica/data/labelGAN/checkpoints/styleGAN/GAN_GEN_8.pth', map_location=device)
@@ -46,8 +46,12 @@ def prepare_stylegan(args, device):
             new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
             new_key = new_key.replace('blocks.3.', 'blocks.64x64.').replace('blocks.2.', 'blocks.32x32.')
             new_key = new_key.replace('blocks.4.', 'blocks.128x128.').replace('blocks.6.', 'blocks.512x512.')
+
+            new_key = new_key.replace('blocks.7.', 'blocks.1024x1024.')
+            
             new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
-            new_key = new_key.replace("g_synthesis.to_rgb.", "g_synthesis.torgb.")
+            new_key = new_key.replace("g_synthesis.to_rgb.8.", "g_synthesis.torgb.")
+            
             ckpt[new_key] = ckpt.pop(key)
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
