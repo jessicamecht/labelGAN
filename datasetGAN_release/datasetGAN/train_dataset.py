@@ -50,10 +50,11 @@ class trainData(Dataset):
         return len(self.X_data)
 
 class labelDataLatent(Dataset):
-    def __init__(self, files, path, device):
+    def __init__(self, files, path, device, ret_id=False):
         self.files = files
         self.path = path
         self.device = device
+        self.ret_id = ret_id
         print(self.path)
 
     def __getitem__(self, index):
@@ -63,8 +64,11 @@ class labelDataLatent(Dataset):
         label_str = df[df.image_id  == imid].class_name.reset_index(drop=True)[0].replace(" ", "").replace('/', "")
         #im_name = os.path.join(self.args['annotation_image_path_classification'], x)
         #x = torch.tensor(np.load(im_name)).type(torch.FloatTensor)
-        y = torch.tensor([few_shot_classes[label_str]])
-        return x,y
+        y = torch.tensor([int(few_shot_classes[label_str] == 0)])
+        if not self.ret_id:
+            return x,y  
+        else:
+            return x, y, imid
 
     def __len__(self):
         return len(self.files)
@@ -91,7 +95,7 @@ class labelData(Dataset):
         return len(self.files)
     
 
-def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
+def prepare_data(args, palette, device, j, g_all, avg_latent, upsamplers):
 
     latent_all = np.load(args['annotation_image_latent_path'])
     
@@ -101,17 +105,20 @@ def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
     # load annotated mask
     mask_list = []
     im_list = []
-    latent_all = latent_all[i:i+args['max_training']]
+    print(latent_all.shape)
+    latent_all = latent_all[j:j+args['max_training']]
     
     num_data = len(latent_all)
+    print(f"NUMBER:{j}")
 
     annotation_mask_path_files = os.listdir(args['annotation_mask_path'])
     for i in tqdm(range(len(latent_all))):
         if i >= args['max_training']:
             break
 
-        mask_name = annotation_mask_path_files[i]
+        mask_name = annotation_mask_path_files[i+j]
         name = mask_name.replace("_mask.png", ".png")
+        print("maskname", name)
         
         im_frame = Image.open(os.path.join( args['annotation_mask_path'] , mask_name)).convert('L')
         mask = np.array(im_frame)
@@ -139,16 +146,17 @@ def prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers):
     all_mask_train_list = []
     for i in tqdm(range(len(latent_all))):
         gc.collect()
-        mask_name = annotation_mask_path_files[i]
+        mask_name = annotation_mask_path_files[j+i].replace("image_", "")
         name = mask_name.split("_")[0]
+        print(name, "imagename")
         mask = [name in elem for elem in latent_files]
         name = latent_files[mask][0].replace(".png", ".npy")
         latent_input = torch.tensor(np.load(latent_path + name)).to(device)
 
         #latent_input = latent_all[i].float().unsqueeze(0)
 
-        img, feature_maps, style_latents, affine_layers = latent_to_image(g_all, upsamplers, latent_input, dim=args['dim'][1],
-                                            return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'], device=device)
+        img, feature_maps = latent_to_image(g_all, upsamplers, latent_input, dim=args['dim'][1],
+                                            return_upsampled_layers=True, use_style_latents=args['annotation_data_from_w'])
 
         #print('test', feature_maps.shape)
         mask = all_mask[i:i + 1]

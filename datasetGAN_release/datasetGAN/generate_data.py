@@ -2,8 +2,7 @@ import torch
 import os 
 import torch.nn as nn 
 import numpy as np 
-from utils.utils import colorize_mask, oht_to_scalar#, latent_to_image
-from utils.utils import process_image
+from utils.utils import process_image, colorize_mask, oht_to_scalar, latent_to_image
 import sys
 sys.path.append('..')
 import imageio
@@ -14,68 +13,9 @@ from PIL import Image
 import pickle
 from torch.distributions import Categorical
 import scipy.stats
+from tqdm import tqdm
 from train_dataset import *
 from label_model import *
-
-def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
-                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False):
-    '''Given a input latent code, generate corresponding image and concatenated feature maps'''
-
-    # assert (len(latents) == 1)  # for GPU memory constraints
-    print(latents.shape)
-    if not use_style_latents:
-        # generate style_latents from latents
-        style_latents = g_all.truncation(g_all.g_mapping(latents))
-        style_latents = style_latents.clone()  # make different layers non-alias
-
-    else:
-        style_latents = latents
-
-        # style_latents = latents
-    if return_stylegan_latent:
-
-        return  style_latents
-    if len(style_latents.shape) == 2:
-        style_latents = style_latents.unsqueeze(0)
-    img_list, affine_layers = g_all.g_synthesis(style_latents)
-
-    if return_only_im:
-        if process_out:
-            if img_list.shape[-2] > 512:
-                img_list = upsamplers[-1](img_list)
-
-            img_list = img_list.cpu().detach().numpy()
-            img_list = process_image(img_list)
-            img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
-        return img_list, style_latents
-
-    number_feautre = 0
-
-    for item in affine_layers:
-        number_feautre += item.shape[1]
-
-
-    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim)
-    if return_upsampled_layers:
-
-        start_channel_index = 0
-        for i in range(len(affine_layers)):
-            len_channel = affine_layers[i].shape[1]
-            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
-                affine_layers[i]).cpu().detach()
-            start_channel_index += len_channel
-
-    if img_list.shape[-2] != 512:
-        img_list = upsamplers[-1](img_list)
-
-    if process_out:
-        img_list = img_list.cpu().detach().numpy()
-        img_list = process_image(img_list)
-        img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
-        # print('start_channel_index',start_channel_index)
-
-
-    return img_list, affine_layers_upsamples
 
     
 
@@ -96,7 +36,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
     if not vis:
         result_path = os.path.join(checkpoint_path_segm, 'samples' )
     else:
-        result_path = os.path.join(checkpoint_path_segm, 'vis_%d'%num_sample)
+        result_path = os.path.join(checkpoint_path_segm, 'vis_KDE_%d'%num_sample)
     if os.path.exists(result_path):
         pass
     else:
@@ -119,7 +59,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         #label_classifier_instance = label_classifier(args['number_class_classification'], feat_size).to(device)
         label_classifier_instance = latent_classifier(args['number_class_classification'])
 
-        checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
+        checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + '.pth'))
         sd = checkpoint['model_state_dict']
         classifier.load_state_dict(sd)
         classifier = classifier
@@ -152,13 +92,15 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         style_latents_flag = args['annotation_data_from_w']
 
         if style_latents_flag: 
-            p = args['annotation_image_latent_path_classification']
+            p = args['annotation_image_latent_path_classification_generate']
             files = os.listdir(p)
             #mask = ["tophat" in elem for elem in files]
             files = np.array(files)#[mask]
             num_sample = len(files)
+        else:
+            print("num_sample", num_sample)
         
-        for i in range(num_sample):
+        for i in tqdm(range(num_sample)):
             if i % 100 == 0:
                 print("Generate", i, "Out of:", num_sample)
 
@@ -172,9 +114,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             curr_result['latent'] = latent
             latent = torch.from_numpy(latent).type(torch.FloatTensor).to(device)
             latent_cache.append(latent)
-            print(latent.shape)
-            print(style_latents_flag)
-            style_latents = latent
+            style_latents = latent if style_latents_flag else g_all.truncation(g_all.g_mapping(latent))
             '''img, affine_layers, style_latents, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1], process_out=False,
                                                      use_style_latents=style_latents_flag, return_upsampled_layers=True, device=device)
             print('style_latents', style_latents.shape)
@@ -195,7 +135,6 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             #else:
             
             affine_layers = affine_layers[0]
-            print('affine_layers', affine_layers.shape)
             affine_layers = affine_layers.reshape(args['dim'][-1], -1).transpose(1, 0)
 
             all_seg = []
@@ -244,7 +183,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
             del (affine_layers)
             if vis:
                 color_mask = colorize_mask(img_seg_final, palette) #+ 0.3 * img
-                add = files[i] if style_latents_flag else ""
+                add = files[i] if style_latents_flag else "_KDE_"
                 imageio.imwrite(os.path.join(result_path, f"{label}_{add}" + str(i) + '_mask.jpg'),
                                   color_mask.astype(np.uint8))
 

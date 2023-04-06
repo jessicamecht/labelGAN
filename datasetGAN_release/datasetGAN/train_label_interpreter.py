@@ -11,32 +11,46 @@ import json
 import numpy as np
 import os
 from tqdm import tqdm
+from eval import calc_test_eval
 import gc
 from utils.utils import multi_acc, get_label_stas
 import torch.optim as optim
 import argparse
 from torch.utils.data import DataLoader
-device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
 from collections import Counter
 import torchvision.models as models
 
 def train_label_classif(args, checkpoint_path_label=""):
+    test_latent_path = '/data3/jessica/data/labelGAN/test_images/latents/'
+
+    p = '/data3/jessica/data/labelGAN/vinbig/train.csv'
+    df = pd.read_csv(p)
     files = os.listdir(args['annotation_image_latent_path_classification'])
     files = sorted(files)
-    mask = ["tophat" not in elem for elem in files]
+    mask = [len(elem) > 14 for elem in files]
     files = np.array(files)[mask]
-    print(len(files),';lkjhgf')
-    label_data = labelDataLatent(files, args['annotation_image_latent_path_classification'], device)
+    files_test = files[int(0.8*len(files)):]
+    ids = [elem.replace('latent_' ,"").replace(".npy", "") for elem in files]
+    df = df[df.image_id.isin(ids)]
+    df['class_name'] = df['class_name'].apply(lambda x: x.replace(" ", "").replace("/", ""))
+    fil = df.groupby(by='image_id').class_name.apply(list)
+    fil = fil.apply(lambda x: np.unique(np.array([few_shot_classes[xel] for xel in x])))
+
+    files_train = files[:int(0.8*len(files))]
+
+    label_data_test = labelDataLatent(files_test, args['annotation_image_latent_path_classification'], device, ret_id=True)
+    test_loader_classif = DataLoader(dataset=label_data_test, batch_size=10, shuffle=True, drop_last=True)
+    
+    label_data = labelDataLatent(files_train, args['annotation_image_latent_path_classification'], device)
     train_loader_classif = DataLoader(dataset=label_data, batch_size=args['batch_size'], shuffle=True)
     label_classifier_instance = latent_classifier(args['number_class_classification']).to(device)
     if checkpoint_path_label != "":
         checkpoint = torch.load(os.path.join(checkpoint_path_label, 'model_label_classif_number_' + '.pth'))
         label_classifier_instance.load_state_dict(checkpoint['model_state_dict'])
-        checkpoint = torch.load(os.path.join(checkpoint_path_label, 'reshaper_number' + str(0) + '.pth'))
         label_classifier_instance.eval()
-        reshaper.eval()
     else:
         label_classifier_instance.train()
         criterion = nn.CrossEntropyLoss()
@@ -45,7 +59,7 @@ def train_label_classif(args, checkpoint_path_label=""):
     sm = nn.Softmax(dim=1)
     iteration = 0
     best_loss = 10000000
-    for epoch in tqdm(range(10)):
+    for epoch in tqdm(range(15)):
         all_preds = []
         all_labels = []
         accs = []
@@ -70,7 +84,7 @@ def train_label_classif(args, checkpoint_path_label=""):
             accs.append(acc.cpu())
             iteration += 1
             if iteration % 5000 == 0:
-                print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ")
+                print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean())
                 gc.collect()
                 model_path = os.path.join(args['exp_dir'],
                                             'model_label_classif_' +  str(iteration) + '_number_' + str(0) + '.pth')   
@@ -96,6 +110,7 @@ def train_label_classif(args, checkpoint_path_label=""):
         df['preds'] = all_preds
         df['probs'] = all_probs
         df.to_csv("res.csv")
+        calc_test_eval(test_loader_classif, label_classifier_instance, fil)
         print('Epoch classif: ', str(epoch), 'loss', np.array(losses).mean(), 'acc', np.array(accs).mean(), "Acc Majority Vote: ")
 
     model_path = os.path.join(args['exp_dir'], 'model_label_classif' + '_number_'+ '.pth')
@@ -123,9 +138,11 @@ def main(args, checkpoint_path_segm=""):
     classifier = segm_classifier((1+1), args['dim'][-1]).to(device)
 
     if checkpoint_path_segm != "":
-        checkpoint = torch.load(os.path.join(checkpoint_path_segm, 'model_' + str(MODEL_NUMBER) + '.pth'))
+        print("LOAD ", checkpoint_path_segm)
+        checkpoint = torch.load(os.path.join(checkpoint_path_segm))
         classifier.load_state_dict(checkpoint['model_state_dict'])
-        classifier.eval()
+        #classifier.eval()
+        classifier.train()
     else:
         classifier.init_weights()
         classifier.train()
@@ -134,7 +151,7 @@ def main(args, checkpoint_path_segm=""):
     criterion = nn.CrossEntropyLoss(weight=class_weights)
     optimizer = optim.Adam(classifier.parameters() , lr=0.001)
 
-    for i in range(args['max_training']-2, 50):#can only fit 2 images into memoory at a time 
+    for i in range(args['max_training']-2, 30, 2):#can only fit 2 images into memory at a time 
         all_feature_maps_train_list, all_mask_train_all, num_data = prepare_data(args, palette, device, i, g_all, avg_latent, upsamplers)
 
         train_data = trainData(all_feature_maps_train_list,
