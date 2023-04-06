@@ -75,22 +75,31 @@ def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
 def get_train_data(images_dir,
+                   train_size = 100,
                    use_augmentation = False,
                    augmentation_type = "basic",
                    augmentation_size = 50):
+    """
+    - The {set}_binarized_list.txt contains the image path relative to vinbig_data folder and segregated into train, test,
+    random, kde directories along with the binarized labels for multi-label classification.
+    
+    - All aforementioned sets should be available in the images_dir directory,
+    and the sett splits and labels should be placed in vinbig repo directory.
+    """
     with open("./vinbig/train_binarized_list.txt") as f:
         image_and_labels = get_data_splits(f)
         
     train_dataset = ChestXrayDatasetClassification(images_dir,
-                                                   image_and_labels) 
+                                                   image_and_labels[:train_size]) 
     
     if use_augmentation:
         if augmentation_type == "basic":
             basic_transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(0.4),
-                transforms.RandomAffine(degrees=20, scale=(1.1, 1.1)),
+                transforms.RandomHorizontalFlip(1),
+#                 transforms.RandomAffine(degrees=20, scale=(1.1, 1.1)),
                 transforms.RandomCrop((28, 28), padding=2, pad_if_needed=True, fill=0,
-                                      padding_mode='constant'), transforms.ToTensor()
+                                      padding_mode='constant'),
+#                 transforms.ToTensor()
             ])
             augmentation_dataset = ChestXrayDatasetClassification(images_dir,
                                                                   image_and_labels[:augmentation_size],
