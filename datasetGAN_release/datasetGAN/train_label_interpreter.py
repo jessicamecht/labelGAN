@@ -17,7 +17,7 @@ from utils.utils import multi_acc, get_label_stas
 import torch.optim as optim
 import argparse
 from torch.utils.data import DataLoader
-device = 'cuda:2' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
 from train_dataset import *
 from label_model import *
 from collections import Counter

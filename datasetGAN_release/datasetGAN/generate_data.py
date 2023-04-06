@@ -8,6 +8,7 @@ sys.path.append('..')
 import imageio
 torch.manual_seed(0)
 from torchvision.utils import save_image
+import random
 import scipy.misc
 from PIL import Image
 import pickle
@@ -94,6 +95,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
         if style_latents_flag: 
             p = args['annotation_image_latent_path_classification_generate']
             files = os.listdir(p)
+            random.shuffle(files)
             #mask = ["tophat" in elem for elem in files]
             files = np.array(files)#[mask]
             num_sample = len(files)
