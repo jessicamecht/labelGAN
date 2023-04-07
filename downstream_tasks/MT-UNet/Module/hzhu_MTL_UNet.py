@@ -113,10 +113,13 @@ class UNet_Chunk(Module):
     
 class MTL_UNet(UNet_Chunk):
     
-    def __init__(self, in_channels, filter_list, out_dict):
-        super().__init__(in_channels, filter_list)
+    def __init__(self, in_channels, out_dict):
+        base = 64 if os.getcwd()[0] == '/' else 2
+        super().__init__(in_channels, filter_list=[base*(2**i) for i in range(5)])
         self.out_dict = out_dict
         self.init()
+        
+        self.sigmoid = nn.Sigmoid() # convert to multi-label
         
     def init(self):
         self.dummy_tensor = nn.Parameter(torch.tensor(0), requires_grad=False)
@@ -127,9 +130,9 @@ class MTL_UNet(UNet_Chunk):
             if 'class' in self.out_dict:
                 if self.out_dict['class']>0:
                     self.out_classification = classification_head(
-                        in_features=self.filter_list[0]+self.filter_list[-1],
-                        mid_features=self.filter_list[0], out_features=self.out_dict['class'],
-                        dropout_rate=0.25)
+                        in_features = self.filter_list[0] + self.filter_list[-1],
+                        mid_features = self.filter_list[0], out_features = self.out_dict['class'],
+                        dropout_rate = 0.25)
             if 'image' in self.out_dict:
                 if self.out_dict['image']>0:
                     self.out_conv_image = conv_bn_acti_drop(
@@ -158,6 +161,8 @@ class MTL_UNet(UNet_Chunk):
                     average_pool_d2 = d2.mean(dim=(-2,-1))
                     average_pool = torch.cat((average_pool_e5, average_pool_d2), dim=1)
                     y_class = self.out_classification(average_pool)
+                    
+                    y_class = self.sigmoid(y_class) # multi-label
                     r.append(y_class)
                 else:
                     r.append(self.dummy_tensor)
@@ -175,79 +180,79 @@ class MTL_UNet(UNet_Chunk):
                 
             return tuple(r)
         
-class MTL_UNet_preset(MTL_UNet):
+# class MTL_UNet_preset(MTL_UNet):
     
-    def __init__(self, device, out_dict, loss_dict):
-        self.device = device
-        base = 64 if os.getcwd()[0] == '/' else 2
-        super().__init__(in_channels=1, filter_list=[base*(2**i) for i in range(5)], out_dict=out_dict)
+#     def __init__(self, device, out_dict, loss_dict):
+#         self.device = device
+#         base = 64 if os.getcwd()[0] == '/' else 2
+#         super().__init__(in_channels=1, filter_list=[base*(2**i) for i in range(5)], out_dict=out_dict)
         
-        self.loss_dict = loss_dict
-        self.mt_param_init()
+#         self.loss_dict = loss_dict
+#         self.mt_param_init()
         
-        self.to(self.device)
+#         self.to(self.device)
         
-    def mt_param_init(self):
-        if 'class' in self.out_dict:
-            if self.out_dict['class']>0:
-                if self.loss_dict['class'] is not None:
-                    self.lg_sigma_class = nn.Parameter(torch.tensor(self.loss_dict['class'], device=self.device, dtype=torch.float32))
-                else:
-                    self.lg_sigma_class = torch.tensor(0.0, device=self.device, dtype=torch.float32)
+#     def mt_param_init(self):
+#         if 'class' in self.out_dict:
+#             if self.out_dict['class']>0:
+#                 if self.loss_dict['class'] is not None:
+#                     self.lg_sigma_class = nn.Parameter(torch.tensor(self.loss_dict['class'], device=self.device, dtype=torch.float32))
+#                 else:
+#                     self.lg_sigma_class = torch.tensor(0.0, device=self.device, dtype=torch.float32)
                     
-        if 'image' in self.out_dict:
-            if self.out_dict['image']>0:
-                if not isinstance(self.loss_dict['image'], (list, tuple)):
-                    self.loss_dict['image'] = [self.loss_dict['image'],]
-                for item in self.loss_dict['image']:
-                    if item is not None:
-                        self.lg_sigma_image = nn.Parameter(torch.tensor(item, device=self.device, dtype=torch.float32))
-                    else:
-                        self.lg_sigma_image = torch.tensor(0.0, device=self.device, dtype=torch.float32)
+#         if 'image' in self.out_dict:
+#             if self.out_dict['image']>0:
+#                 if not isinstance(self.loss_dict['image'], (list, tuple)):
+#                     self.loss_dict['image'] = [self.loss_dict['image'],]
+#                 for item in self.loss_dict['image']:
+#                     if item is not None:
+#                         self.lg_sigma_image = nn.Parameter(torch.tensor(item, device=self.device, dtype=torch.float32))
+#                     else:
+#                         self.lg_sigma_image = torch.tensor(0.0, device=self.device, dtype=torch.float32)
                     
-    def compute_loss_class(self, y_pred, y_true, loss_function):
+#     def compute_loss_class(self, y_pred, y_true, loss_function):
         
-        sigma = torch.exp(self.lg_sigma_class)
-        loss_raw = loss_function(y_pred, y_true)
-        loss_weighted = loss_raw/sigma/sigma+torch.log(sigma+1.0)
+#         sigma = torch.exp(self.lg_sigma_class)
+#         loss_raw = loss_function(y_pred, y_true)
+#         loss_weighted = loss_raw/sigma/sigma+torch.log(sigma+1.0)
         
-        return sigma, loss_raw, loss_weighted
+#         return sigma, loss_raw, loss_weighted
     
-    def compute_loss_image(self, y_pred, y_true, loss_function, idx):
+#     def compute_loss_image(self, y_pred, y_true, loss_function, idx):
         
-        sigma = torch.exp(self.lg_sigma_image)
-        loss_raw = loss_function(y_pred, y_true)
-        loss_weighted = loss_raw/sigma/sigma/2.0+torch.log(sigma+1.0)
+#         sigma = torch.exp(self.lg_sigma_image)
+#         loss_raw = loss_function(y_pred, y_true)
+#         loss_weighted = loss_raw/sigma/sigma/2.0+torch.log(sigma+1.0)
         
-        return sigma, loss_raw, loss_weighted
+#         return sigma, loss_raw, loss_weighted
     
-    def compute_loss(self, y_class_pred, y_image_pred, y_class_true, y_image_true, loss_class, loss_image_list):
+#     def compute_loss(self, y_class_pred, y_image_pred, y_class_true, y_image_true, loss_class, loss_image_list):
         
-        class_sigma, class_loss_raw, class_loss_weighted = self.compute_loss_class(
-            y_pred=y_class_pred, y_true=y_class_true, loss_function=loss_class)
+#         class_sigma, class_loss_raw, class_loss_weighted = self.compute_loss_class(
+#             y_pred=y_class_pred, y_true=y_class_true, loss_function=loss_class)
         
-        image_sigma, image_loss_raw, image_loss_weighted = self.compute_loss_image(
-            y_pred=y_image_pred, y_true=y_image_true, loss_function=loss_image_list[0], idx=0)
+#         image_sigma, image_loss_raw, image_loss_weighted = self.compute_loss_image(
+#             y_pred=y_image_pred, y_true=y_image_true, loss_function=loss_image_list[0], idx=0)
         
-        loss_sum = class_loss_weighted+image_loss_weighted
+#         loss_sum = class_loss_weighted+image_loss_weighted
         
-        r = {'loss_sum':loss_sum,
-             'class_loss_raw':class_loss_raw,
-             'image_loss_raw':image_loss_raw}
+#         r = {'loss_sum':loss_sum,
+#              'class_loss_raw':class_loss_raw,
+#              'image_loss_raw':image_loss_raw}
             
-        return r
+#         return r
     
-    def get_status(self):
-        r = []
-        r.append(torch.exp(self.lg_sigma_class).detach().clone().cpu())
-        r.append(torch.exp(self.lg_sigma_image).detach().clone().cpu())
-        return r
+#     def get_status(self):
+#         r = []
+#         r.append(torch.exp(self.lg_sigma_class).detach().clone().cpu())
+#         r.append(torch.exp(self.lg_sigma_image).detach().clone().cpu())
+#         return r
     
-    def get_status_str(self):
-        stats = self.get_status()
-        r = ''
-        for item in stats:
-            r += '%.2e '%item
+#     def get_status_str(self):
+#         stats = self.get_status()
+#         r = ''
+#         for item in stats:
+#             r += '%.2e '%item
             
-        return r
+#         return r
     
