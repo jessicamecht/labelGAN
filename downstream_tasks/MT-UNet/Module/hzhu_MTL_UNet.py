@@ -172,6 +172,8 @@ class MTL_UNet(UNet_Chunk):
             if 'image' in self.out_dict:
                 if self.out_dict['image']>0:
                     y_image = self.out_conv_image(d2)
+                    
+                    y_image = self.sigmoid(y_image) # to binary segmentation
                     r.append(y_image)
                 else:
                     r.append(self.dummy_tensor)
@@ -180,67 +182,45 @@ class MTL_UNet(UNet_Chunk):
                 
             return tuple(r)
         
-# class MTL_UNet_preset(MTL_UNet):
+class MTL_UNet_Main(MTL_UNet):
     
-#     def __init__(self, device, out_dict, loss_dict):
-#         self.device = device
-#         base = 64 if os.getcwd()[0] == '/' else 2
-#         super().__init__(in_channels=1, filter_list=[base*(2**i) for i in range(5)], out_dict=out_dict)
+    def __init__(self, in_channels, out_dict):
+        super().__init__(in_channels=in_channels, out_dict=out_dict)
         
-#         self.loss_dict = loss_dict
-#         self.mt_param_init()
+        self.lg_sigma_class = torch.tensor(0.0, dtype=torch.float32)
+        self.lg_sigma_image = torch.tensor(0.0, dtype=torch.float32)
+                            
+    def compute_loss_class(self, y_pred, y_true, loss_function):
         
-#         self.to(self.device)
+        sigma = torch.exp(self.lg_sigma_class)
+        loss_raw = loss_function(y_pred, y_true)
+        loss_weighted = loss_raw/sigma/sigma+torch.log(sigma + 1.0)
         
-#     def mt_param_init(self):
-#         if 'class' in self.out_dict:
-#             if self.out_dict['class']>0:
-#                 if self.loss_dict['class'] is not None:
-#                     self.lg_sigma_class = nn.Parameter(torch.tensor(self.loss_dict['class'], device=self.device, dtype=torch.float32))
-#                 else:
-#                     self.lg_sigma_class = torch.tensor(0.0, device=self.device, dtype=torch.float32)
-                    
-#         if 'image' in self.out_dict:
-#             if self.out_dict['image']>0:
-#                 if not isinstance(self.loss_dict['image'], (list, tuple)):
-#                     self.loss_dict['image'] = [self.loss_dict['image'],]
-#                 for item in self.loss_dict['image']:
-#                     if item is not None:
-#                         self.lg_sigma_image = nn.Parameter(torch.tensor(item, device=self.device, dtype=torch.float32))
-#                     else:
-#                         self.lg_sigma_image = torch.tensor(0.0, device=self.device, dtype=torch.float32)
-                    
-#     def compute_loss_class(self, y_pred, y_true, loss_function):
-        
-#         sigma = torch.exp(self.lg_sigma_class)
-#         loss_raw = loss_function(y_pred, y_true)
-#         loss_weighted = loss_raw/sigma/sigma+torch.log(sigma+1.0)
-        
-#         return sigma, loss_raw, loss_weighted
+        return sigma, loss_raw, loss_weighted
     
-#     def compute_loss_image(self, y_pred, y_true, loss_function, idx):
+    def compute_loss_image(self, y_pred, y_true, loss_function, idx):
         
-#         sigma = torch.exp(self.lg_sigma_image)
-#         loss_raw = loss_function(y_pred, y_true)
-#         loss_weighted = loss_raw/sigma/sigma/2.0+torch.log(sigma+1.0)
+        sigma = torch.exp(self.lg_sigma_image)
+        loss_raw = loss_function(y_pred, y_true)
+        loss_weighted = loss_raw/sigma/sigma/2.0 + torch.log(sigma + 1.0)
         
-#         return sigma, loss_raw, loss_weighted
+        return sigma, loss_raw, loss_weighted
     
-#     def compute_loss(self, y_class_pred, y_image_pred, y_class_true, y_image_true, loss_class, loss_image_list):
+    def compute_loss(self, y_class_pred, y_image_pred, y_class_true, y_image_true, loss_class, loss_image):
         
-#         class_sigma, class_loss_raw, class_loss_weighted = self.compute_loss_class(
-#             y_pred=y_class_pred, y_true=y_class_true, loss_function=loss_class)
+        class_sigma, class_loss_raw, class_loss_weighted = self.compute_loss_class(
+            y_pred=y_class_pred, y_true=y_class_true, loss_function=loss_class)
         
-#         image_sigma, image_loss_raw, image_loss_weighted = self.compute_loss_image(
-#             y_pred=y_image_pred, y_true=y_image_true, loss_function=loss_image_list[0], idx=0)
+        image_sigma, image_loss_raw, image_loss_weighted = self.compute_loss_image(
+            y_pred=y_image_pred, y_true=y_image_true, loss_function=loss_image, idx=0)
         
-#         loss_sum = class_loss_weighted+image_loss_weighted
+        loss_sum = class_loss_weighted+image_loss_weighted
         
 #         r = {'loss_sum':loss_sum,
 #              'class_loss_raw':class_loss_raw,
 #              'image_loss_raw':image_loss_raw}
             
-#         return r
+        return loss_sum
     
 #     def get_status(self):
 #         r = []

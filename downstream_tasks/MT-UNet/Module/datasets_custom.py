@@ -11,10 +11,11 @@ import csv
 
 class ChestXrayDataset(Dataset):
 
-    def __init__(self, root_dir, image_and_labels, use_aug=False):
+    def __init__(self, root_dir, image_and_labels, res=(1024, 1024), use_aug=False):
 
         self.image_and_labels = image_and_labels
         self.root_dir = root_dir
+        self.res = res
         self.use_aug = use_aug
 
     def __len__(self):
@@ -25,32 +26,25 @@ class ChestXrayDataset(Dataset):
         #Reading images
         img_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "img.png")
         image = Image.open(img_name)
-        
-        #Converting to grayscale if RGB
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "label.png")
         mask = Image.open(mask_name)
-        mask = ImageOps.grayscale(mask)
+        mask = np.array(ImageOps.grayscale(mask))
+        mask[mask > 5] = 255
         
         #Extracting disease label
         label = self.image_and_labels[idx][1]
         
         #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((256, 256))])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
         self.transform_hflip = transforms.functional.hflip
         
         image = self.transform(image)
         mask = self.transform(mask)
         
-        data = {
-                "cxr": image,
-                "gaze": mask, # named gaze with compatibility with MT-UNet code
-                "Y": label
-        }
-        
-        return data
+        return image, mask, label
     
 class AugmentationDataset(Dataset):
 
@@ -68,8 +62,6 @@ class AugmentationDataset(Dataset):
         #Reading images
         img_name = os.path.join(self.root_dir, 'synthetic/images', self.image_paths[idx])
         image = Image.open(img_name)
-        
-        #Converting to grayscale if RGB
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
@@ -81,7 +73,7 @@ class AugmentationDataset(Dataset):
         label = self.labels[idx]
         
         #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((256, 256))])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
         self.transform_hflip = transforms.functional.hflip
         
         image = self.transform(image)
@@ -92,42 +84,39 @@ class AugmentationDataset(Dataset):
         if probability <= 0.5:
             image = self.transform_hflip(image)
             mask = self.transform_hflip(mask)
-
-        data = {
-                "cxr": image,
-                "gaze": mask, # named gaze with compatibility with MT-UNet code
-                "Y": label
-        }
         
-        return data
+        return image, mask, label
 
 def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
-def get_datasets(aug_size=None, use_augmentation = False):
+def get_datasets(res = (256, 256), aug_size=None, use_augmentation = False):
     root_dir = '../../../../data/vinbig_we_labeled/'
     
     with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
         train_file = get_data_splits(f)
     train_dataset = ChestXrayDataset(root_dir,
-                                     train_file) 
+                                     train_file,
+                                     res) 
     
     with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
         val_file = get_data_splits(f)
     valid_dataset = ChestXrayDataset(root_dir,
-                                     val_file)   
+                                     val_file,
+                                     res)   
     
     with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
         test_file = get_data_splits(f)
     test_dataset = ChestXrayDataset(root_dir,
-                                    test_file)  
+                                    test_file,
+                                    res)  
     
     if use_augmentation:
-        synthetic_labels = "To-do: obtain disease labels for synthetic images"
+        with open(os.path.join(root_dir, "aug_binarized_list.txt")) as f:
+            aug_file = get_data_splits(f)
         augmentation_dataset = AugmentationDataset(root_dir,
-                                                   os.listdir(os.path.join(self.root_dir, 'synthetic/images'))[0:aug_size],
-                                                   os.listdir(os.path.join(self.root_dir, 'synthetic/masks'))[0:aug_size],
-                                                   synthetic_labels) 
+                                                   aug_file[:aug_size],
+                                                   res) 
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
     
     return train_dataset, valid_dataset, test_dataset
