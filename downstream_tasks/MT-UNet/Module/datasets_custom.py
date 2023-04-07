@@ -91,7 +91,7 @@ def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size=None, use_augmentation = False):
-    root_dir = '../../../../data/vinbig_we_labeled/'
+    root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/'
     
     with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
         train_file = get_data_splits(f)
