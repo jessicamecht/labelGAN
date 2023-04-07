@@ -35,17 +35,89 @@ import numpy as np
 import os
 device_ids = [0]
 from PIL import Image
-from models.stylegan import GMapping, GSynthesis, Truncation, Generator
+#from models.stylegan import GMapping, GSynthesis, Truncation, Generator
 
 from models.stylegan1 import G_mapping,G_synthesis, Truncation
 import copy
 from numpy.random import choice
-from utils.utils import latent_to_image, Interpolate
+from utils.utils import Interpolate
 import argparse
 
 import models as n
 #from models.CustomLayer import Truncation
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cuda:3' if torch.cuda.is_available() else 'cpu'
+
+def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
+                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False):
+    '''Given a input latent code, generate corresponding image and concatenated feature maps'''
+
+    # assert (len(latents) == 1)  # for GPU memory constraints
+    print(latents.shape)
+    if not use_style_latents:
+        # generate style_latents from latents
+        style_latents = g_all.module.truncation(g_all.module.g_mapping(latents))
+        style_latents = style_latents.clone()  # make different layers non-alias
+
+    else:
+        style_latents = latents
+
+        # style_latents = latents
+    if return_stylegan_latent:
+
+        return  style_latents
+    if len(style_latents.shape) == 2:
+        style_latents = style_latents.unsqueeze(0)
+    img_list, affine_layers = g_all.module.g_synthesis(style_latents)
+
+    if return_only_im:
+        if process_out:
+            if img_list.shape[-2] > 512:
+                img_list = upsamplers[-1](img_list)
+
+            img_list = img_list.cpu().detach().numpy()
+            img_list = process_image(img_list)
+            img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        return img_list, style_latents
+
+    number_feautre = 0
+
+    for item in affine_layers:
+        number_feautre += item.shape[1]
+
+
+    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim)
+    if return_upsampled_layers:
+
+        start_channel_index = 0
+        for i in range(len(affine_layers)):
+            len_channel = affine_layers[i].shape[1]
+            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
+                affine_layers[i]).cpu().detach()
+            start_channel_index += len_channel
+
+    if img_list.shape[-2] != 512:
+        img_list = upsamplers[-1](img_list)
+
+    if process_out:
+        img_list = img_list.cpu().detach().numpy()
+        img_list = process_image(img_list)
+        img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        # print('start_channel_index',start_channel_index)
+
+
+    return img_list, affine_layers_upsamples
+
+
+def process_image(images):
+    drange = [-1, 1]
+    scale = 255 / (drange[1] - drange[0])
+    images = images * scale + (0.5 - drange[0] * scale)
+
+    images = images.astype(int)
+    images[images > 255] = 255
+    images[images < 0] = 0
+
+    return images.astype(int)
 
 
 
@@ -53,8 +125,8 @@ def prepare_stylegan(args):
 
     if args['stylegan_ver'] == "1":
         if args['category'] == "xray":
-            resolution = 256
-            max_layer = 7
+            resolution = 1024
+            max_layer = 8
         else:
             assert "Not implementated!"
 
@@ -68,27 +140,34 @@ def prepare_stylegan(args):
             ('truncation', Truncation(avg_latent,max_layer=max_layer, threshold=0.7)),
             ('g_synthesis', GSynthesis(resolution=256))
         ]))'''
-        g_all = nn.Sequential(OrderedDict([
-            ('g_mapping', G_mapping()),
-            ('truncation', Truncation(avg_latent,max_layer=max_layer, threshold=0.7, device=device)),
-            ('g_synthesis', G_synthesis(resolution=256))
-        ]))
+        g_all = nn.Sequential(OrderedDict([('g_mapping', G_mapping()),
+        ('truncation', Truncation(avg_latent, device)),
+        ('g_synthesis', G_synthesis(resolution=1024))    
+            ]))
         
         #print('hhh', GSynthesis())
         #print('kkk', G_synthesis())
+        
         ckpt = torch.load(args['stylegan_checkpoint'], map_location=device)
+    
         for key in list(ckpt.keys()):
             new_key = key.replace('init_block', 'blocks.4x4').replace('blocks.0.', 'blocks.8x8.')
             new_key = new_key.replace('blocks.1.', 'blocks.16x16.').replace('blocks.5.', 'blocks.256x256.')
             new_key = new_key.replace('blocks.3.', 'blocks.64x64.').replace('blocks.2.', 'blocks.32x32.')
             new_key = new_key.replace('blocks.4.', 'blocks.128x128.').replace('blocks.6.', 'blocks.512x512.')
+
+            new_key = new_key.replace('blocks.7.', 'blocks.1024x1024.')
+            
             new_key = new_key.replace("g_mapping.map.dense", "g_mapping.dense")
-            new_key = new_key.replace("g_synthesis.to_rgb.6.", "g_synthesis.torgb.")
+            new_key = new_key.replace("g_synthesis.to_rgb.8.", "g_synthesis.torgb.")
+            
             ckpt[new_key] = ckpt.pop(key)
 
         g_all.load_state_dict(ckpt, strict=False)
         g_all.eval()
-        g_all = nn.DataParallel(g_all, device_ids=device_ids).cuda()
+        g_all = nn.DataParallel(g_all, device_ids=device_ids).to(device)
+
+
 
         if args['average_latent'] == '':
             avg_latent = g_all.module.g_mapping.make_mean_latent(8000)
@@ -156,12 +235,12 @@ def generate_data(args, num_sample, sv_path):
 
 
         print( "num_sample: ", num_sample)
-
-
+        latent_path = '/data3/jessica/data/labelGAN/train_images/latents/'#args['annotation_image_latent_path_classification']
+        files = os.listdir(latent_path)
         for i in range(num_sample):
             if i % 10 == 0:
                 print("Generate", i, "Out of:", num_sample)
-            if i == 0:
+            '''if i == 0:
 
                 latent = avg_latent.to(device)
                 img, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
@@ -175,6 +254,17 @@ def generate_data(args, num_sample, sv_path):
 
                 img, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
                                                          return_upsampled_layers=False)
+            #latent = np.random.randn(1, 512)'''
+            
+            p = latent_path + files[i]
+            style_latent = np.load(p) 
+            latent_cache.append(copy.deepcopy(style_latent))
+
+            style_latent = torch.from_numpy(style_latent).type(torch.FloatTensor).to(device)
+
+            img, _ = latent_to_image(g_all, upsamplers, style_latent, dim=args['dim'][1],
+                                                         return_upsampled_layers=False, 
+                                                         use_style_latents=True)
 
             #if args['dim'][0] != args['dim'][1]:
             #    img = img[:, 64:448][0]
@@ -189,11 +279,14 @@ def generate_data(args, num_sample, sv_path):
         latent_sv_path = os.path.join(sv_path, "latent_stylegan1.npy")
         np.save(latent_sv_path, latent_cache)
 
-        for latent in latent_cache:
+        '''for style_latent in latent_cache:
 
-            latent = torch.from_numpy(latent).type(torch.FloatTensor).to(device).unsqueeze(0)
-            img, _ = latent_to_image(g_all, upsamplers, latent, dim=args['dim'][1],
-                                     return_upsampled_layers=False)
+            style_latent = torch.from_numpy(style_latent).type(torch.FloatTensor).to(device).unsqueeze(0)
+
+            img, _ = latent_to_image(g_all, upsamplers, style_latent, dim=args['dim'][1],
+                                                         return_upsampled_layers=False, 
+                                                         use_style_latents=True,
+                                                        style_latents=style_latent)
 
             #if args['dim'][0] != args['dim'][1]:
             #    img = img[:, 64:448][0]
@@ -202,7 +295,7 @@ def generate_data(args, num_sample, sv_path):
             img = Image.fromarray(img)
 
             image_name =  os.path.join(sv_path, 'reconstruct', "image_%d.jpg" % i)
-            img.save("./image_%d.jpg" % i)
+            img.save(image_name)'''
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

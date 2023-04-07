@@ -58,9 +58,9 @@ def oht_to_scalar(y_pred):
 
     return y_pred_tags
 
-def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
+'''def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
                     style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False, device="cuda"):
-    '''Given a input latent code, generate corresponding image and concatenated feature maps'''
+    #Given a input latent code, generate corresponding image and concatenated feature maps
 
     # assert (len(latents) == 1)  # for GPU memory constraints
     if not use_style_latents:
@@ -77,7 +77,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
     img_list, affine_layers = g_all.g_synthesis(style_latents)
     save_image(img_list[0].detach(),"/home/jessica/labelGAN/datasetGAN_release/utils/test.png")
 
-    '''if return_only_im:
+    if return_only_im:
         if process_out:
             if img_list.shape[-2] > 512:
                 img_list = upsamplers[-1](img_list)
@@ -85,7 +85,7 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
             img_list = img_list.cpu().detach().numpy()
             img_list = process_image(img_list)
             img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
-        return img_list, style_latents'''
+        return img_list, style_latents
 
     number_feautre = 0
     for i, item in enumerate(affine_layers):
@@ -104,8 +104,8 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
             #print('elem', affine_layers[i].shape)
             affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = elem
             start_channel_index += len_channel
-    '''if img_list.shape[-2] != 512:
-        img_list = upsamplers[-1](img_list)'''
+    if img_list.shape[-2] != 512:
+        img_list = upsamplers[-1](img_list)
     if process_out:
         img_list = img_list.cpu().detach().numpy()
         img_list = process_image(img_list)
@@ -113,7 +113,66 @@ def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, u
         # print('start_channel_index',start_channel_index)
    
 
-    return img_list, affine_layers_upsamples, style_latents, affine_layers
+    return img_list, affine_layers_upsamples, style_latents, affine_layers'''
+
+def latent_to_image(g_all, upsamplers, latents, return_upsampled_layers=False, use_style_latents=False,
+                    style_latents=None, process_out=True, return_stylegan_latent=False, dim=512, return_only_im=False):
+    '''Given a input latent code, generate corresponding image and concatenated feature maps'''
+
+    # assert (len(latents) == 1)  # for GPU memory constraints
+    if not use_style_latents:
+        # generate style_latents from latents
+        style_latents = g_all.truncation(g_all.g_mapping(latents))
+        style_latents = style_latents.clone()  # make different layers non-alias
+
+    else:
+        style_latents = latents
+
+        # style_latents = latents
+    if return_stylegan_latent:
+
+        return  style_latents
+    if len(style_latents.shape) == 2:
+        style_latents = style_latents.unsqueeze(0)
+    img_list, affine_layers = g_all.g_synthesis(style_latents)
+
+    if return_only_im:
+        if process_out:
+            if img_list.shape[-2] > 512:
+                img_list = upsamplers[-1](img_list)
+
+            img_list = img_list.cpu().detach().numpy()
+            img_list = process_image(img_list)
+            img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        return img_list, style_latents
+
+    number_feautre = 0
+
+    for item in affine_layers:
+        number_feautre += item.shape[1]
+
+
+    affine_layers_upsamples = torch.FloatTensor(1, number_feautre, dim, dim)
+    if return_upsampled_layers:
+
+        start_channel_index = 0
+        for i in range(len(affine_layers)):
+            len_channel = affine_layers[i].shape[1]
+            affine_layers_upsamples[:, start_channel_index:start_channel_index + len_channel] = upsamplers[i](
+                affine_layers[i]).cpu().detach()
+            start_channel_index += len_channel
+
+    if img_list.shape[-2] != 512:
+        img_list = upsamplers[-1](img_list)
+
+    if process_out:
+        img_list = img_list.cpu().detach().numpy()
+        img_list = process_image(img_list)
+        img_list = np.transpose(img_list, (0, 2, 3, 1)).astype(np.uint8)
+        # print('start_channel_index',start_channel_index)
+
+
+    return img_list, affine_layers_upsamples
 
 
 def process_image(images):
