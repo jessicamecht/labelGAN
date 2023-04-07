@@ -5,3 +5,4 @@
 *.pth
 *.pickle
 /StyleGAN.pytorch/output/*
+*.pt

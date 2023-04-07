@@ -116,8 +116,9 @@ def get_train_data(images_dir,
             basic_transform = transforms.Compose([
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.RandomAffine(degrees=20, scale=(1.1, 1.1)),
-                transforms.RandomCrop((28, 28), padding=2, pad_if_needed=True, fill=0,
-                                      padding_mode='constant'), transforms.ToTensor()
+#                 transforms.RandomCrop((28, 28), padding=2, pad_if_needed=True, fill=0,
+#                                       padding_mode='constant')
+                #transforms.ToTensor()
             ])
             augmentation_dataset = ChestXrayDatasetSegmentation(images_dir,
                                                                 images[:augmentation_size],

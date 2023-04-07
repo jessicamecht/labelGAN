@@ -11,32 +11,31 @@ import csv
 
 class ChestXrayDataset(Dataset):
 
-    def __init__(self, root_dir, image_paths, mask_paths, labels, use_aug=True):
+    def __init__(self, root_dir, image_and_labels, use_aug=False):
 
-        self.image_paths = image_paths
-        self.mask_paths = mask_paths
-        self.labels = labels
+        self.image_and_labels = image_and_labels
         self.root_dir = root_dir
         self.use_aug = use_aug
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.image_and_labels)
 
     def __getitem__(self, idx):
  
         #Reading images
-        img_name = os.path.join(self.root_dir, 'original/images', self.image_paths[idx])
+        img_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "img.png")
         image = Image.open(img_name)
         
         #Converting to grayscale if RGB
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
-        mask_name = os.path.join(self.root_dir, 'original/masks', self.mask_paths[idx])
+        mask_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "label.png")
         mask = Image.open(mask_name)
+        mask = ImageOps.grayscale(mask)
         
         #Extracting disease label
-        label = self.labels[idx]
+        label = self.image_and_labels[idx][1]
         
         #Converting to tensors and Resizing images
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((256, 256))])
@@ -44,13 +43,6 @@ class ChestXrayDataset(Dataset):
         
         image = self.transform(image)
         mask = self.transform(mask)
-        
-        #Flipping images and labels with probability 0.5
-        if self.use_aug:
-            probability = torch.rand(1)
-            if probability <= 0.5:
-                image = self.transform_hflip(image)
-                mask = self.transform_hflip(mask)
         
         data = {
                 "cxr": image,
@@ -62,7 +54,7 @@ class ChestXrayDataset(Dataset):
     
 class AugmentationDataset(Dataset):
 
-    def __init__(self, image_paths, mask_paths, labels path_file):
+    def __init__(self, image_paths, mask_paths, labels):
         
         self.image_paths = image_paths
         self.mask_paths = mask_paths
@@ -108,29 +100,27 @@ class AugmentationDataset(Dataset):
         }
         
         return data
-    
 
-def get_datasets(train_size, aug_size=None, use_augmentation = False):
-    root_dir = 'data/cxr-mask-label'
+def get_data_splits(f):
+    return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
+
+def get_datasets(aug_size=None, use_augmentation = False):
+    root_dir = '../../../../data/vinbig_we_labeled/'
     
-    synthetic_labels = "To-do: obtain disease labels for train images"
+    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+        train_file = get_data_splits(f)
     train_dataset = ChestXrayDataset(root_dir,
-                                     os.listdir(os.path.join(self.root_dir, 'train/images'))[0:train_size],
-                                     os.listdir(os.path.join(self.root_dir, 'train/masks'))[0:train_size],
-                                     train_labels) 
+                                     train_file) 
     
-    synthetic_labels = "To-do: obtain disease labels for valid images"
+    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+        val_file = get_data_splits(f)
     valid_dataset = ChestXrayDataset(root_dir,
-                                     os.listdir(os.path.join(self.root_dir, 'valid/images'))[0:train_size],
-                                     os.listdir(os.path.join(self.root_dir, 'valid/masks'))[0:train_size],
-                                     valid_labels)   
+                                     val_file)   
     
-    synthetic_labels = "To-do: obtain disease labels for test images"
+    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+        test_file = get_data_splits(f)
     test_dataset = ChestXrayDataset(root_dir,
-                                    os.listdir(os.path.join(self.root_dir, 'test/images'))[0:train_size],
-                                    os.listdir(os.path.join(self.root_dir, 'test/masks'))[0:train_size],
-                                    test_labels,
-                                    use_aug=False)  
+                                    test_file)  
     
     if use_augmentation:
         synthetic_labels = "To-do: obtain disease labels for synthetic images"
