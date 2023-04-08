@@ -63,10 +63,10 @@ save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_size_{aug
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-train_dataset, valid_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px), aug_size=aug_size, use_augmentation = use_augmentation)
+train_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px), aug_size=aug_size, use_augmentation = use_augmentation)
 dataAll = {
             "Train": DataLoader(train_dataset, batch_size=train_bs, shuffle=True),
-            "Valid": DataLoader(valid_dataset, batch_size=val_bs, shuffle=True),
+#             "Valid": DataLoader(valid_dataset, batch_size=val_bs, shuffle=True),
             "Test": DataLoader(test_dataset, batch_size=test_bs, shuffle=True) 
 }
 
@@ -158,6 +158,7 @@ def test(model):
     dice_scores = []
     iou = []
     atleast_one_score = []
+    losses = []
     jaccard = BinaryJaccardIndex()
     
     model.eval()
@@ -169,11 +170,21 @@ def test(model):
 
             Y_pred, seg_pred = model(X)
             
+            loss = model.compute_loss(
+                    y_class_pred = Y_pred.type(torch.float),
+                    y_image_pred = seg_pred.type(torch.float),
+                    y_class_true = Y.type(torch.float), 
+                    y_image_true = seg.type(torch.float),
+                    loss_class = classification_loss,
+                    loss_image = seg_pred_loss)
+        
+            losses.append(loss.item())
+            
             iou.append(jaccard(seg_pred.cpu(), seg.cpu()))
             dice_scores.append(dice_coeff(seg_pred.cpu(), seg.cpu()))
             atleast_one_score.append(get_atleast_one_metric(Y_pred, Y))
     
-    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score)
+    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score), np.mean(losses)
 
 # train model
 def train():
@@ -211,14 +222,16 @@ def train():
         print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))
                 
         if (epoch + 1) % val_check == 0:
-            cur_loss = validation(model)
-            print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
+            iou, dsc, custom_acc, cur_loss = test(model)
+            print("[TEST] Epoch : %d, IoU: %2.5f, DSC: %2.5f, ACC: %.3f" % (epoch, iou, dsc, custom_acc))
+
+            #             print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
+            
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
                 
-                iou, dsc, custom_acc = test(model)
-                print("[TEST] Epoch : %d, IoU: %2.5f, DSC: %2.5f, ACC: %.3f" % (epoch, iou, dsc, custom_acc))
+                
 
 
 if __name__ == "__main__":

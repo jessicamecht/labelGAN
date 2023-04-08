@@ -24,12 +24,12 @@ class ChestXrayDataset(Dataset):
     def __getitem__(self, idx):
  
         #Reading images
-        img_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "img.png")
+        img_name = os.path.join(self.root_dir, f"{self.image_and_labels[idx][0]}.png")
         image = Image.open(img_name)
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
-        mask_name = os.path.join(self.root_dir, 'originals', f"{self.image_and_labels[idx][0]}_json", "label.png")
+        mask_name = os.path.join(self.root_dir, f"{self.image_and_labels[idx][0]}_mask.png")
         mask = Image.open(mask_name)
         mask = np.array(ImageOps.grayscale(mask))
         mask[mask > 5] = 255
@@ -86,21 +86,22 @@ def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size=None, use_augmentation = False):
-    root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/'
+    root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/vinbig_test_imgs_and_segm'
+    data_split_dir = '/home/rmpatil/multi_task_gen/labelGAN/downstream_tasks/vinbig/'
     
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+    with open(os.path.join(data_split_dir, "train_binarized_list.txt")) as f:
         train_file = get_data_splits(f)
     train_dataset = ChestXrayDataset(root_dir,
                                      train_file,
                                      res) 
     
-    with open(os.path.join(root_dir, "val_binarized_list.txt")) as f:
-        val_file = get_data_splits(f)
-    valid_dataset = ChestXrayDataset(root_dir,
-                                     val_file,
-                                     res)   
+#     with open(os.path.join(data_split_dir, "val_binarized_list.txt")) as f:
+#         val_file = get_data_splits(f)
+#     valid_dataset = ChestXrayDataset(root_dir,
+#                                      val_file,
+#                                      res)   
     
-    with open(os.path.join(root_dir, "test_binarized_list.txt")) as f:
+    with open(os.path.join(data_split_dir, "test_binarized_list.txt")) as f:
         test_file = get_data_splits(f)
     test_dataset = ChestXrayDataset(root_dir,
                                     test_file,
@@ -114,5 +115,5 @@ def get_datasets(res = (256, 256), aug_size=None, use_augmentation = False):
                                                    res) 
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
     
-    return train_dataset, valid_dataset, test_dataset
+    return train_dataset, test_dataset #, valid_dataset
 
