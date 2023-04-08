@@ -37,7 +37,7 @@ def generate_data(args, checkpoint_path_segm, checkpoint_path_label, num_sample,
     if not vis:
         result_path = os.path.join(checkpoint_path_segm, 'samples' )
     else:
-        result_path = os.path.join(checkpoint_path_segm, 'vis_KDE_%d'%num_sample)
+        result_path = os.path.join(checkpoint_path_segm, 'vis_test_imgs_vinbig_%d'%num_sample)
     if os.path.exists(result_path):
         pass
     else:

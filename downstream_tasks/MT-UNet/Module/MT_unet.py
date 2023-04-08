@@ -44,6 +44,7 @@ parser.add_argument('-num_epochs', '--num_epochs', type=int, required=False, def
 parser.add_argument('-bs', '--bs', type=int, required=False, default=8, help='')
 parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=1000, help='')
 parser.add_argument('-resize_px', '--resize_px', type=int, required=False, default=512, help='')
+parser.add_argument('-aug_type', '--aug_type', type=str, required=False, default="KDE", help='')
 
 
 # parse arguments from command line
@@ -54,14 +55,15 @@ use_augmentation = args.use_augment
 gpu_num = args.gpu_num
 num_epochs = args.num_epochs
 bs = args.bs
+aug_type = args.aug_type
 resize_px = args.resize_px
 aug_size = args.aug_size
-save_path = f"/data3/jessica/data/labelGAN/downstream_results/aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}_KDE/"
+save_path = f"/data3/jessica/data/labelGAN/downstream_results/aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}_{aug_type}/"
 
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
-train_dataset, valid_dataset, test_dataset = datasets_custom_jessica.get_datasets(aug_size=aug_size, use_augmentation = use_augmentation, resize_px=resize_px)
+train_dataset, valid_dataset, test_dataset = datasets_custom_jessica.get_datasets(aug_size=aug_size, use_augmentation = use_augmentation, resize_px=resize_px, aug_type=aug_type)
 dataAll = {
             "Train": DataLoader(train_dataset, batch_size=bs, shuffle=True),
             "Valid": DataLoader(valid_dataset, batch_size=bs, shuffle=True),

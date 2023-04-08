@@ -30,39 +30,40 @@ mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
 
 class ChestXrayDataset(Dataset):
 
-    def __init__(self, root_dir, image_and_labels, use_aug=False, resize_px=256):
+    def __init__(self, root_dir, use_aug=False, resize_px=256, aug=False):
 
-        self.image_and_labels = image_and_labels
         self.root_dir = root_dir
         self.use_aug = use_aug
+        self.aug=aug
         self.resize_px = resize_px
-        self.vinbig_path = '/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm'
-        self.mask_path = os.listdir(f"{self.vinbig_path}/masks")
+        self.mask_path = os.listdir(f"{self.root_dir}/masks/")
         
         train_csv = pd.read_csv('/data3/jessica/data/labelGAN/vinbig/train.csv')
         self.image_id_to_labels = train_csv.groupby(by="image_id").class_name.apply(list).apply(lambda x: np.unique([elem.replace(" ", "").replace("/", "") for elem in x]))
 
     def __len__(self):
-        return len(os.listdir(f"{self.vinbig_path}/masks"))
+        return len(os.listdir(f"{self.root_dir}/masks"))
 
     def __getitem__(self, idx):
  
         #Reading images
         imgname = self.mask_path[idx]
-        imname = imgname.replace("_mask", "")
-        img_name = os.path.join(self.vinbig_path, 'imgs', f"{imname}")
+        imname = imgname.replace("_mask", "") 
+        if self.aug:
+            imname = imname.replace(".jpg", ".png")
+        img_name = os.path.join(self.root_dir, 'imgs', f"{imname}")
         image = Image.open(img_name)
         
         #Converting to grayscale if RGB
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
-        mask_name = os.path.join(self.vinbig_path, 'masks', f"{imgname}")
+        mask_name = os.path.join(self.root_dir, 'masks', f"{imgname}")
         mask = Image.open(mask_name)
         mask = ImageOps.grayscale(mask)
         
         #Extracting disease label
-        label_list = self.image_id_to_labels[imgname.replace(".png", "").replace("_mask", "")]
+        label_list = self.image_id_to_labels[imgname.replace(".png", "").replace(".jpg", "").replace("_mask", "")]
         labels = np.zeros(15).astype(int)
         for label in label_list:
             labels = labels | mlb[label]
@@ -141,29 +142,23 @@ class AugmentationDataset(Dataset):
 def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
-def get_datasets(aug_size= None, use_augmentation = False, resize_px=256):
-    root_dir = '/home/jessica/labelGAN/downstream_tasks/vinbig/'
+def get_datasets(aug_size= None, use_augmentation = False, resize_px=256, aug_type="KDE"):
     
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
-        train_file = get_data_splits(f)
-    train_dataset = ChestXrayDataset(root_dir,
-                                     train_file, resize_px=resize_px)
-    root_dir
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
-        val_file = get_data_splits(f)
-    valid_dataset = ChestXrayDataset(root_dir,
-                                     val_file, resize_px=resize_px)   
+    train_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)
+
+    valid_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)   
     
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
-        test_file = get_data_splits(f)
-    test_dataset = ChestXrayDataset(root_dir,
-                                    test_file, resize_px=resize_px)  
+    test_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)  
     
     if use_augmentation:
-        synthetic_labels = "To-do: obtain disease labels for synthetic images"
-        synth_root = '/data3/jessica/data/labelGAN/results_dir_multitask_generation_segm_new_4/vis_KDE_all/'
-        augmentation_dataset = AugmentationDataset(synth_root, os.listdir(os.path.join(synth_root, 'imgs'))[0:aug_size],
+        if aug_type == "KDE":
+            synth_root = '/data3/jessica/data/labelGAN/results_dir_multitask_generation_segm_new_4/vis_KDE_all/'
+            augmentation_dataset = AugmentationDataset(synth_root, os.listdir(os.path.join(synth_root, 'imgs'))[0:aug_size],
                                                    os.listdir(os.path.join(synth_root, 'masks'))[0:aug_size], resize_px=resize_px) 
+        else:
+            root_dir = '/data3/jessica/data/labelGAN/train_images/'
+            augmentation_dataset = ChestXrayDataset(root_dir, resize_px=resize_px, aug=True) 
+
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
     
     return train_dataset, valid_dataset, test_dataset
