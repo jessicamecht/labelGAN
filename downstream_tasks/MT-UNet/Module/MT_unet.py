@@ -7,7 +7,7 @@ from hzhu_MTL_UNet import *
 import torch
 from torch import nn as nn
 from torchmetrics import JaccardIndex
-
+from torchmetrics.classification import BinaryJaccardIndex
 import os
 import torch.optim as optim
 import torchvision
@@ -22,17 +22,7 @@ import pandas as pd
 import os
 import copy
 import argparse
-
-
-def dice_coeff(pred, target):
-    smooth = 1.
-    pred = torch.where(pred>=0.5, 1, 0)
-    iflat = pred.view(-1)
-    tflat = target.view(-1)
-    intersection = (iflat * tflat).sum()
-    
-    return 1 - ((2. * intersection + smooth) /
-              (iflat.sum() + tflat.sum() + smooth))
+from utils import * 
 
 # create argument parser object
 parser = argparse.ArgumentParser(description='')
@@ -71,10 +61,10 @@ dataAll = {
 }
 
 device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
-model = MTL_UNet(in_channels = 1, out_dict = {'class': 15, 'image': 1},)
+model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1},)
 model = model.to(device)
 
-jaccard = JaccardIndex(task = 'binary', num_classes=2).to(device)
+jaccard = BinaryJaccardIndex().to(device)
 
 classification_loss = nn.BCELoss()
 seg_pred_loss = nn.KLDivLoss()
@@ -82,10 +72,83 @@ seg_pred_loss = nn.KLDivLoss()
 val_check = 5
 lr = 0.0002
 beta1 = 0.5
-optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, 0.999))
+optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, 0.999)) 
+def validation(model):
+    losses = []
+    model.eval()
+    for data in dataAll["Valid"]:
+        X = data['cxr'].to(device).type(torch.float).to(device)
+        Y = data['Y'].to(device)
+        seg = data['gaze'].to(device).type(torch.int8).to(device)
+        
+        Y_pred, seg_pred = model(X)
 
-#Function for visualization
-def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = None, pacc=None, dice=None, iou=None, atleastone=None, pred_perc=None):
+        loss = model.compute_loss(
+                    y_class_pred = Y_pred.type(torch.float),
+                    y_image_pred = seg_pred.type(torch.float),
+                    y_class_true = Y.type(torch.float), 
+                    y_image_true = seg.type(torch.float),
+                    loss_class = classification_loss,
+                    loss_image = seg_pred_loss)
+        
+        losses.append(loss.item())
+    return np.mean(losses)
+
+def test_finegrained(dataAll):
+    with torch.no_grad():
+        losses = []
+        all_preds = []
+        all_true = []
+        all_pixel_accs = []
+        all_dices = []
+        all_jaccard = []
+        at_least_one = []
+        binary_class_eval_list = []
+
+        for data in dataAll["Test"]:
+            X = data['cxr'].to(device).type(torch.float)
+            Y_class = data['Y'].to(device)
+            Y_seg = data['gaze'].to(device).type(torch.float)
+            Y_class_pred, Y_seg_pred = model(X)
+            
+            loss = loss = model.compute_loss(
+                    y_class_pred = Y_class_pred.type(torch.float),
+                    y_image_pred = Y_seg_pred.type(torch.float),
+                    y_class_true = Y_class.type(torch.float), 
+                    y_image_true = Y_seg.type(torch.float),
+                    loss_class = classification_loss,
+                    loss_image = seg_pred_loss)
+            losses.append(loss.detach().clone().cpu())
+            Y_seg_pred = Y_seg_pred > 0.5
+            
+            pixel_accuracy = pixel_acc(Y_seg_pred, Y_seg)
+            all_pixel_accs.append(pixel_accuracy.cpu().detach().numpy())
+
+            dice = dice_coeff(Y_seg_pred, Y_seg)
+            all_dices.append(dice.cpu().detach().numpy())
+            all_jaccard.append(jaccard(Y_seg_pred, Y_seg).cpu().detach().numpy())
+
+            true = data['Y'].detach().cpu().numpy().tolist()
+            pred = Y_class_pred.detach().cpu().numpy().tolist()
+
+            at_least_one.append(get_atleast_one_metric(Y_class_pred, Y_class))
+            binary_class_eval_list.append(binary_class_eval(Y_class, Y_class_pred).detach().cpu().item())
+
+            all_preds.extend(pred)
+            all_true.extend(true)
+            del X, Y_class, Y_seg
+        
+        print("PIXEL ACC:", np.array(all_pixel_accs).mean())
+        print("MEAN DICE:", np.array(all_dices).mean())
+        print("MEAN IOU:", np.array(all_jaccard).mean())
+        print("BINARY CLASS EVAL:", np.array(binary_class_eval_list).mean())
+        print("at_least_one", np.array(at_least_one).mean())
+        print(f"TEST LOSS EPOCH {epoch}:", np.array(losses).mean())
+        visualize(data, Y_seg_pred, Y_class_pred, epoch, test=True, true=all_true, pred_= all_preds,
+        pacc=np.array(all_pixel_accs).mean(), dice=np.array(all_dices).mean(), iou=np.array(all_jaccard).mean(), atleastone=np.array(at_least_one).mean(), binary_class_eval=np.array(binary_class_eval_list).mean())
+    
+
+def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = None, pacc=None, dice=None, iou=None, atleastone=None, binary_class_eval=None):
     fig, axs = plt.subplots(1, 3, figsize=(10,10))
     img_plot = data["cxr"].detach().cpu()
     pred_plot = pred[0].detach().cpu()
@@ -111,16 +174,14 @@ def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = No
         pred = pred_
 
     with open(f'{save_path}/{epoch}.txt', 'w') as f:
-        f.write(f'\t{pacc}\t{dice}\t{iou}\t{atleastone}\t{pred_perc}')
-        #for x, y in zip(true[0], pred[0]):
-        #    f.write(f'{x}\t{round(y, 3)}')
+        f.write(f'\t{pacc}\t{dice}\t{iou}\t{atleastone}\t{binary_class_eval}')
 
 # train model
 loss_list = []
 best_dice_epoch = 0
 best_pixelacc_epoch = 0
 best_classif_epoch = 0
-sm = nn.Softmax(dim=0)
+best_loss = np.inf
 for epoch in tqdm(range(num_epochs)):
     model.train()
 
@@ -132,75 +193,29 @@ for epoch in tqdm(range(num_epochs)):
         Y_seg = data['gaze'].to(device).type(torch.float)
 
         optimizer.zero_grad()
-        Y_class_pred, Y_seg_pred = model(X)
+        Y_pred, Y_seg_pred = model(X)
         
-        loss = classification_loss(Y_class_pred.type(torch.float), Y_class.type(torch.float)) + seg_pred_loss(Y_seg_pred.type(torch.float), Y_seg.type(torch.float))
+        loss = loss = model.compute_loss(
+                    y_class_pred = Y_pred.type(torch.float),
+                    y_image_pred = Y_seg_pred.type(torch.float),
+                    y_class_true = Y_class.type(torch.float), 
+                    y_image_true = Y_seg.type(torch.float),
+                    loss_class = classification_loss,
+                    loss_image = seg_pred_loss)
+        #loss = classification_loss(Y_class_pred.type(torch.float), Y_class.type(torch.float)) + seg_pred_loss(Y_seg_pred.type(torch.float), Y_seg.type(torch.float))
         loss.backward()
 
         optimizer.step()
         loss_list.append(loss.detach().clone().cpu())
         del X, Y_class, Y_seg
-    #visualize(data, Y_seg_pred, Y_class_pred)
-    torch.save(model.state_dict(), f"{save_path}/model_{epoch}.pth")
-    with torch.no_grad():
-        losses = []
-        all_preds = []
-        all_true = []
-        all_pixel_accs = []
-        all_dices = []
-        all_jaccard = []
-        at_least_one = []
-        pred_percs = []
-        for data in dataAll["Valid"]:
-            X = data['cxr'].to(device).type(torch.float)
+    cur_loss = validation(model)
+    print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
+    if cur_loss < best_loss:
+        best_loss = cur_loss
+        torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
+        test_finegrained(dataAll)
 
-            Y_class = data['Y'].to(device)
-            Y_seg = data['gaze'].to(device).type(torch.float)
-
-            Y_class_pred, Y_seg_pred = model(X)
-            
-            loss = classification_loss(Y_class_pred.type(torch.float), Y_class.type(torch.float)) + seg_pred_loss(Y_seg_pred.type(torch.float), Y_seg.type(torch.float))
-
-
-            Y_seg_pred = sm(Y_seg_pred) > 0.5
-            Y_seg = Y_seg > 0.5
-            
-            batch_size = Y_seg_pred.shape[0]
-            num_pixels = batch_size * Y_seg_pred.shape[2] * Y_seg_pred.shape[3]
-            num_correct_pixels = (Y_seg_pred == Y_seg).sum()
-            pixel_accuracy = num_correct_pixels / num_pixels
-
-
-            all_pixel_accs.append(pixel_accuracy.cpu().detach().numpy())
-            dice = dice_coeff(Y_seg_pred, Y_seg)
-            all_dices.append(dice.cpu().detach().numpy())
-            losses.append(loss.detach().clone().cpu())
-            
-            all_jaccard.append(jaccard(Y_seg_pred, Y_seg).cpu().detach().numpy())
-            true = data['Y'].detach().cpu().numpy().tolist()
-            pred = Y_class_pred.detach().cpu().numpy().tolist()
-
-            for i, elem in enumerate(data['Y'].detach().cpu().numpy()):
-                t = (elem > 0.5 ).astype(int) 
-                p = (Y_class_pred.detach().cpu().numpy()[i] > 0.5).astype(int)
-                atleast = (p & t).sum() > 0
-                pred_perc = (p == t).mean()
-                at_least_one.append(atleast)
-                pred_percs.append(pred_perc)
-            all_preds.extend(pred)
-            all_true.extend(true)
-            del X, Y_class, Y_seg
         
-        print("PIXEL ACC:", np.array(all_pixel_accs).mean())
-        print("MEAN DICE:", np.array(all_dices).mean())
-        print("MEAN IOU:", np.array(all_jaccard).mean())
-        print("PRED PERC:", np.array(pred_percs).mean())
-        print("at_least_one", np.array(at_least_one).mean())
-        print(f"TEST LOSS EPOCH {epoch}:", np.array(losses).mean())
-        visualize(data, Y_seg_pred, Y_class_pred, epoch, test=True, true=all_true, pred_= all_preds,
-        pacc=np.array(all_pixel_accs).mean(), dice=np.array(all_dices).mean(), iou=np.array(all_jaccard).mean(), atleastone=np.array(at_least_one).mean(), pred_perc=np.array(pred_percs).mean())
-    
-    
     print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))
 #     if (epoch + 1) % val_check == 0:
     

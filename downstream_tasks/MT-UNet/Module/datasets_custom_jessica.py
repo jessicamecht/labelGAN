@@ -61,6 +61,7 @@ class ChestXrayDataset(Dataset):
         mask_name = os.path.join(self.root_dir, 'masks', f"{imgname}")
         mask = Image.open(mask_name)
         mask = ImageOps.grayscale(mask)
+        mask = np.array(ImageOps.grayscale(mask))
         
         #Extracting disease label
         label_list = self.image_id_to_labels[imgname.replace(".png", "").replace(".jpg", "").replace("_mask", "")]
@@ -70,16 +71,16 @@ class ChestXrayDataset(Dataset):
         
         #Converting to tensors and Resizing images
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize((self.resize_px, self.resize_px))])
-        self.transform_hflip = transforms.functional.hflip
         
         image = self.transform(image)
-        mask = self.transform(mask)
-        
+        mask = (self.transform(mask) > 0.5).type(torch.float)
+
         data = {
                 "cxr": image,
                 "gaze": mask, # named gaze with compatibility with MT-UNet code
                 "Y": torch.tensor(labels)
         }
+        
         
         return data
     
@@ -109,7 +110,10 @@ class AugmentationDataset(Dataset):
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'masks', self.mask_paths[idx])
         mask = Image.open(mask_name)
+        #mask[mask > 5] = 255
+        #mask[mask < 5] = 0
         mask = np.where(np.min(mask, axis=2) >= 150, 1, 0)
+        
         
         #Extracting disease label
         if self.labels != None:
