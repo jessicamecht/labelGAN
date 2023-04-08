@@ -67,7 +67,8 @@ class AugmentationDataset(Dataset):
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'synthetic/masks', self.mask_paths[idx])
         mask = Image.open(mask_name)
-        mask = np.where(np.min(mask, axis=2) >= 150, 1, 0)
+        mask = np.array(ImageOps.grayscale(mask))
+        mask[mask > 5] = 255
         
         #Extracting disease label
         label = self.labels[idx]
@@ -78,12 +79,6 @@ class AugmentationDataset(Dataset):
         
         image = self.transform(image)
         mask = self.transform(mask)
-        
-        #Flipping images and labels with probability 0.5
-        probability = torch.rand(1)
-        if probability <= 0.5:
-            image = self.transform_hflip(image)
-            mask = self.transform_hflip(mask)
         
         return image, mask, label
 
@@ -99,13 +94,13 @@ def get_datasets(res = (256, 256), aug_size=None, use_augmentation = False):
                                      train_file,
                                      res) 
     
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+    with open(os.path.join(root_dir, "val_binarized_list.txt")) as f:
         val_file = get_data_splits(f)
     valid_dataset = ChestXrayDataset(root_dir,
                                      val_file,
                                      res)   
     
-    with open(os.path.join(root_dir, "train_binarized_list.txt")) as f:
+    with open(os.path.join(root_dir, "test_binarized_list.txt")) as f:
         test_file = get_data_splits(f)
     test_dataset = ChestXrayDataset(root_dir,
                                     test_file,
