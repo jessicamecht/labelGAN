@@ -105,6 +105,7 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 #             print(f'{x}\t{round(y, 3)}')
     
     plt.savefig(f"{save_path}/{epoch}.png")
+    plt.clf()
     
     return
 
