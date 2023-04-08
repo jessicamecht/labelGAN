@@ -36,6 +36,9 @@ parser.add_argument('-test_bs', '--test_bs', type=int, required=False, default=1
 parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=1000, help='')
 parser.add_argument('-aug_type', '--aug_type', type=int, required=False, default=1000, help='')
 parser.add_argument('-resize_px', '--resize_px', type=int, required=False, default=512, help='')
+parser.add_argument('-val_check', '--val_check', type=int, required=False, default=5, help='')
+parser.add_argument('-lr', '--lr', type=float, required=False, default=2e-4, help='')
+parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
 
 
 # parse arguments from command line
@@ -51,6 +54,9 @@ train_bs = args.train_bs
 test_bs = args.test_bs
 val_bs = args.val_bs
 resize_px = args.resize_px
+val_check = args.val_check
+lr = args.lr
+beta1 = args.beta1
 
 save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
 
@@ -70,10 +76,6 @@ model = model.to(device)
 
 classification_loss = nn.BCELoss()
 seg_pred_loss = DiceLoss()
-
-val_check = 5
-lr = 0.0002
-beta1 = 0.5
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, 0.999))
 
 #Function for visualization
@@ -105,10 +107,20 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 #             print(f'{x}\t{round(y, 3)}')
     
     plt.savefig(f"{save_path}/{epoch}.png")
-    plt.clf()
+    fig.clf()
     
     return
 
+#Dice Coefficient
+def dice_coeff(pred, target):
+    smooth = 1.
+    pred = torch.where(pred>=0.5, 1, 0)
+    iflat = pred.view(-1)
+    tflat = target.view(-1)
+    intersection = (iflat * tflat).sum()
+    
+    return (1 - ((2. * intersection + smooth) /
+              (iflat.sum() + tflat.sum() + smooth))).item()
 
 def get_atleast_one_metric(pred, true):
     pred = pred > 0.5
@@ -144,6 +156,7 @@ def test(model):
 #     model.load_state_dict(weights)
 #     model = model.to(device)
     dice_scores = []
+    iou = []
     atleast_one_score = []
     jaccard = BinaryJaccardIndex()
     
@@ -156,10 +169,11 @@ def test(model):
 
             Y_pred, seg_pred = model(X)
             
-            dice_scores.append(jaccard(seg_pred.cpu(), seg.cpu()))
+            iou.append(jaccard(seg_pred.cpu(), seg.cpu()))
+            dice_scores.append(dice_coeff(seg_pred.cpu(), seg.cpu()))
             atleast_one_score.append(get_atleast_one_metric(Y_pred, Y))
     
-    return np.mean(dice_scores), np.mean(atleast_one_score)
+    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score)
 
 # train model
 def train():
@@ -203,8 +217,8 @@ def train():
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
                 
-                dsc, custom_acc = test(model)
-                print("[TEST] Epoch : %d, DSC: %2.5f, ACC: %.3f" % (epoch, dsc, custom_acc))
+                iou, dsc, custom_acc = test(model)
+                print("[TEST] Epoch : %d, IoU: %2.5f, DSC: %2.5f, ACC: %.3f" % (epoch, iou, dsc, custom_acc))
 
 
 if __name__ == "__main__":
