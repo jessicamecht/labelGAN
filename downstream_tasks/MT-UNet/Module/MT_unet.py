@@ -6,6 +6,8 @@ from hzhu_MTL_UNet import *
 
 import torch
 from torch import nn as nn
+from torchmetrics import JaccardIndex
+
 import os
 import torch.optim as optim
 import torchvision
@@ -20,6 +22,17 @@ import pandas as pd
 import os
 import copy
 import argparse
+
+
+def dice_coeff(pred, target):
+    smooth = 1.
+    pred = torch.where(pred>=0.5, 1, 0)
+    iflat = pred.view(-1)
+    tflat = target.view(-1)
+    intersection = (iflat * tflat).sum()
+    
+    return 1 - ((2. * intersection + smooth) /
+              (iflat.sum() + tflat.sum() + smooth))
 
 # create argument parser object
 parser = argparse.ArgumentParser(description='')
@@ -48,16 +61,18 @@ save_path = f"/data3/jessica/data/labelGAN/downstream_results/aug_size_{aug_size
 if not os.path.exists(save_path):
     os.mkdir(save_path)
 
-train_dataset, valid_dataset, test_dataset = datasets_custom.get_datasets(aug_size=aug_size, use_augmentation = use_augmentation, resize_px=resize_px)
+train_dataset, valid_dataset, test_dataset = datasets_custom_jessica.get_datasets(aug_size=aug_size, use_augmentation = use_augmentation, resize_px=resize_px)
 dataAll = {
             "Train": DataLoader(train_dataset, batch_size=bs, shuffle=True),
             "Valid": DataLoader(valid_dataset, batch_size=bs, shuffle=True),
-            "Test": DataLoader(test_dataset, batch_size=bs, shuffle=True) 
+            "Test": DataLoader(test_dataset, batch_size=1, shuffle=True) 
 }
 
 device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
 model = MTL_UNet(in_channels = 1, out_dict = {'class': 15, 'image': 1},)
 model = model.to(device)
+
+jaccard = JaccardIndex(task = 'binary', num_classes=2).to(device)
 
 classification_loss = nn.BCELoss()
 seg_pred_loss = nn.KLDivLoss()
@@ -68,7 +83,7 @@ beta1 = 0.5
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, 0.999))
 
 #Function for visualization
-def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = None):
+def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = None, pacc=None, dice=None, iou=None, atleastone=None, pred_perc=None):
     fig, axs = plt.subplots(1, 3, figsize=(10,10))
     img_plot = data["cxr"].detach().cpu()
     pred_plot = pred[0].detach().cpu()
@@ -93,18 +108,22 @@ def visualize(data, pred, disease_pred, epoch, test=False, true=None, pred_ = No
         true = true
         pred = pred_
 
-
-    print(f"True v/s Pred:")
     with open(f'{save_path}/{epoch}.txt', 'w') as f:
-        for x, y in zip(true[0], pred[0]):
-            f.write(f'{x}\t{round(y, 3)}')
+        f.write(f'\t{pacc}\t{dice}\t{iou}\t{atleastone}\t{pred_perc}')
+        #for x, y in zip(true[0], pred[0]):
+        #    f.write(f'{x}\t{round(y, 3)}')
 
 # train model
 loss_list = []
+best_dice_epoch = 0
+best_pixelacc_epoch = 0
+best_classif_epoch = 0
+sm = nn.Softmax(dim=0)
 for epoch in tqdm(range(num_epochs)):
     model.train()
 
     for data in dataAll["Train"]:
+        if epoch == 0: break
         X = data['cxr'].to(device).type(torch.float)
 
         Y_class = data['Y'].to(device)
@@ -125,26 +144,59 @@ for epoch in tqdm(range(num_epochs)):
         losses = []
         all_preds = []
         all_true = []
+        all_pixel_accs = []
+        all_dices = []
+        all_jaccard = []
+        at_least_one = []
+        pred_percs = []
         for data in dataAll["Valid"]:
             X = data['cxr'].to(device).type(torch.float)
 
             Y_class = data['Y'].to(device)
             Y_seg = data['gaze'].to(device).type(torch.float)
 
-            optimizer.zero_grad()
             Y_class_pred, Y_seg_pred = model(X)
             
             loss = classification_loss(Y_class_pred.type(torch.float), Y_class.type(torch.float)) + seg_pred_loss(Y_seg_pred.type(torch.float), Y_seg.type(torch.float))
 
+
+            Y_seg_pred = sm(Y_seg_pred) > 0.5
+            Y_seg = Y_seg > 0.5
+            
+            batch_size = Y_seg_pred.shape[0]
+            num_pixels = batch_size * Y_seg_pred.shape[2] * Y_seg_pred.shape[3]
+            num_correct_pixels = (Y_seg_pred == Y_seg).sum()
+            pixel_accuracy = num_correct_pixels / num_pixels
+
+
+            all_pixel_accs.append(pixel_accuracy.cpu().detach().numpy())
+            dice = dice_coeff(Y_seg_pred, Y_seg)
+            all_dices.append(dice.cpu().detach().numpy())
             losses.append(loss.detach().clone().cpu())
+            
+            all_jaccard.append(jaccard(Y_seg_pred, Y_seg).cpu().detach().numpy())
             true = data['Y'].detach().cpu().numpy().tolist()
             pred = Y_class_pred.detach().cpu().numpy().tolist()
+
+            for i, elem in enumerate(data['Y'].detach().cpu().numpy()):
+                t = (elem > 0.5 ).astype(int) 
+                p = (Y_class_pred.detach().cpu().numpy()[i] > 0.5).astype(int)
+                atleast = (p & t).sum() > 0
+                pred_perc = (p == t).mean()
+                at_least_one.append(atleast)
+                pred_percs.append(pred_perc)
             all_preds.extend(pred)
             all_true.extend(true)
             del X, Y_class, Y_seg
+        
+        print("PIXEL ACC:", np.array(all_pixel_accs).mean())
+        print("MEAN DICE:", np.array(all_dices).mean())
+        print("MEAN IOU:", np.array(all_jaccard).mean())
+        print("PRED PERC:", np.array(pred_percs).mean())
+        print("at_least_one", np.array(at_least_one).mean())
         print(f"TEST LOSS EPOCH {epoch}:", np.array(losses).mean())
-        visualize(data, Y_seg_pred, Y_class_pred, epoch, test=True, true=all_true, pred_ = all_preds)
-
+        visualize(data, Y_seg_pred, Y_class_pred, epoch, test=True, true=all_true, pred_= all_preds,
+        pacc=np.array(all_pixel_accs).mean(), dice=np.array(all_dices).mean(), iou=np.array(all_jaccard).mean(), atleastone=np.array(at_least_one).mean(), pred_perc=np.array(pred_percs).mean())
     
     
     print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))

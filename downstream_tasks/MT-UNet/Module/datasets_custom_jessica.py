@@ -161,7 +161,7 @@ def get_datasets(aug_size= None, use_augmentation = False, resize_px=256):
     
     if use_augmentation:
         synthetic_labels = "To-do: obtain disease labels for synthetic images"
-        synth_root = '/data3/jessica/data/labelGAN/results_dir_multitask_generation_segm_new_4/vis_KDE_2000/'
+        synth_root = '/data3/jessica/data/labelGAN/results_dir_multitask_generation_segm_new_4/vis_KDE_all/'
         augmentation_dataset = AugmentationDataset(synth_root, os.listdir(os.path.join(synth_root, 'imgs'))[0:aug_size],
                                                    os.listdir(os.path.join(synth_root, 'masks'))[0:aug_size], resize_px=resize_px) 
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
