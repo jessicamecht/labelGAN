@@ -124,7 +124,6 @@ def dice_coeff(pred, target):
 
 def get_atleast_one_metric(pred, true):
     pred = pred > 0.5
-    pred[0, 8] = 0 # override "no finding" to 0 because we don't want to calculate that
     return torch.any(torch.logical_and(pred, true)).long().item()
 
 #Validation Loop
