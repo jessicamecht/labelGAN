@@ -62,6 +62,7 @@ class ChestXrayDataset(Dataset):
         mask = Image.open(mask_name)
         mask = ImageOps.grayscale(mask)
         mask = np.array(ImageOps.grayscale(mask))
+        mask[mask > 5] = 255
         
         #Extracting disease label
         label_list = self.image_id_to_labels[imgname.replace(".png", "").replace(".jpg", "").replace("_mask", "")]

@@ -119,6 +119,7 @@ def test_finegrained(dataAll):
                     loss_class = classification_loss,
                     loss_image = seg_pred_loss)
             losses.append(loss.detach().clone().cpu())
+            Y_seg_pred_fil = Y_seg_pred
             Y_seg_pred = Y_seg_pred > 0.5
             
             pixel_accuracy = pixel_acc(Y_seg_pred, Y_seg)
@@ -141,10 +142,10 @@ def test_finegrained(dataAll):
         print("PIXEL ACC:", np.array(all_pixel_accs).mean())
         print("MEAN DICE:", np.array(all_dices).mean())
         print("MEAN IOU:", np.array(all_jaccard).mean())
-        print("BINARY CLASS EVAL:", np.array(binary_class_eval_list).mean())
+        print("BINARY CLASS:", np.array(binary_class_eval_list).mean())
         print("at_least_one", np.array(at_least_one).mean())
         print(f"TEST LOSS EPOCH {epoch}:", np.array(losses).mean())
-        visualize(data, Y_seg_pred, Y_class_pred, epoch, test=True, true=all_true, pred_= all_preds,
+        visualize(data, Y_seg_pred_fil, Y_class_pred, epoch, test=True, true=all_true, pred_= all_preds,
         pacc=np.array(all_pixel_accs).mean(), dice=np.array(all_dices).mean(), iou=np.array(all_jaccard).mean(), atleastone=np.array(at_least_one).mean(), binary_class_eval=np.array(binary_class_eval_list).mean())
     
 
@@ -190,11 +191,11 @@ for epoch in tqdm(range(num_epochs)):
         X = data['cxr'].to(device).type(torch.float)
 
         Y_class = data['Y'].to(device)
-        Y_seg = data['gaze'].to(device).type(torch.float)
+        Y_seg = data['gaze'].to(device).type(torch.int8)
+        
 
         optimizer.zero_grad()
         Y_pred, Y_seg_pred = model(X)
-        
         loss = loss = model.compute_loss(
                     y_class_pred = Y_pred.type(torch.float),
                     y_image_pred = Y_seg_pred.type(torch.float),
@@ -208,12 +209,12 @@ for epoch in tqdm(range(num_epochs)):
         optimizer.step()
         loss_list.append(loss.detach().clone().cpu())
         del X, Y_class, Y_seg
-    cur_loss = validation(model)
-    print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
-    if cur_loss < best_loss:
-        best_loss = cur_loss
-        torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
-        test_finegrained(dataAll)
+    #cur_loss = validation(model)
+    #print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
+    #if cur_loss < best_loss:
+    #    best_loss = cur_loss
+    torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
+    test_finegrained(dataAll)
 
         
     print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))
