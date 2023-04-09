@@ -1,4 +1,5 @@
 import sys
+import json
 from tqdm import tqdm
 
 import datasets_custom
@@ -19,8 +20,6 @@ import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 import pandas as pd
-import os
-import copy
 import argparse
 
 # create argument parser object
@@ -33,16 +32,16 @@ parser.add_argument('-num_epochs', '--num_epochs', type=int, required=False, def
 parser.add_argument('-train_bs', '--train_bs', type=int, required=False, default=8, help='')
 parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=2, help='')
 parser.add_argument('-test_bs', '--test_bs', type=int, required=False, default=1, help='')
-parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=1000, help='')
-parser.add_argument('-aug_type', '--aug_type', type=int, required=False, default=1000, help='')
+parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=None, help='')
+parser.add_argument('-aug_type', '--aug_type', type=str, required=False, default=None, help='')
 parser.add_argument('-resize_px', '--resize_px', type=int, required=False, default=512, help='')
 parser.add_argument('-val_check', '--val_check', type=int, required=False, default=5, help='')
 parser.add_argument('-lr', '--lr', type=float, required=False, default=2e-4, help='')
 parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
 
 """
-usage for no augmentation: python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100
-basic augmentation: python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100 -use_augment -aug_type basic 
+usage for no augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100
+basic augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 2 -resize_px 1024 -val_check 1 -num_epochs 100 -use_augment -aug_type basic -aug_size 50
 """
 
 # parse arguments from command line
@@ -62,16 +61,23 @@ val_check = args.val_check
 lr = args.lr
 beta1 = args.beta1
 
-save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
+save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_type_{augmentation_type}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-train_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px), aug_size=aug_size, use_augmentation = use_augmentation)
+train_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px),
+                                                           aug_size=aug_size,
+                                                           use_augmentation=use_augmentation)
+
 dataAll = {
-            "Train": DataLoader(train_dataset, batch_size=train_bs, shuffle=True),
+            "Train": DataLoader(train_dataset,
+                                batch_size=train_bs,
+                                shuffle=True),
 #             "Valid": DataLoader(valid_dataset, batch_size=val_bs, shuffle=True),
-            "Test": DataLoader(test_dataset, batch_size=test_bs, shuffle=True) 
+            "Test": DataLoader(test_dataset,
+                               batch_size=test_bs,
+                               shuffle=True) 
 }
 
 device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
@@ -114,7 +120,6 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 
         axs[2].imshow(label_plot, cmap='gray')
         axs[2].set_title('Label')
-
 
 #         np.set_printoptions(precision=3)
 #         true = Y[i].detach().cpu().numpy().tolist()
@@ -226,7 +231,12 @@ def test(model):
             pixel_acc.append(get_pixel_acc(seg_pred.cpu(), seg.cpu()))
             binary_acc.append(get_binary_acc(Y_pred, Y))
     
-    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score), np.mean(pixel_acc), np.mean(binary_acc), np.mean(losses)
+    return  (np.mean(iou),
+             np.mean(dice_scores),
+             np.mean(atleast_one_score),
+             np.mean(pixel_acc),
+             np.mean(binary_acc),
+             np.mean(losses))
 
 # train model
 def train():
@@ -274,4 +284,26 @@ def train():
                 torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
 
 if __name__ == "__main__":
+    exp_params = {
+                 "train_size": train_dataset.__len__(),
+                 "test_size": test_dataset.__len__(),
+                 "use_augmentation": args.use_augment,
+                 "augmentation_type": args.aug_type,
+                 "aug_size": args.aug_size,
+                 "gpu_num": args.gpu_num,
+                 "num_epochs": args.num_epochs,
+                 "train_bs": args.train_bs,
+                 "test_bs": args.test_bs,
+#                  "val_bs": args.val_bs,
+                 "resize_px": args.resize_px,
+                 "val_check": args.val_check,
+                 "lr": args.lr,
+                 "beta1": args.beta1
+    }
+
+    print(f"\n*** [STARTING EXPERIMENT] Visualizations and best models saved at: {save_path} ***\n")
+    print("[EXPERIMENT PARAMETERS]\n", json.dumps(exp_params, indent = 4))
+    with open(os.path.join(save_path, 'exp_params.json'), 'w') as fp:
+        json.dump(exp_params, fp, indent = 4)
+    
     train()
