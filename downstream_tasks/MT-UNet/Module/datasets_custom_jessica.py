@@ -30,26 +30,33 @@ mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
 
 class ChestXrayDataset(Dataset):
 
-    def __init__(self, root_dir, use_aug=False, resize_px=256, aug=False):
+    def __init__(self, root_dir, resize_px=256, aug_size=None, mode_path=None):
 
         self.root_dir = root_dir
-        self.use_aug = use_aug
-        self.aug=aug
+        self.aug_size=aug_size
         self.resize_px = resize_px
         self.mask_path = os.listdir(f"{self.root_dir}/masks/")
-        
+        id_paths = [elem.replace('_mask.png', "") for elem in self.mask_path]
+        if mode_path != None:
+            with open(mode_path) as f:
+                img_ids = get_data_splits(f)
+            mask = [elem in img_ids for elem in id_paths] 
+            self.mask_path = np.array(self.mask_path)[mask]
+        if aug_size != None:
+            self.mask_path = self.mask_path[0:aug_size]
+
         train_csv = pd.read_csv('/data3/jessica/data/labelGAN/vinbig/train.csv')
         self.image_id_to_labels = train_csv.groupby(by="image_id").class_name.apply(list).apply(lambda x: np.unique([elem.replace(" ", "").replace("/", "") for elem in x]))
 
     def __len__(self):
-        return len(os.listdir(f"{self.root_dir}/masks"))
+        return len(self.mask_path)
 
     def __getitem__(self, idx):
  
         #Reading images
         imgname = self.mask_path[idx]
         imname = imgname.replace("_mask", "") 
-        if self.aug:
+        if self.aug_size != None:
             imname = imname.replace(".jpg", ".png")
         img_name = os.path.join(self.root_dir, 'imgs', f"{imname}")
         image = Image.open(img_name)
@@ -138,15 +145,13 @@ class AugmentationDataset(Dataset):
         return data
 
 def get_data_splits(f):
-    return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
+    return [image.split()[0] for image in f.readlines()]
 
 def get_datasets(aug_size= None, use_augmentation = False, resize_px=256, aug_type="KDE"):
-    
-    train_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)
-
-    valid_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)   
-    
-    test_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm', resize_px=resize_px)  
+    mode_path = '/home/jessica/labelGAN/downstream_tasks/vinbig/train_binarized_list.txt'
+    train_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm/', resize_px=resize_px, mode_path=mode_path)
+    mode_path = '/home/jessica/labelGAN/downstream_tasks/vinbig/test_binarized_list.txt'
+    test_dataset = ChestXrayDataset('/data3/jessica/data/labelGAN/vinbig_test_imgs_and_segm/', resize_px=resize_px, mode_path=mode_path)  
     
     if use_augmentation:
         if aug_type == "KDE":
@@ -155,9 +160,9 @@ def get_datasets(aug_size= None, use_augmentation = False, resize_px=256, aug_ty
                                                    os.listdir(os.path.join(synth_root, 'masks'))[0:aug_size], resize_px=resize_px) 
         else:
             root_dir = '/data3/jessica/data/labelGAN/train_images/'
-            augmentation_dataset = ChestXrayDataset(root_dir, resize_px=resize_px, aug=True) 
+            augmentation_dataset = ChestXrayDataset(root_dir, resize_px=resize_px, aug_size=aug_size) 
 
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
     
-    return train_dataset, valid_dataset, test_dataset
+    return train_dataset, test_dataset
 
