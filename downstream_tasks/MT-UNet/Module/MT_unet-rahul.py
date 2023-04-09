@@ -40,6 +40,10 @@ parser.add_argument('-val_check', '--val_check', type=int, required=False, defau
 parser.add_argument('-lr', '--lr', type=float, required=False, default=2e-4, help='')
 parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
 
+"""
+usage for no augmentation: python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100
+basic augmentation: python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100 -use_augment -aug_type basic 
+"""
 
 # parse arguments from command line
 args = parser.parse_args()
@@ -83,19 +87,33 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
     batchsize = cxr.size()[0]
     fig, axs = plt.subplots(batchsize, 3, figsize=(10, 10))
     
-    for i in range(batchsize): 
-        img_plot = cxr[i].permute(1,2,0).detach().cpu()
-        seg_pred_plot = seg_pred[i].permute(1,2,0).detach().cpu()
-        label_plot = mask[i].permute(1,2,0).detach().cpu()
+    if batchsize > 1:
+        for i in range(batchsize): 
+            img_plot = cxr[i].permute(1,2,0).detach().cpu()
+            seg_pred_plot = seg_pred[i].permute(1,2,0).detach().cpu()
+            label_plot = mask[i].permute(1,2,0).detach().cpu()
 
-        axs[i, 0].imshow(img_plot)
-        axs[i, 0].set_title('Image')
+            axs[i, 0].imshow(img_plot)
+            axs[i, 0].set_title('Image')
 
-        axs[i, 1].imshow(seg_pred_plot, cmap='gray')
-        axs[i, 1].set_title('Prediction')
+            axs[i, 1].imshow(seg_pred_plot, cmap='gray')
+            axs[i, 1].set_title('Prediction')
 
-        axs[i, 2].imshow(label_plot, cmap='gray')
-        axs[i, 2].set_title('Label')
+            axs[i, 2].imshow(label_plot, cmap='gray')
+            axs[i, 2].set_title('Label')
+    else:
+        img_plot = cxr[0].permute(1,2,0).detach().cpu()
+        seg_pred_plot = seg_pred[0].permute(1,2,0).detach().cpu()
+        label_plot = mask[0].permute(1,2,0).detach().cpu()
+
+        axs[0].imshow(img_plot)
+        axs[0].set_title('Image')
+
+        axs[1].imshow(seg_pred_plot, cmap='gray')
+        axs[1].set_title('Prediction')
+
+        axs[2].imshow(label_plot, cmap='gray')
+        axs[2].set_title('Label')
 
 
 #         np.set_printoptions(precision=3)
@@ -114,7 +132,7 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 #Dice Coefficient
 def dice_coeff(pred, target):
     smooth = 1.
-    pred = torch.where(pred>=0.5, 1, 0)
+    pred = (pred > 0.5).long()
     iflat = pred.view(-1)
     tflat = target.view(-1)
     intersection = (iflat * tflat).sum()
@@ -122,9 +140,29 @@ def dice_coeff(pred, target):
     return (1 - ((2. * intersection + smooth) /
               (iflat.sum() + tflat.sum() + smooth))).item()
 
-def get_atleast_one_metric(pred, true):
+# disease v/s no-disease binary classifier
+def get_binary_acc(pred, target):
+    target = target.squeeze(0)
+    pred = pred.squeeze(0)
     pred = pred > 0.5
-    return torch.any(torch.logical_and(pred, true)).long().item()
+    
+    if target[8].item() == 1:
+        if pred[8].long().item() == 1: 
+            return 1
+        else: 
+            return 0
+    else:
+        return torch.any(torch.logical_and(pred, target)).long().item()
+
+# pixel-acc
+def get_pixel_acc(pred, target):
+    pred = pred > 0.5
+    return (torch.logical_and(pred, target).long().sum() / target.sum()).item()
+
+# at least one classified metric
+def get_atleast_one_metric(pred, target):
+    pred = pred > 0.5
+    return torch.any(torch.logical_and(pred, target)).long().item()
 
 #Validation Loop
 def validation(model):
@@ -158,6 +196,8 @@ def test(model):
     dice_scores = []
     iou = []
     atleast_one_score = []
+    pixel_acc = []
+    binary_acc = []
     losses = []
     jaccard = BinaryJaccardIndex()
     
@@ -183,8 +223,10 @@ def test(model):
             iou.append(jaccard(seg_pred.cpu(), seg.cpu()))
             dice_scores.append(dice_coeff(seg_pred.cpu(), seg.cpu()))
             atleast_one_score.append(get_atleast_one_metric(Y_pred, Y))
+            pixel_acc.append(get_pixel_acc(seg_pred.cpu(), seg.cpu()))
+            binary_acc.append(get_binary_acc(Y_pred, Y))
     
-    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score), np.mean(losses)
+    return np.mean(iou), np.mean(dice_scores), np.mean(atleast_one_score), np.mean(pixel_acc), np.mean(binary_acc), np.mean(losses)
 
 # train model
 def train():
@@ -222,17 +264,14 @@ def train():
         print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))
                 
         if (epoch + 1) % val_check == 0:
-            iou, dsc, custom_acc, cur_loss = test(model)
-            print("[TEST] Epoch : %d, IoU: %2.5f, DSC: %2.5f, ACC: %.3f" % (epoch, iou, dsc, custom_acc))
+            iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+            print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
 
             #             print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
             
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
-                
-                
-
 
 if __name__ == "__main__":
     train()
