@@ -60,7 +60,6 @@ class ChestXrayDataset(Dataset):
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'masks', f"{imgname}")
         mask = Image.open(mask_name)
-        mask = ImageOps.grayscale(mask)
         mask = np.array(ImageOps.grayscale(mask))
         mask[mask > 5] = 255
         
@@ -76,14 +75,8 @@ class ChestXrayDataset(Dataset):
         image = self.transform(image)
         mask = (self.transform(mask) > 0.5).type(torch.float)
 
-        data = {
-                "cxr": image,
-                "gaze": mask, # named gaze with compatibility with MT-UNet code
-                "Y": torch.tensor(labels)
-        }
+        return image, mask, torch.tensor(labels)
         
-        
-        return data
     
 class AugmentationDataset(Dataset):
 
