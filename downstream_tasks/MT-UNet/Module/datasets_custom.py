@@ -93,6 +93,7 @@ def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False):
+    augment_set_inc = 50
     root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/vinbig_test_imgs_and_segm'
     data_split_dir = '/home/rmpatil/multi_task_gen/labelGAN/downstream_tasks/vinbig/'
     
@@ -122,11 +123,14 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False):
             ])
         
         train_file = np.array(train_file, dtype = object)
-        augmentation_dataset = ChestXrayDataset(root_dir,
-                                                train_file[random.sample(range(train_file.shape[0]), aug_size)],
-                                                res,
-                                                basic_transform) 
-        train_dataset = torch.utils.data.ConcatDataset([train_dataset, augmentation_dataset])
+        augmented_dataset = [train_dataset]
+        for i in range(aug_size / augment_set_inc): 
+            augmentation_dataset = ChestXrayDataset(root_dir,
+                                                    train_file[random.sample(range(train_file.shape[0]), augment_set_inc)],
+                                                    res,
+                                                    basic_transform) 
+            augmented_dataset.append(augmentation_dataset)
+        train_dataset = torch.utils.data.ConcatDataset(augmented_dataset)
     
     return train_dataset, test_dataset #, valid_dataset
 
