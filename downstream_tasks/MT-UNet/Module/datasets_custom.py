@@ -43,14 +43,16 @@ class ChestXrayDataset(Dataset):
         mask = self.transform(mask)
         
         if self.use_aug:
-            image = self.use_aug(image)
-            mask = self.use_aug(mask)
+            sample = {"image": image, "mask": mask}
+            sample = self.use_aug(sample)
             p = torch.rand(1)
             if p <= 0.5:
                 self.crop = transforms.RandomResizedCrop(size=self.res, scale=(0.3, 0.8))
-                image = self.crop(image)
-                mask = self.crop(mask)
-        
+                sample = self.crop(sample)
+            
+            image = sample["image"]
+            mask = sample["mask"]
+            
         return image, mask, label
     
 # class AugmentationDataset(Dataset):
