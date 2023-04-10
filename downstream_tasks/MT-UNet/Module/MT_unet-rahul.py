@@ -6,6 +6,8 @@ import datasets_custom
 from dice_loss import DiceLoss
 from hzhu_MTL_UNet import *
 
+import time
+
 import torch
 from torch import nn as nn
 import os
@@ -13,6 +15,7 @@ import torch.optim as optim
 import torchvision
 from torch.utils.data import DataLoader
 from torchmetrics.classification import BinaryJaccardIndex
+from torchmetrics import Dice
 
 # torch.backends.cudnn.enabled=False
 
@@ -39,6 +42,9 @@ parser.add_argument('-val_check', '--val_check', type=int, required=False, defau
 parser.add_argument('-lr', '--lr', type=float, required=False, default=2e-4, help='')
 parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
 
+parser.add_argument('-mode', '--mode', type=str, required=True, default="train", help='')
+parser.add_argument('-model_path', '--model_path', type=str, required=False, default="", help='')
+
 """
 usage for no augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100
 basic augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 2 -resize_px 1024 -val_check 1 -num_epochs 100 -use_augment -aug_type basic -aug_size 50
@@ -60,6 +66,8 @@ resize_px = args.resize_px
 val_check = args.val_check
 lr = args.lr
 beta1 = args.beta1
+mode = args.mode
+model_path = args.model_path
 
 save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_type_{augmentation_type}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
 
@@ -136,14 +144,18 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 
 #Dice Coefficient
 def dice_coeff(pred, target):
-    smooth = 1.
+#     smooth = 1.
     pred = (pred > 0.5).long()
-    iflat = pred.view(-1)
-    tflat = target.view(-1)
-    intersection = (iflat * tflat).sum()
+    dice = Dice()
     
-    return (1 - ((2. * intersection + smooth) /
-              (iflat.sum() + tflat.sum() + smooth))).item()
+    return dice(pred, target)
+
+#     iflat = pred.view(-1)
+#     tflat = target.view(-1)
+#     intersection = (iflat * tflat).sum()
+    
+#     return (1 - ((2. * intersection + smooth) /
+#               (iflat.sum() + tflat.sum() + smooth))).item()
 
 # disease v/s no-disease binary classifier
 def get_binary_acc(pred, target):
@@ -243,9 +255,10 @@ def train():
     loss_list = []
     best_loss = np.inf
     for epoch in tqdm(range(num_epochs)):
+#         start = time.process_time()
         model.train()
-
-        for cxr, mask, Y in dataAll["Train"]:
+#         print(time.process_time() - start)
+        for cxr, mask, Y in dataAll["Train"]: 
             X = cxr.to(device).type(torch.float)
 
             Y = Y.to(device).type(torch.float)
@@ -263,47 +276,54 @@ def train():
                     loss_image = seg_pred_loss)
 
     #         loss = seg_pred_loss(Y_seg_pred.type(torch.float), Y_seg.type(torch.float)) + classification_loss(Y_class_pred.type(torch.float), Y_class.type(torch.float))
-
+    
             loss.backward()
-
             optimizer.step()
             loss_list.append(loss.detach().clone().cpu())
-
+        
         visualize(cxr, mask, Y, seg_pred, Y_pred, epoch)
 
-        print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))
-                
+        print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))       
         if (epoch + 1) % val_check == 0:
             iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
             print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
 
             #             print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
-            
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
 
 if __name__ == "__main__":
-    exp_params = {
-                 "train_size": train_dataset.__len__(),
-                 "test_size": test_dataset.__len__(),
-                 "use_augmentation": args.use_augment,
-                 "augmentation_type": args.aug_type,
-                 "aug_size": args.aug_size,
-                 "gpu_num": args.gpu_num,
-                 "num_epochs": args.num_epochs,
-                 "train_bs": args.train_bs,
-                 "test_bs": args.test_bs,
-#                  "val_bs": args.val_bs,
-                 "resize_px": args.resize_px,
-                 "val_check": args.val_check,
-                 "lr": args.lr,
-                 "beta1": args.beta1
-    }
+    if mode == "train":
+        exp_params = {
+                     "train_size": train_dataset.__len__(),
+                     "test_size": test_dataset.__len__(),
+                     "use_augmentation": args.use_augment,
+                     "augmentation_type": args.aug_type,
+                     "aug_size": args.aug_size,
+                     "gpu_num": args.gpu_num,
+                     "num_epochs": args.num_epochs,
+                     "train_bs": args.train_bs,
+                     "test_bs": args.test_bs,
+    #                  "val_bs": args.val_bs,
+                     "resize_px": args.resize_px,
+                     "val_check": args.val_check,
+                     "lr": args.lr,
+                     "beta1": args.beta1
+        }
 
-    print(f"\n*** [STARTING EXPERIMENT] Visualizations and best models saved at: {save_path} ***\n")
-    print("[EXPERIMENT PARAMETERS]\n", json.dumps(exp_params, indent = 4))
-    with open(os.path.join(save_path, 'exp_params.json'), 'w') as fp:
-        json.dump(exp_params, fp, indent = 4)
-    
-    train()
+        print(f"\n*** [STARTING EXPERIMENT] Visualizations and best models saved at: {save_path} ***\n")
+        print("[EXPERIMENT PARAMETERS]\n", json.dumps(exp_params, indent = 4))
+        with open(os.path.join(save_path, 'exp_params.json'), 'w') as fp:
+            json.dump(exp_params, fp, indent = 4)
+
+        train()
+        
+    elif mode == "test":
+        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1})
+        weights = torch.load(model_path)
+        model.load_state_dict(weights)
+        model = model.to(device)    
+        
+        iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc))

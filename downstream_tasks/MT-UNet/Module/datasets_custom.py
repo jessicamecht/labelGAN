@@ -124,7 +124,7 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False):
         
         train_file = np.array(train_file, dtype = object)
         augmented_dataset = [train_dataset]
-        for i in range(aug_size / augment_set_inc): 
+        for i in range(int(aug_size / augment_set_inc)): 
             augmentation_dataset = ChestXrayDataset(root_dir,
                                                     train_file[random.sample(range(train_file.shape[0]), augment_set_inc)],
                                                     res,
