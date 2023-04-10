@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 
 class ChestXrayDataset(Dataset):
 
-    def __init__(self, root_dir, image_and_labels, res=(1024, 1024), use_aug = None):
+    def __init__(self, root_dir, image_and_labels, res=(1024, 1024), use_aug = False):
 
         self.image_and_labels = image_and_labels
         self.root_dir = root_dir
@@ -43,15 +43,38 @@ class ChestXrayDataset(Dataset):
         mask = self.transform(mask)
         
         if self.use_aug:
-            sample = {"image": image, "mask": mask}
-            sample = self.use_aug(sample)
-            p = torch.rand(1)
-            if p <= 0.5:
-                self.crop = transforms.RandomResizedCrop(size=self.res, scale=(0.3, 0.8))
-                sample = self.crop(sample)
             
-            image = sample["image"]
-            mask = sample["mask"]
+            if random.random() > 0.5:
+                # Random crop
+                i, j, h, w = transforms.RandomCrop.get_params(
+                    image, output_size=(int(self.res[0]/1.75) , int(self.res[0]/1.75)))
+                image = transforms.functional.crop(image, i, j, h, w)
+                mask = transforms.functional.crop(mask, i, j, h, w)
+                
+                self.resize = transforms.Resize(self.res)
+                image = self.resize(image)
+                mask = self.resize(mask)
+
+            # Random horizontal flipping
+            if random.random() > 0.5:
+                image = transforms.functional.hflip(image)
+                mask = transforms.functional.hflip(mask)
+
+            # Random vertical flipping
+            if random.random() > 0.5:
+                image = transforms.functional.vflip(image)
+                mask = transforms.functional.vflip(mask)
+        
+#         if self.use_aug:
+#             sample = {"image": image, "mask": mask}
+#             sample = self.use_aug(sample)
+#             p = torch.rand(1)
+#             if p <= 0.5:
+#                 self.crop = transforms.RandomResizedCrop(size=self.res, scale=(0.3, 0.8))
+#                 sample = self.crop(sample)
+            
+#             image = sample["image"]
+#             mask = sample["mask"]
             
         return image, mask, label
     
@@ -118,11 +141,11 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False):
                                     res)  
     
     if use_augmentation:
-        basic_transform = transforms.Compose([
-                transforms.RandomHorizontalFlip(p=1),
-                transforms.RandomVerticalFlip(p=0.5),
-                transforms.RandomAffine(degrees=(20, 70), scale=(1.1, 1.3), translate=(0.05, 0.15))
-            ])
+#         basic_transform = transforms.Compose([
+#                 transforms.RandomHorizontalFlip(p=1),
+#                 transforms.RandomVerticalFlip(p=0.5),
+#                 transforms.RandomAffine(degrees=(20, 70), scale=(1.1, 1.3), translate=(0.05, 0.15))
+#             ])
         
         train_file = np.array(train_file, dtype = object)
         augmented_dataset = [train_dataset]
@@ -130,7 +153,7 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False):
             augmentation_dataset = ChestXrayDataset(root_dir,
                                                     train_file[random.sample(range(train_file.shape[0]), augment_set_inc)],
                                                     res,
-                                                    basic_transform) 
+                                                    use_augmentation) 
             augmented_dataset.append(augmentation_dataset)
         train_dataset = torch.utils.data.ConcatDataset(augmented_dataset)
     
