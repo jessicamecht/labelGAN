@@ -74,7 +74,7 @@ save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_type_{aug
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
-train_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px),
+train_dataset, val_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px),
                                                            aug_size=aug_size,
                                                            use_augmentation=use_augmentation)
 
@@ -82,7 +82,7 @@ dataAll = {
             "Train": DataLoader(train_dataset,
                                 batch_size=train_bs,
                                 shuffle=True),
-#             "Valid": DataLoader(valid_dataset, batch_size=val_bs, shuffle=True),
+            "Valid": DataLoader(val_dataset, batch_size=val_bs, shuffle=True),
             "Test": DataLoader(test_dataset,
                                batch_size=test_bs,
                                shuffle=True) 
@@ -128,14 +128,6 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 
         axs[2].imshow(label_plot, cmap='gray')
         axs[2].set_title('Label')
-
-#         np.set_printoptions(precision=3)
-#         true = Y[i].detach().cpu().numpy().tolist()
-#         pred = disease_pred[i].detach().cpu().numpy().tolist()
-
-#         print(f"True v/s Pred:")
-#         for x, y in zip(true, pred):
-#             print(f'{x}\t{round(y, 3)}')
     
     plt.savefig(f"{save_path}/{epoch}.png")
     fig.clf()
@@ -144,18 +136,10 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 
 #Dice Coefficient
 def dice_coeff(pred, target):
-#     smooth = 1.
     pred = (pred > 0.5).long()
     dice = Dice()
     
     return dice(pred, target)
-
-#     iflat = pred.view(-1)
-#     tflat = target.view(-1)
-#     intersection = (iflat * tflat).sum()
-    
-#     return (1 - ((2. * intersection + smooth) /
-#               (iflat.sum() + tflat.sum() + smooth))).item()
 
 # disease v/s no-disease binary classifier
 def get_binary_acc(pred, target):
@@ -205,11 +189,6 @@ def validation(model):
 
 # test model
 def test(model):
-    # uncomment below lines of code for batch testing later
-#     model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1})
-#     weights = torch.load(model_path)
-#     model.load_state_dict(weights)
-#     model = model.to(device)
     dice_scores = []
     iou = []
     atleast_one_score = []
@@ -285,13 +264,14 @@ def train():
 
         print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))       
         if (epoch + 1) % val_check == 0:
-            iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
-            print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
+#             iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+#             print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
+            cur_loss = validation(model)
 
-            #             print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
+            print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))
             if cur_loss < best_loss:
                 best_loss = cur_loss
-                torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
+                torch.save(model.state_dict(), os.path.join(save_path, f"best_model.pt")) 
 
 if __name__ == "__main__":
     if mode == "train":
@@ -305,7 +285,7 @@ if __name__ == "__main__":
                      "num_epochs": args.num_epochs,
                      "train_bs": args.train_bs,
                      "test_bs": args.test_bs,
-    #                  "val_bs": args.val_bs,
+                     "val_bs": args.val_bs,
                      "resize_px": args.resize_px,
                      "val_check": args.val_check,
                      "lr": args.lr,
