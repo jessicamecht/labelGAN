@@ -6,3 +6,4 @@
 *.pickle
 /StyleGAN.pytorch/output/*
 *.pt
+*.csv

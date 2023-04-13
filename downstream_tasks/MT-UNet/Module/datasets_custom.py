@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import PIL
 from PIL import Image,ImageOps
 from torchvision import transforms
+import pandas as pd
 from torch.utils.data import Dataset
 
 mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),       
@@ -39,12 +40,12 @@ class ChestXrayDataset(Dataset):
     def __getitem__(self, idx):
  
         #Reading images
-        img_name = os.path.join(self.root_dir, f"{self.image_and_labels[idx][0]}.png")
+        img_name = os.path.join(self.root_dir, 'imgs', f"{self.image_and_labels[idx][0]}.png")
         image = Image.open(img_name)
         image = ImageOps.grayscale(image)
         
         #Reading segmentation Masks
-        mask_name = os.path.join(self.root_dir, f"{self.image_and_labels[idx][0]}_mask.png")
+        mask_name = os.path.join(self.root_dir, "masks", f"{self.image_and_labels[idx][0]}_mask.png")
         mask = Image.open(mask_name)
         mask = np.array(ImageOps.grayscale(mask))
         mask[mask > 5] = 255
@@ -80,22 +81,22 @@ class ChestXrayDataset(Dataset):
             if random.random() > 0.5:
                 image = transforms.functional.vflip(image)
                 mask = transforms.functional.vflip(mask)
-            
-        return image, mask, label
+        return torch.tensor(image), torch.tensor(mask), torch.tensor(label)
     
 class AugmentationDatasetEmbedded(Dataset):
 
     def __init__(self, root_dir, aug_size, res=(1024, 1024),):
 
         self.root_dir = root_dir
-        self.resize_px = resize_px
-        self.mask_path = os.listdir(f"{self.root_dir}/masks/")[:aug_size]
-        
-        train_csv = pd.read_csv('/data3/jessica/data/labelGAN/vinbig/train.csv')
+        self.res = res
+        self.mask_path = os.listdir(f"{self.root_dir}/masks/")
+        random.shuffle(self.mask_path)
+        self.mask_path = self.mask_path[:aug_size]
+        train_csv = pd.read_csv('/home/jessica/labelGAN/downstream_tasks/vinbig/train.csv')
         self.image_id_to_labels = train_csv.groupby(by="image_id").class_name.apply(list).apply(lambda x: np.unique([elem.replace(" ", "").replace("/", "") for elem in x]))
 
     def __len__(self):
-        return len(os.listdir(f"{self.root_dir}/masks"))
+        return len(self.mask_path)
 
     def __getitem__(self, idx):
  
@@ -121,52 +122,57 @@ class AugmentationDatasetEmbedded(Dataset):
             labels = labels | mlb[label]
         
         #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(res)])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
         
         image = self.transform(image)
         mask = (self.transform(mask) > 0.5).type(torch.float)
 
-        return image, mask, torch.tensor(label)
+        return torch.tensor(image), torch.tensor(mask), torch.tensor(labels)
     
 class AugmentationDatasetKDE(Dataset):
 
-    def __init__(self, root_dir, image_paths, mask_paths, labels=None, res=(102, 1024)):
+    def __init__(self, root_dir, aug_size, labels=None, res=(1024, 1024)):
         
-        self.image_paths = image_paths
-        self.mask_paths = mask_paths
         self.root_dir = root_dir
         self.labels = labels
-        self.resize_px = resize_px
+        self.res = res
+        self.mask_path = os.listdir(f"{self.root_dir}/masks/")
+        fil = [elem.replace("_image", "_mask") for elem in os.listdir(f"{self.root_dir}/imgs/")]
+        mask = [elem in fil for elem in self.mask_path]
+        self.mask_path = np.array(self.mask_path)[mask]
+        random.shuffle(self.mask_path)
+        self.mask_path = self.mask_path[:aug_size]
+
     
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.mask_path)
 
     def __getitem__(self, idx):
       
-        #Reading images
-        img_name = os.path.join(self.root_dir, 'imgs', self.image_paths[idx])
-        image = Image.open(img_name)
-        
-        #Converting to grayscale if RGB
-        image = ImageOps.grayscale(image)
-        
         #Reading segmentation Masks
-        mask_name = os.path.join(self.root_dir, 'masks', self.mask_paths[idx])
+        mask_name = os.path.join(self.root_dir, 'masks', self.mask_path[idx])
         mask = Image.open(mask_name)
         #mask[mask > 5] = 255
         #mask[mask < 5] = 0
         mask = np.where(np.min(mask, axis=2) >= 150, 1, 0)
+
+        img_name_str = self.mask_path[idx].replace("_mask", "_image")
+        img_name = os.path.join(self.root_dir, 'imgs', img_name_str)
+        image = Image.open(img_name)
+        
+        #Converting to grayscale if RGB
+        image = ImageOps.grayscale(image)
         
         
         #Extracting disease label
         if self.labels != None:
             label = self.labels[idx]
         else: 
-            label = self.image_paths[idx].split("_")[1]
+            label = self.mask_path[idx].split("_")[1]
             label = mlb[label]
         
         #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(res)])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
         self.transform_hflip = transforms.functional.hflip
         
         image = self.transform(image)
@@ -177,15 +183,14 @@ class AugmentationDatasetKDE(Dataset):
         if probability <= 0.5:
             image = self.transform_hflip(image)
             mask = self.transform_hflip(mask)
-
-        return image, mask, torch.tensor(label)
+        return torch.tensor(image), torch.tensor(mask), torch.tensor(label)
 
 def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:-1])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, aug_types=["KDE"]):
-    root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/vinbig_test_imgs_and_segm'
-    data_split_dir = '/home/rmpatil/multi_task_gen/labelGAN/downstream_tasks/vinbig/'
+    root_dir = '/data1/shared/jessica/drive_data/vinbig_test_imgs_and_segm/'
+    data_split_dir = '/home/jessica/labelGAN/downstream_tasks/vinbig/'
     
     with open(os.path.join(data_split_dir, "train_binarized_list.txt")) as f:
         train_file = get_data_splits(f)
@@ -209,6 +214,7 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, au
         augmented_dataset = [train_dataset]
         for aug_type in aug_types:
             if aug_type == "baseline":
+                print("in baseline")
                 augment_set_inc = 50
                 train_file = np.array(train_file, dtype = object)
                 for i in range(int(aug_size / augment_set_inc)): 
@@ -219,14 +225,15 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, au
                     augmented_dataset.append(augmentation_dataset)
 
             if aug_type == "KDE":
-                synth_root = '/data3/jessica/data/labelGAN/results_dir_multitask_generation_segm_new_4/vis_KDE_all/'
-                augmentation_dataset = AugmentationDatasetKDE(synth_root, os.listdir(os.path.join(synth_root, 'imgs'))[0:aug_size],
-                                                       os.listdir(os.path.join(synth_root, 'masks'))[0:aug_size], resize_px=resize_px) 
+                print("in KDE")
+                synth_root = '/data1/shared/jessica/drive_data/vis_KDE_all/'
+                augmentation_dataset = AugmentationDatasetKDE(synth_root, aug_size, res=res) 
                 augmented_dataset.append(augmentation_dataset)
 
             if aug_type == "Embedded":
-                root_dir = '/data3/jessica/data/labelGAN/train_images/'
-                augmentation_dataset = AugmentationDatasetEmbedded(root_dir, res, aug_size)
+                print("in embedded")
+                root_dir = '/data1/shared/jessica/drive_data/train_images_embedded/'
+                augmentation_dataset = AugmentationDatasetEmbedded(root_dir, aug_size, res)
                 augmented_dataset.append(augmentation_dataset)
             
         train_dataset = torch.utils.data.ConcatDataset(augmented_dataset)

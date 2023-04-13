@@ -67,10 +67,11 @@ val_check = args.val_check
 lr = args.lr
 beta1 = args.beta1
 mode = args.mode
-model_path = args.model_path
+
 
 augment_type_str = '_'.join(augmentation_types) if use_augmentation else "None"
-save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results_new/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
+save_path = f"/data1/shared/jessica/drive_data/results/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
+model_path = args.model_path if args.model_path != "" else save_path + "best_model.pt"
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -308,4 +309,7 @@ if __name__ == "__main__":
         model = model.to(device)    
         
         iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+        with open(f"{save_path}/result.txt", "w") as file:
+            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc)
+            file.write(text)
         print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc))
