@@ -11,21 +11,21 @@ import pandas as pd
 import csv
 from sklearn.preprocessing import MultiLabelBinarizer
 
-mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
-       'Atelectasis': np.array([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]), 
-       'Calcification': np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]),
-       'Cardiomegaly': np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]), 
-       'Consolidation': np.array([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]), 
-       'ILD': np.array([0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]), 
-       'Infiltration': np.array([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]),
-       'LungOpacity': np.array([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]), 
-       'Nofinding': np.array([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]), 
-       'NoduleMass': np.array([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]), 
-       'Otherlesion': np.array([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]),
-       'Pleuraleffusion': np.array([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]), 
-       'Pleuralthickening': np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]), 
-       'Pneumothorax': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]),
-       'Pulmonaryfibrosis': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])}
+mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),       
+       'Atelectasis': np.array([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]),         
+       'Calcification': np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]),       
+       'Cardiomegaly': np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]),        
+       'Consolidation': np.array([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]),       
+       'ILD': np.array([0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]),                 
+       'Infiltration': np.array([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]),        
+       'LungOpacity': np.array([0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]),         
+       'Nofinding': np.array([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]),          
+       'NoduleMass': np.array([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]),         
+       'Otherlesion': np.array([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]),        
+       'Pleuraleffusion': np.array([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]),    
+       'Pleuralthickening': np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]),  
+       'Pneumothorax': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]),       
+       'Pulmonaryfibrosis': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])}  
 
 
 class ChestXrayDataset(Dataset):
