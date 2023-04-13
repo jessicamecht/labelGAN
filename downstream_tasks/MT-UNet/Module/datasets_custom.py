@@ -181,7 +181,7 @@ class AugmentationDatasetKDE(Dataset):
         return image, mask, torch.tensor(label)
 
 def get_data_splits(f):
-    return [(image.split()[0], np.array(list(map(int, image.split()[1:])))) for image in f.readlines()]
+    return [(image.split()[0], np.array(list(map(int, image.split()[1:-1])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, aug_types=["KDE"]):
     root_dir = '/home/rmpatil/multi_task_gen/data/vinbig_we_labeled/vinbig_test_imgs_and_segm'
@@ -195,9 +195,9 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, au
     
     with open(os.path.join(data_split_dir, "val_binarized_list.txt")) as f:
         val_file = get_data_splits(f)
-    valid_dataset = ChestXrayDataset(root_dir,
-                                     val_file,
-                                     res)   
+    val_dataset = ChestXrayDataset(root_dir,
+                                   val_file,
+                                   res)   
     
     with open(os.path.join(data_split_dir, "test_binarized_list.txt")) as f:
         test_file = get_data_splits(f)
