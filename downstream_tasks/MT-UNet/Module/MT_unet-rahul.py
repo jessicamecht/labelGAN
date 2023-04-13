@@ -36,10 +36,10 @@ parser.add_argument('-train_bs', '--train_bs', type=int, required=False, default
 parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=2, help='')
 parser.add_argument('-test_bs', '--test_bs', type=int, required=False, default=1, help='')
 parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=None, help='')
-parser.add_argument('-aug_type', '--aug_type', type=str, required=False, default=None, help='')
+parser.add_argument('-aug_types', '--aug_types', type=str, nargs="*", required=False, default=[None], help='')
 parser.add_argument('-resize_px', '--resize_px', type=int, required=False, default=512, help='')
 parser.add_argument('-val_check', '--val_check', type=int, required=False, default=5, help='')
-parser.add_argument('-lr', '--lr', type=float, required=False, default=2e-4, help='')
+parser.add_argument('-lr', '--lr', type=float, required=False, default=1e-3, help='')
 parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
 
 parser.add_argument('-mode', '--mode', type=str, required=True, default="train", help='')
@@ -55,7 +55,7 @@ args = parser.parse_args()
 
 # use arguments
 use_augmentation = args.use_augment
-augmentation_type = args.aug_type
+augmentation_types = args.aug_types
 aug_size = args.aug_size
 gpu_num = args.gpu_num
 num_epochs = args.num_epochs
@@ -69,14 +69,16 @@ beta1 = args.beta1
 mode = args.mode
 model_path = args.model_path
 
-save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results/aug_type_{augmentation_type}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
+augment_type_str = '_'.join(augmentation_types) if use_augmentation else "None"
+save_path = f"/home/rmpatil/multi_task_gen/data/downstream_results_new/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
 
 train_dataset, val_dataset, test_dataset = datasets_custom.get_datasets(res=(resize_px, resize_px),
-                                                           aug_size=aug_size,
-                                                           use_augmentation=use_augmentation)
+                                                                        aug_size = aug_size,
+                                                                        use_augmentation = use_augmentation,
+                                                                        aug_types = augmentation_types)
 
 dataAll = {
             "Train": DataLoader(train_dataset,
@@ -279,7 +281,7 @@ if __name__ == "__main__":
                      "train_size": train_dataset.__len__(),
                      "test_size": test_dataset.__len__(),
                      "use_augmentation": args.use_augment,
-                     "augmentation_type": args.aug_type,
+                     "augmentation_types": augment_type_str,
                      "aug_size": args.aug_size,
                      "gpu_num": args.gpu_num,
                      "num_epochs": args.num_epochs,
