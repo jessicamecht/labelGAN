@@ -190,8 +190,21 @@ def validation(model):
         losses.append(loss.item())
     return np.mean(losses)
 
+def prec_rec(predictions, targets):
+    predictions = predictions > 0.5
+    accuracy = (predictions == targets).float().mean().item()
+    # Calculate the precision, recall, and F1 score
+    tp = (predictions & targets).sum(dim=1)
+    fp = (predictions & ~targets).sum(dim=1)
+    fn = (~predictions & targets).sum(dim=1)
+    precision = (tp / (tp + fp + 1e-7)).mean().item()
+    recall = (tp / (tp + fn + 1e-7)).mean().item()
+    f1 = (2 * precision * recall) / (precision + recall + 1e-7)
+    return accuracy, f1
+
+
 # test model
-def test(model):
+def test(model, tset = "Test"):
     dice_scores = []
     iou = []
     atleast_one_score = []
@@ -199,10 +212,12 @@ def test(model):
     binary_acc = []
     losses = []
     jaccard = BinaryJaccardIndex()
+    accs = []
+    f1s = []
     
     model.eval()
     with torch.no_grad():
-        for cxr, mask, Y in dataAll["Test"]:
+        for cxr, mask, Y in dataAll[tset]:
             X = cxr.to(device)
             seg = mask.type(torch.int8).to(device)
             Y = Y.to(device)
@@ -224,13 +239,18 @@ def test(model):
             atleast_one_score.append(get_atleast_one_metric(Y_pred, Y))
             pixel_acc.append(get_pixel_acc(seg_pred.cpu(), seg.cpu()))
             binary_acc.append(get_binary_acc(Y_pred, Y))
+            acc, f1 = prec_rec(Y_pred, Y)
+            accs.append(acc)
+            f1s.append(f1)
     
     return  (np.mean(iou),
              np.mean(dice_scores),
              np.mean(atleast_one_score),
              np.mean(pixel_acc),
              np.mean(binary_acc),
-             np.mean(losses))
+             np.mean(losses),
+             np.mean(accs),
+             np.mean(f1s))
 
 # train model
 def train():
@@ -275,6 +295,7 @@ def train():
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"best_model.pt")) 
+        torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
 
 if __name__ == "__main__":
     if mode == "train":
@@ -308,8 +329,22 @@ if __name__ == "__main__":
         model.load_state_dict(weights)
         model = model.to(device)    
         
-        iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+        iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss, accs, f1s = test(model)
         with open(f"{save_path}/result.txt", "w") as file:
-            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc)
+            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s)
             file.write(text)
-        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc))
+        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s))
+
+    elif mode == "val":
+        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1})
+        for i in range(num_epochs):
+            model_path = save_path + f"model_{i}.pt"
+            weights = torch.load(model_path)
+            model.load_state_dict(weights)
+            model = model.to(device)    
+            
+            iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss, accs, f1s = test(model, tset="Valid")
+            with open(f"{save_path}/result_valid.txt", "a") as file:
+                text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, pACC: %3.3f, aACC: %.3f, bACC: %3.3f, acc: %.3f, f1: %3.3f" % (iou, dsc, pixel_acc, custom_acc, binary_acc, accs, f1s)
+                file.write(text)
+            print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s))
