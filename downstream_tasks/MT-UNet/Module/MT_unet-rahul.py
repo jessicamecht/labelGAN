@@ -33,14 +33,17 @@ parser.add_argument('-gpu_num', '--gpu_num', type=int, required=False, help='')
 parser.add_argument('-use_augment', '--use_augment', action=argparse.BooleanOptionalAction)
 parser.add_argument('-num_epochs', '--num_epochs', type=int, required=False, default=50, help='')
 parser.add_argument('-train_bs', '--train_bs', type=int, required=False, default=8, help='')
-parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=2, help='')
+parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=30, help='')
 parser.add_argument('-test_bs', '--test_bs', type=int, required=False, default=1, help='')
 parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=None, help='')
 parser.add_argument('-aug_types', '--aug_types', type=str, nargs="*", required=False, default=[None], help='')
 parser.add_argument('-resize_px', '--resize_px', type=int, required=False, default=512, help='')
 parser.add_argument('-val_check', '--val_check', type=int, required=False, default=5, help='')
-parser.add_argument('-lr', '--lr', type=float, required=False, default=1e-3, help='')
+parser.add_argument('-lr', '--lr', type=float, required=False, default=0.0001, help='')
 parser.add_argument('-beta1', '--beta1', type=float, required=False, default=0.5, help='')
+parser.add_argument('-save_path_dir', '--save_path_dir', type=str, required=False, default="results", help='')
+parser.add_argument('-verbose', '--verbose', action=argparse.BooleanOptionalAction)
+parser.add_argument('-binary', '--binary', action=argparse.BooleanOptionalAction)
 
 parser.add_argument('-mode', '--mode', type=str, required=True, default="train", help='')
 parser.add_argument('-model_path', '--model_path', type=str, required=False, default="", help='')
@@ -60,17 +63,19 @@ aug_size = args.aug_size
 gpu_num = args.gpu_num
 num_epochs = args.num_epochs
 train_bs = args.train_bs
+binary = args.binary
 test_bs = args.test_bs
 val_bs = args.val_bs
 resize_px = args.resize_px
 val_check = args.val_check
+save_path_dir = args.save_path_dir
 lr = args.lr
 beta1 = args.beta1
 mode = args.mode
 
 
 augment_type_str = '_'.join(augmentation_types) if use_augmentation else "None"
-save_path = f"/data1/shared/jessica/drive_data/results/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"
+save_path = f"/data1/shared/jessica/drive_data/{save_path_dir}/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}_binary_{binary}/"
 model_path = args.model_path if args.model_path != "" else save_path + "best_model.pt"
 
 if not os.path.exists(save_path):
@@ -92,10 +97,10 @@ dataAll = {
 }
 
 device = torch.device(f"cuda:{gpu_num}" if torch.cuda.is_available() else "cpu")
-model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1},)
+model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15 if not binary else 2, 'image': 1},)
 model = model.to(device)
 
-classification_loss = nn.BCELoss()
+classification_loss = nn.BCELoss(weight=torch.tensor([0.01,0.99]).to(device)) if binary else nn.BCELoss()
 seg_pred_loss = DiceLoss()
 optimizer = optim.Adam(model.parameters(), lr=lr, betas=(beta1, 0.999))
 
@@ -139,33 +144,30 @@ def visualize(cxr, mask, Y, seg_pred, disease_pred, epoch):
 
 #Dice Coefficient
 def dice_coeff(pred, target):
-    pred = (pred > 0.5).long()
+    pred = pred.long()
     dice = Dice()
     
     return dice(pred, target)
 
 # disease v/s no-disease binary classifier
 def get_binary_acc(pred, target):
-    target = target.squeeze(0)
-    pred = pred.squeeze(0)
-    pred = pred > 0.5
-    
-    if target[8].item() == 1:
-        if pred[8].long().item() == 1: 
-            return 1
-        else: 
-            return 0
+    if target.shape[0] == 1:
+        target = target.squeeze(0)
+        pred = pred.squeeze(0)
+        if target[8].item() == 1:
+            if pred[8].long().item() == 1: 
+                return 1
+            else: 
+                return 0
     else:
         return torch.any(torch.logical_and(pred, target)).long().item()
 
 # pixel-acc
 def get_pixel_acc(pred, target):
-    pred = pred > 0.5
     return (torch.logical_and(pred, target).long().sum() / target.sum()).item()
 
 # at least one classified metric
 def get_atleast_one_metric(pred, target):
-    pred = pred > 0.5
     return torch.any(torch.logical_and(pred, target)).long().item()
 
 #Validation Loop
@@ -176,6 +178,12 @@ def validation(model):
         X = cxr.to(device)
         seg = mask.type(torch.int8).to(device)
         Y = Y.to(device)
+        
+        if binary:
+            Y = (Y[:,8] == 1).unsqueeze(1).long()
+            Y_ = torch.zeros((Y.size(0), 2)).to(device)
+            Y_ = Y_.scatter_(1, Y, 1)
+            Y = Y_
         
         Y_pred, seg_pred = model(X)
 
@@ -191,12 +199,14 @@ def validation(model):
     return np.mean(losses)
 
 def prec_rec(predictions, targets):
-    predictions = predictions > 0.5
     accuracy = (predictions == targets).float().mean().item()
     # Calculate the precision, recall, and F1 score
-    tp = (predictions & targets).sum(dim=1)
-    fp = (predictions & ~targets).sum(dim=1)
-    fn = (~predictions & targets).sum(dim=1)
+    targets = targets == 1
+    predictions = predictions == 1
+    dim = 1 if len(predictions.shape) > 1 else 0
+    tp = (predictions & targets).sum(dim=dim)
+    fp = (predictions & ~targets).sum(dim=dim)
+    fn = (~predictions & targets).sum(dim=dim)
     precision = (tp / (tp + fp + 1e-7)).mean().item()
     recall = (tp / (tp + fn + 1e-7)).mean().item()
     f1 = (2 * precision * recall) / (precision + recall + 1e-7)
@@ -209,11 +219,12 @@ def test(model, tset = "Test"):
     iou = []
     atleast_one_score = []
     pixel_acc = []
-    binary_acc = []
     losses = []
     jaccard = BinaryJaccardIndex()
     accs = []
     f1s = []
+    ypreds = []
+    ys = []
     
     model.eval()
     with torch.no_grad():
@@ -221,9 +232,12 @@ def test(model, tset = "Test"):
             X = cxr.to(device)
             seg = mask.type(torch.int8).to(device)
             Y = Y.to(device)
-
+            if binary:
+                Y = (Y[:,8] == 1).unsqueeze(1).long()
+                Y_ = torch.zeros((Y.size(0), 2)).to(device)
+                Y_ = Y_.scatter_(1, Y, 1)
+                Y = Y_
             Y_pred, seg_pred = model(X)
-            
             loss = model.compute_loss(
                     y_class_pred = Y_pred.type(torch.float),
                     y_image_pred = seg_pred.type(torch.float),
@@ -231,23 +245,42 @@ def test(model, tset = "Test"):
                     y_image_true = seg.type(torch.float),
                     loss_class = classification_loss,
                     loss_image = seg_pred_loss)
-        
-            losses.append(loss.item())
-            
+
+            seg_pred = seg_pred > 0.5
             iou.append(jaccard(seg_pred.cpu(), seg.cpu()))
-            dice_scores.append(dice_coeff(seg_pred.cpu(), seg.cpu()))
-            atleast_one_score.append(get_atleast_one_metric(Y_pred, Y))
             pixel_acc.append(get_pixel_acc(seg_pred.cpu(), seg.cpu()))
-            binary_acc.append(get_binary_acc(Y_pred, Y))
-            acc, f1 = prec_rec(Y_pred, Y)
-            accs.append(acc)
-            f1s.append(f1)
-    
+            dice_scores.append(dice_coeff(seg_pred.cpu(), seg.cpu()))
+            losses.append(loss.item())
+            if not binary: 
+                Y_pred_bin = Y_pred > 0.5
+                if Y_pred_bin.sum() == 0:
+                    max_index = torch.argmax(Y_pred, dim=1)
+                    Y_pred_bin = torch.zeros_like(Y_pred)
+                    Y_pred_bin[:,max_index] = 1
+                    Y_pred = Y_pred_bin
+                else:
+                    Y_pred = Y_pred_bin
+            else:
+                Y_pred = Y_pred.argmax(dim=1)
+                Y = Y.argmax(dim=1)
+            if binary:
+                ypreds.extend(Y_pred.cpu().numpy())
+                ys.extend(Y.cpu().numpy())
+            else:
+                acc, f1 = prec_rec(torch.tensor(ypreds), torch.tensor(ys))
+                accs.append(acc)
+                f1s.append(f1)
+                atleast_one_score.append(get_atleast_one_metric(torch.tensor(ypreds), torch.tensor(ys)))
+                
+            
+    if binary: 
+        atleast_one_score = get_atleast_one_metric(torch.tensor(ypreds), torch.tensor(ys))
+        accs, f1s = prec_rec(torch.tensor(ypreds), torch.tensor(ys))
+
     return  (np.mean(iou),
              np.mean(dice_scores),
              np.mean(atleast_one_score),
              np.mean(pixel_acc),
-             np.mean(binary_acc),
              np.mean(losses),
              np.mean(accs),
              np.mean(f1s))
@@ -265,6 +298,11 @@ def train():
 
             Y = Y.to(device).type(torch.float)
             seg = mask.to(device).type(torch.int8)
+            if binary:
+                Y = (Y[:,8] == 1).unsqueeze(1).long()
+                Y_ = torch.zeros((Y.size(0), 2)).to(device)
+                Y_ = Y_.scatter_(1, Y, 1)
+                Y = Y_
             
             optimizer.zero_grad()
             Y_pred, seg_pred = model(X)
@@ -283,11 +321,11 @@ def train():
             optimizer.step()
             loss_list.append(loss.detach().clone().cpu())
         
-        visualize(cxr, mask, Y, seg_pred, Y_pred, epoch)
+        #visualize(cxr, mask, Y, seg_pred, Y_pred, epoch)
 
         print("[TRAIN] Epoch : %d, Loss : %2.5f" % (epoch, np.mean(loss_list)))       
         if (epoch + 1) % val_check == 0:
-#             iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
+#             iou, dsc, custom_acc, pixel_acc,  cur_loss = test(model)
 #             print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
             cur_loss = validation(model)
 
@@ -295,6 +333,19 @@ def train():
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"best_model.pt")) 
+        iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Train")
+       
+        print("[TRAIN-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
+        iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Valid")
+
+        print("[VAL-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
+        iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Test")
+
+        with open(f"{save_path}/result_valid_{epoch}.txt", "a") as file:
+            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, pACC: %3.3f, aACC: %.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, pixel_acc, custom_acc,  accs, f1s)
+            file.write(text)
+
+        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
         torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
 
 if __name__ == "__main__":
@@ -324,27 +375,32 @@ if __name__ == "__main__":
         train()
         
     elif mode == "test":
-        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1})
+        print("lkjh")
+        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15 if not binary else 2, 'image': 1})
         weights = torch.load(model_path)
         model.load_state_dict(weights)
         model = model.to(device)    
         
-        iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss, accs, f1s = test(model)
+        iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model)
         with open(f"{save_path}/result.txt", "w") as file:
-            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s)
+            text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s)
             file.write(text)
-        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s))
+        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
 
     elif mode == "val":
-        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15, 'image': 1})
+        model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15 if not binary else 2, 'image': 1})
+        best_f1 = 0
         for i in range(num_epochs):
             model_path = save_path + f"model_{i}.pt"
             weights = torch.load(model_path)
             model.load_state_dict(weights)
             model = model.to(device)    
-            
-            iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss, accs, f1s = test(model, tset="Valid")
-            with open(f"{save_path}/result_valid.txt", "a") as file:
-                text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, pACC: %3.3f, aACC: %.3f, bACC: %3.3f, acc: %.3f, f1: %3.3f" % (iou, dsc, pixel_acc, custom_acc, binary_acc, accs, f1s)
+            iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Valid")
+            if best_f1 < f1s:
+                best_f1 = f1s
+                torch.save(model.state_dict(), os.path.join(save_path, f"best_model_f1.pt")) 
+
+            with open(f"{save_path}/result_valid_{i}.txt", "a") as file:
+                text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, pACC: %3.3f, aACC: %.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, pixel_acc, custom_acc,  accs, f1s)
                 file.write(text)
-            print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f, acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc, binary_acc, accs, f1s))
+            print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))

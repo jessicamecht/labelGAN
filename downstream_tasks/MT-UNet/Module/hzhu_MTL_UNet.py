@@ -120,6 +120,7 @@ class MTL_UNet(UNet_Chunk):
         self.init()
         
         self.sigmoid = nn.Sigmoid() # convert to multi-label
+        self.softmax = nn.Softmax(dim=1) # convert to class
         
     def init(self):
         self.dummy_tensor = nn.Parameter(torch.tensor(0), requires_grad=False)
@@ -161,8 +162,7 @@ class MTL_UNet(UNet_Chunk):
                     average_pool_d2 = d2.mean(dim=(-2,-1))
                     average_pool = torch.cat((average_pool_e5, average_pool_d2), dim=1)
                     y_class = self.out_classification(average_pool)
-                    
-                    y_class = self.sigmoid(y_class) # multi-label
+                    y_class = self.softmax(y_class)#self.sigmoid(y_class) # multi-label
                     r.append(y_class)
                 else:
                     r.append(self.dummy_tensor)
@@ -191,10 +191,9 @@ class MTL_UNet_Main(MTL_UNet):
         self.lg_sigma_image = torch.tensor(0.0, dtype=torch.float32)
                             
     def compute_loss_class(self, y_pred, y_true, loss_function):
-        
         sigma = torch.exp(self.lg_sigma_class)
         loss_raw = loss_function(y_pred, y_true)
-        loss_weighted = loss_raw/sigma/sigma+torch.log(sigma + 1.0)
+        loss_weighted = loss_raw#/sigma/sigma+torch.log(sigma + 1.0)
         
         return sigma, loss_raw, loss_weighted
     
@@ -202,19 +201,19 @@ class MTL_UNet_Main(MTL_UNet):
         
         sigma = torch.exp(self.lg_sigma_image)
         loss_raw = loss_function(y_pred, y_true)
-        loss_weighted = loss_raw/sigma/sigma/2.0 + torch.log(sigma + 1.0)
+        loss_weighted = loss_raw#/sigma/sigma/2.0 + torch.log(sigma + 1.0)
         
         return sigma, loss_raw, loss_weighted
     
     def compute_loss(self, y_class_pred, y_image_pred, y_class_true, y_image_true, loss_class, loss_image):
-        
+        #print(y_class_pred, y_class_true)
         class_sigma, class_loss_raw, class_loss_weighted = self.compute_loss_class(
             y_pred=y_class_pred, y_true=y_class_true, loss_function=loss_class)
         
         image_sigma, image_loss_raw, image_loss_weighted = self.compute_loss_image(
             y_pred=y_image_pred, y_true=y_image_true, loss_function=loss_image, idx=0)
         
-        loss_sum = class_loss_weighted+image_loss_weighted
+        loss_sum = 0.8*class_loss_weighted+ 0.2*image_loss_weighted
         
 #         r = {'loss_sum':loss_sum,
 #              'class_loss_raw':class_loss_raw,

@@ -4,7 +4,7 @@ import os
 import random
 import matplotlib.pyplot as plt
 import PIL
-from PIL import Image,ImageOps
+from PIL import Image,ImageOps, ImageEnhance
 from torchvision import transforms
 import pandas as pd
 from torch.utils.data import Dataset
@@ -112,8 +112,8 @@ class AugmentationDatasetEmbedded(Dataset):
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'masks', f"{imgname}")
         mask = Image.open(mask_name)
-        mask = ImageOps.grayscale(mask)
         mask = np.array(ImageOps.grayscale(mask))
+        mask[mask > 5] = 255
         
         #Extracting disease label
         label_list = self.image_id_to_labels[imgname.replace(".png", "").replace(".jpg", "").replace("_mask", "")]
@@ -123,9 +123,15 @@ class AugmentationDatasetEmbedded(Dataset):
         
         #Converting to tensors and Resizing images
         self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
+        self.transform_hflip = transforms.functional.hflip
         
         image = self.transform(image)
-        mask = (self.transform(mask) > 0.5).type(torch.float)
+        mask = self.transform(mask).type(torch.float)
+
+        probability = torch.rand(1)
+        if probability <= 0.5:
+            image = self.transform_hflip(image)
+            mask = self.transform_hflip(mask)
 
         return torch.tensor(image), torch.tensor(mask), torch.tensor(labels)
     
@@ -152,9 +158,8 @@ class AugmentationDatasetKDE(Dataset):
         #Reading segmentation Masks
         mask_name = os.path.join(self.root_dir, 'masks', self.mask_path[idx])
         mask = Image.open(mask_name)
-        #mask[mask > 5] = 255
-        #mask[mask < 5] = 0
-        mask = np.where(np.min(mask, axis=2) >= 150, 1, 0)
+        mask = np.array(ImageOps.grayscale(mask))
+        mask[mask > 5] = 255
 
         img_name_str = self.mask_path[idx].replace("_mask", "_image")
         img_name = os.path.join(self.root_dir, 'imgs', img_name_str)
@@ -162,6 +167,8 @@ class AugmentationDatasetKDE(Dataset):
         
         #Converting to grayscale if RGB
         image = ImageOps.grayscale(image)
+        enhancer = ImageEnhance.Contrast(image)
+        image = enhancer.enhance(2.0)
         
         
         #Extracting disease label
@@ -189,7 +196,7 @@ def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:-1])))) for image in f.readlines()]
 
 def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, aug_types=["KDE"]):
-    root_dir = '/data1/shared/jessica/drive_data/vinbig_test_imgs_and_segm/'
+    root_dir = '/data1/shared/jessica/data/labelGAN/vinbig_test_imgs_and_segm/'
     data_split_dir = '/home/jessica/labelGAN/downstream_tasks/vinbig/'
     
     with open(os.path.join(data_split_dir, "train_binarized_list.txt")) as f:
