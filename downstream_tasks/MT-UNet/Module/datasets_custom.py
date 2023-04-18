@@ -214,7 +214,7 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, au
     with open(os.path.join(data_split_dir, "test_binarized_list.txt")) as f:
         test_file = get_data_splits(f)
     test_dataset = ChestXrayDataset(root_dir,
-                                    test_file,
+                                    test_file[0:45],
                                     res)  
     
     if use_augmentation:

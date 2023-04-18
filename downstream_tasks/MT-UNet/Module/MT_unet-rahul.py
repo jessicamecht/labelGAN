@@ -33,7 +33,7 @@ parser.add_argument('-gpu_num', '--gpu_num', type=int, required=False, help='')
 parser.add_argument('-use_augment', '--use_augment', action=argparse.BooleanOptionalAction)
 parser.add_argument('-num_epochs', '--num_epochs', type=int, required=False, default=50, help='')
 parser.add_argument('-train_bs', '--train_bs', type=int, required=False, default=8, help='')
-parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=30, help='')
+parser.add_argument('-val_bs', '--val_bs', type=int, required=False, default=1, help='')
 parser.add_argument('-test_bs', '--test_bs', type=int, required=False, default=1, help='')
 parser.add_argument('-aug_size', '--aug_size', type=int, required=False, default=None, help='')
 parser.add_argument('-aug_types', '--aug_types', type=str, nargs="*", required=False, default=[None], help='')
@@ -75,7 +75,7 @@ mode = args.mode
 
 
 augment_type_str = '_'.join(augmentation_types) if use_augmentation else "None"
-save_path = f"/data1/shared/jessica/drive_data/{save_path_dir}/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}_binary_{binary}/"
+save_path = f"/data1/shared/jessica/drive_data/{save_path_dir}/aug_type_{augment_type_str}_aug_size_{aug_size}_use_augment_{use_augmentation}_num_epochs_{num_epochs}_resize_px_{resize_px}/"#_binary_{binary}/"
 model_path = args.model_path if args.model_path != "" else save_path + "best_model.pt"
 
 if not os.path.exists(save_path):
@@ -199,6 +199,7 @@ def validation(model):
     return np.mean(losses)
 
 def prec_rec(predictions, targets):
+    print(predictions, targets)
     accuracy = (predictions == targets).float().mean().item()
     # Calculate the precision, recall, and F1 score
     targets = targets == 1
@@ -267,10 +268,10 @@ def test(model, tset = "Test"):
                 ypreds.extend(Y_pred.cpu().numpy())
                 ys.extend(Y.cpu().numpy())
             else:
-                acc, f1 = prec_rec(torch.tensor(ypreds), torch.tensor(ys))
+                acc, f1 = prec_rec(Y_pred,Y)
                 accs.append(acc)
                 f1s.append(f1)
-                atleast_one_score.append(get_atleast_one_metric(torch.tensor(ypreds), torch.tensor(ys)))
+                atleast_one_score.append(get_atleast_one_metric(Y_pred,Y))
                 
             
     if binary: 
@@ -333,7 +334,7 @@ def train():
             if cur_loss < best_loss:
                 best_loss = cur_loss
                 torch.save(model.state_dict(), os.path.join(save_path, f"best_model.pt")) 
-        iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Train")
+        '''iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Train")
        
         print("[TRAIN-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
         iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model, tset="Valid")
@@ -345,7 +346,7 @@ def train():
             text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, pACC: %3.3f, aACC: %.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, pixel_acc, custom_acc,  accs, f1s)
             file.write(text)
 
-        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
+        print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))'''
         torch.save(model.state_dict(), os.path.join(save_path, f"model_{epoch}.pt")) 
 
 if __name__ == "__main__":
@@ -375,14 +376,13 @@ if __name__ == "__main__":
         train()
         
     elif mode == "test":
-        print("lkjh")
         model = MTL_UNet_Main(in_channels = 1, out_dict = {'class': 15 if not binary else 2, 'image': 1})
         weights = torch.load(model_path)
         model.load_state_dict(weights)
         model = model.to(device)    
         
         iou, dsc, custom_acc, pixel_acc,  cur_loss, accs, f1s = test(model)
-        with open(f"{save_path}/result.txt", "w") as file:
+        with open(f"{save_path}/result_____.txt", "w") as file:
             text = "[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s)
             file.write(text)
         print("[TEST-FINAL] IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f,  acc: %3.3f, f1: %3.3f" % (iou, dsc, custom_acc, pixel_acc,  accs, f1s))
