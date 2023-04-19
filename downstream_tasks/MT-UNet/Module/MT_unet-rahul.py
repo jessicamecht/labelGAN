@@ -46,8 +46,13 @@ parser.add_argument('-mode', '--mode', type=str, required=True, default="train",
 parser.add_argument('-model_path', '--model_path', type=str, required=False, default="", help='')
 
 """
+train:
 usage for no augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 1 -resize_px 1024 -val_check 5 -num_epochs 100
 basic augmentation === python MT_unet-rahul.py -gpu_num 0 -train_bs 2 -resize_px 1024 -val_check 1 -num_epochs 100 -use_augment -aug_type basic -aug_size 50
+
+test:
+python MT_unet-rahul.py -gpu_num 0 -test_bs 1 -resize_px 1024 -model_path /home/rmpatil/multi_task_gen/data/downstream_results_new/aug_type_None_aug_size_None_use_augment_None_num_epochs_50_resize_px_256/best_model.pt -mode test
+
 """
 
 # parse arguments from command line
@@ -171,22 +176,23 @@ def get_atleast_one_metric(pred, target):
 def validation(model):
     losses = []
     model.eval()
-    for cxr, mask, Y in dataAll["Valid"]:
-        X = cxr.to(device)
-        seg = mask.type(torch.int8).to(device)
-        Y = Y.to(device)
-        
-        Y_pred, seg_pred = model(X)
+    with torch.no_grad():
+        for cxr, mask, Y in dataAll["Valid"]:
+            cxr = cxr.to(device)
+            mask = mask.type(torch.int8).to(device)
+            Y = Y.to(device)
 
-        loss = model.compute_loss(
-                    y_class_pred = Y_pred.type(torch.float),
-                    y_image_pred = seg_pred.type(torch.float),
-                    y_class_true = Y.type(torch.float), 
-                    y_image_true = seg.type(torch.float),
-                    loss_class = classification_loss,
-                    loss_image = seg_pred_loss)
-        
-        losses.append(loss.item())
+            Y_pred, seg_pred = model(cxr)
+
+            loss = model.compute_loss(
+                        y_class_pred = Y_pred.type(torch.float),
+                        y_image_pred = seg_pred.type(torch.float),
+                        y_class_true = Y.type(torch.float), 
+                        y_image_true = mask.type(torch.float),
+                        loss_class = classification_loss,
+                        loss_image = seg_pred_loss)
+
+            losses.append(loss.item())
     return np.mean(losses)
 
 # test model
@@ -268,6 +274,15 @@ def train():
         if (epoch + 1) % val_check == 0:
 #             iou, dsc, custom_acc, pixel_acc, binary_acc, cur_loss = test(model)
 #             print("[TEST] Epoch : %d, IoU: %2.3f, DSC: %2.3f, aACC: %.3f, pACC: %3.3f, bACC: %3.3f" % (epoch, iou, dsc, custom_acc, pixel_acc, binary_acc))
+            
+            cxr = cxr.detach()
+            mask = mask.detach()
+            Y = Y.detach()
+            seg_pred = seg_pred.detach()
+            Y_pred = Y_pred.detach()
+            del X, cxr, mask, Y, seg, seg_pred, Y_pred, loss
+            torch.cuda.empty_cache()
+            
             cur_loss = validation(model)
 
             print("[VALIDATION] Epoch : %d, Loss : %2.5f" % (epoch, cur_loss))

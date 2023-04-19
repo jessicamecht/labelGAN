@@ -21,7 +21,7 @@ def prepare_dataloading(opt):
     else:
         opt.no_masks = True
         print("Using the training regime *without* segmentation masks")
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size = opt.batch_size, shuffle = True, num_workers=8)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size = opt.batch_size, shuffle = True)
     return dataloader, recommended_config
 
 
