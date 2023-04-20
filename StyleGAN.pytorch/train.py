@@ -53,6 +53,8 @@ if __name__ == '__main__':
     opt.merge_from_file(args.config)
     opt.freeze()
 
+    
+
     # make output dir
     output_dir = opt.output_dir
     #if os.path.exists(output_dir):
@@ -79,11 +81,11 @@ if __name__ == '__main__':
 
     # create the dataset for training
     dataset = make_dataset(opt.dataset, conditional=opt.conditional)
-
     # init the network
     style_gan = StyleGAN(structure=opt.structure,
                          conditional=opt.conditional,
                          n_classes=opt.n_classes,
+                         from_scratch=opt.from_scratch,
                          resolution=opt.dataset.resolution,
                          num_channels=opt.dataset.channels,
                          latent_size=opt.model.gen.latent_size,
@@ -97,19 +99,18 @@ if __name__ == '__main__':
                          use_ema=opt.use_ema,
                          ema_decay=opt.ema_decay,
                          device=device)
-
     # Resume training from checkpoints
     if args.generator_file is not None:
         logger.info("Loading generator from: %s", args.generator_file)
-        # style_gan.gen.load_state_dict(torch.load(args.generator_file))
+        style_gan.gen.load_state_dict(torch.load(args.generator_file), strict=False)
         # Load fewer layers of pre-trained models if possible
-        load(style_gan.gen, args.generator_file)
+        #load(style_gan.gen, args.generator_file)
     else:
         logger.info("Training from scratch...")
 
     if args.discriminator_file is not None:
         logger.info("Loading discriminator from: %s", args.discriminator_file)
-        style_gan.dis.load_state_dict(torch.load(args.discriminator_file))
+        style_gan.dis.load_state_dict(torch.load(args.discriminator_file), strict=False)
 
     if args.gen_shadow_file is not None and opt.use_ema:
         logger.info("Loading shadow generator from: %s", args.gen_shadow_file)

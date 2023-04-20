@@ -212,7 +212,7 @@ class Generator(nn.Module):
 
     def __init__(self, resolution, latent_size=512, dlatent_size=512,
                  conditional=False, n_classes=0, truncation_psi=0.7,
-                 truncation_cutoff=8, dlatent_avg_beta=0.995,
+                 truncation_cutoff=8, dlatent_avg_beta=0.995, from_scratch=True,
                  style_mixing_prob=0.9, **kwargs):
         """
         # Style-based generator used in the StyleGAN paper.
@@ -230,13 +230,17 @@ class Generator(nn.Module):
         
         super(Generator, self).__init__()
 
-        if conditional:
+        if conditional and n_classes > 0:
             assert n_classes > 0, "Conditional generation requires n_class > 0"
             self.class_embedding = nn.Embedding(n_classes, latent_size)
-            latent_size *= 2
+            if not from_scratch:
+                self.class_reduce = nn.Linear(2*latent_size, latent_size)
+            else:
+                latent_size *= 2
 
         self.conditional = conditional
         self.style_mixing_prob = style_mixing_prob
+        self.from_scratch = from_scratch
 
         # Setup components.
         self.num_layers = (int(np.log2(resolution)) - 1) * 2
@@ -268,6 +272,8 @@ class Generator(nn.Module):
             assert labels_in is not None, "Conditional discriminatin requires labels"
             embedding = self.class_embedding(labels_in)
             latents_in = torch.cat([latents_in, embedding], 1)
+            if not self.from_scratch:
+                latents_in = self.class_reduce(latents_in)
 
         dlatents_in = self.g_mapping(latents_in)
 
@@ -302,7 +308,7 @@ class Discriminator(nn.Module):
     def __init__(self, resolution, num_channels=3, conditional=False,
                  n_classes=0, fmap_base=8192, fmap_decay=1.0, fmap_max=512,
                  nonlinearity='lrelu', use_wscale=True, mbstd_group_size=4,
-                 mbstd_num_features=1, blur_filter=None, structure='linear',
+                 mbstd_num_features=1, blur_filter=None, structure='linear',from_scratch=True,
                  **kwargs):
         """
         Discriminator used in the StyleGAN paper.
@@ -326,7 +332,8 @@ class Discriminator(nn.Module):
         if conditional:
             assert n_classes > 0, "Conditional Discriminator requires n_class > 0"
             # self.embedding = nn.Embedding(n_classes, num_channels * resolution ** 2)
-            num_channels *= 2
+            if from_scratch:
+                num_channels *= 2
             self.embeddings = []
 
         def nf(stage):
@@ -336,6 +343,7 @@ class Discriminator(nn.Module):
         self.mbstd_num_features = mbstd_num_features
         self.mbstd_group_size = mbstd_group_size
         self.structure = structure
+        self.from_scratch = from_scratch
         # if blur_filter is None:
         #     blur_filter = [1, 2, 1]
 
@@ -367,6 +375,8 @@ class Discriminator(nn.Module):
             self.embeddings.append(nn.Embedding(
                 n_classes, (num_channels // 2) * 4 * 4))
             self.embeddings = nn.ModuleList(self.embeddings)
+            if not self.from_scratch:
+                self.class_reduce = nn.Linear(num_channels+1, num_channels)
 
         self.blocks = nn.ModuleList(blocks)
 
@@ -394,10 +404,6 @@ class Discriminator(nn.Module):
 
         if self.conditional:
             assert labels_in is not None, "Conditional Discriminator requires labels"
-        # print(embedding_in.shape, images_in.shape)
-        # exit(0)
-        # print(self.embeddings)
-        # exit(0)
         if self.structure == 'fixed':
             if self.conditional:
                 embedding_in = self.embeddings[0](labels_in)
@@ -419,6 +425,8 @@ class Discriminator(nn.Module):
                                                      images_in.shape[2],
                                                      images_in.shape[3])
                     images_in = torch.cat([images_in, embedding_in], dim=1)
+                    if not self.from_scratch:
+                        images_in = self.class_reduce(images_in.permute(0,2,3,1)).permute(0,3,1,2)
                     
                 residual = self.from_rgb[self.depth -
                                          depth](self.temporaryDownsampler(images_in))
@@ -434,6 +442,7 @@ class Discriminator(nn.Module):
                     embedding_in = embedding_in.view(images_in.shape[0], -1,
                                                      images_in.shape[2],
                                                      images_in.shape[3])
+                    print(images_in.shape, embedding_in.shape)
                     images_in = torch.cat([images_in, embedding_in], dim=1)
                 x = self.from_rgb[-1](images_in)
                     
@@ -447,7 +456,7 @@ class Discriminator(nn.Module):
 class StyleGAN:
 
     def __init__(self, structure, resolution, num_channels, latent_size,
-                 g_args, d_args, g_opt_args, d_opt_args, conditional=False,
+                 g_args, d_args, g_opt_args, d_opt_args, conditional=False,from_scratch=False,
                  n_classes=0, loss="relativistic-hinge", drift=0.001, d_repeats=1,
                  use_ema=False, ema_decay=0.999, device=torch.device("cpu")):
         """
@@ -473,7 +482,6 @@ class StyleGAN:
         :param ema_decay: value of mu for ema
         :param device: device to run the GAN on (GPU / CPU)
         """
-
         # state of the object
         assert structure in ['fixed', 'linear']
 
@@ -494,6 +502,7 @@ class StyleGAN:
         # Create the Generator and the Discriminator
         self.gen = Generator(num_channels=num_channels,
                              resolution=resolution,
+                             from_scratch=from_scratch, 
                              structure=self.structure,
                              conditional=self.conditional,
                              n_classes=self.n_classes,
@@ -501,6 +510,7 @@ class StyleGAN:
 
         self.dis = Discriminator(num_channels=num_channels,
                                  resolution=resolution,
+                                 from_scratch=from_scratch, 
                                  structure=self.structure,
                                  conditional=self.conditional,
                                  n_classes=self.n_classes,
@@ -576,7 +586,6 @@ class StyleGAN:
         prior_down_sample_factor = max(int(np.power(2, self.depth - depth)), 0)
 
         ds_real_samples = AvgPool2d(down_sample_factor)(real_batch)
-
         if depth > 0:
             prior_ds_real_samples = interpolate(AvgPool2d(prior_down_sample_factor)(real_batch), scale_factor=2)
         else:

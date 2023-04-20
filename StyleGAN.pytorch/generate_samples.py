@@ -30,13 +30,14 @@ def parse_arguments():
     parser.add_argument("--generator_file", action="store", type=str,
                         help="pretrained weights file for generator", required=True)
     parser.add_argument("--num_samples", action="store", type=int,
-                        default=300, help="number of synchronized grids to be generated")
-    parser.add_argument("--output_dir", action="store", type=str,
-                        default="output/",
+                        default=400, help="number of synchronized grids to be generated")
+    parser.add_argument("--output_dir", action="store", type=str, default="",
                         help="path to the output directory for the frames")
     parser.add_argument("--input", action="store", type=str,
                         default=None, help="the dlatent code (W) for a certain sample")
-    parser.add_argument("--output", action="store", type=str,
+    parser.add_argument("--conditional", action=argparse.BooleanOptionalAction)
+    parser.add_argument("--n_classes", help="whether to generate conditional samples", type=int, default=0)
+    parser.add_argument("--output", action="store", type=bool,
                         default="output.png", help="the output for the certain samples")
 
     args = parser.parse_args()
@@ -72,10 +73,13 @@ def main(args):
     opt.merge_from_file(args.config)
     opt.freeze()
 
-    print("Creating generator object ...")
+    print("Creating generator object ...",  args.conditional)
     # create the generator object
     gen = Generator(resolution=opt.dataset.resolution,
+                    from_scratch=opt.from_scratch,
                     num_channels=opt.dataset.channels,
+                    conditional=args.conditional,
+                    n_classes = args.n_classes,
                     structure=opt.structure,
                     **opt.model.gen)
 
@@ -96,12 +100,18 @@ def main(args):
             with torch.no_grad():
                 point = torch.randn(1, latent_size)
                 point = (point / point.norm()) * (latent_size ** 0.5)
-                ss_image = gen(point, depth=out_depth, alpha=1)
+                if args.conditional:
+                    label = torch.randint(0, 15, (1,))
+                    ss_image = gen(point, labels_in=label, depth=out_depth, alpha=1)
+                    label = label.item()
+                else:
+                    ss_image = gen(point, depth=out_depth, alpha=1)
+                    label = None
                 # color adjust the generated image:
                 ss_image = adjust_dynamic_range(ss_image)
 
             # save the ss_image in the directory
-            save_image(ss_image, os.path.join(save_path, str(img_num) + ".png"))
+            save_image(ss_image, os.path.join(save_path, str(img_num) + "_label_" + str(label) + ".png"))
 
         print("Generated %d images at %s" % (args.num_samples, save_path))
     else:

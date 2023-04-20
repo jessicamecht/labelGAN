@@ -8,15 +8,80 @@
 """
 
 from torchvision.datasets import ImageFolder
-
+import pandas as pd
+import torch
+import os
+from PIL import Image, ImageOps
+import numpy as np
 from data.datasets import FlatDirectoryImageDataset, FoldersDistributedDataset
 from data.transforms import get_transform
+import torchvision.transforms
+from torchvision.transforms import Compose, ToTensor, Resize
+import random
+from torch.utils.data import Dataset
+mlb = {'Aorticenlargement': np.array([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),       
+       'Atelectasis': np.array([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]),         
+       'Calcification': np.array([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]),       
+       'Cardiomegaly': np.array([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]),        
+       'Consolidation': np.array([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]),       
+       'ILD': np.array([0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]),                 
+       'Infiltration': np.array([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]),        
+       'LungOpacity': np.array([0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]),         
+       'Nofinding': np.array([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]),          
+       'NoduleMass': np.array([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]),         
+       'Otherlesion': np.array([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]),        
+       'Pleuraleffusion': np.array([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]),    
+       'Pleuralthickening': np.array([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]),  
+       'Pneumothorax': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]),       
+       'Pulmonaryfibrosis': np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])} 
+class AugmentationDatasetEmbedded(Dataset):
+    def __init__(self, root_dir, aug_size=-1, res=(1024, 1024),):
+
+        self.root_dir = root_dir
+        self.res = res
+        self.mask_path = os.listdir(f"{self.root_dir}/masks/")
+        random.shuffle(self.mask_path)
+        self.mask_path = self.mask_path[:aug_size]
+        train_csv = pd.read_csv('/home/jessica/labelGAN/downstream_tasks/vinbig/train.csv')
+        self.image_id_to_labels = train_csv.groupby(by="image_id").class_name.apply(list).apply(lambda x: np.unique([elem.replace(" ", "").replace("/", "") for elem in x]))
+
+    def __len__(self):
+        return len(self.mask_path)
+
+    def __getitem__(self, idx):
+ 
+        #Reading images
+        imgname = self.mask_path[idx]
+        imname = imgname.replace("_mask", "").replace(".jpg", ".png")
+        img_name = os.path.join(self.root_dir, 'imgs', f"{imname}")
+        image = Image.open(img_name)
+        
+        #Converting to grayscale if RGB
+        image = ImageOps.grayscale(image).convert('RGB')
+        
+        #Extracting disease label
+        label_list = self.image_id_to_labels[imgname.replace(".png", "").replace(".jpg", "").replace("_mask", "")]
+        labels = np.zeros(15).astype(int)
+        for label in label_list:
+            labels = labels | mlb[label]
+        
+        #Converting to tensors and Resizing images
+        self.transform = Compose([ToTensor(), Resize(self.res)])
+        
+        image = self.transform(image)
+        indices = [i for i, x in enumerate(labels) if x == 1]
+
+        random_index = random.choice(indices)
+        #image = torch.stack((torch.tensor(image),)*3, axis=0).squeeze()
+        return image, torch.tensor(random_index)
+
 
 
 def make_dataset(cfg, conditional=False):
     
     if conditional:
-        Dataset = ImageFolder
+        dataset = AugmentationDatasetEmbedded(root_dir='/data1/shared/jessica/drive_data/train_images_embedded/')#ImageFolder
+        return dataset
     else:
         if cfg.folder:
             Dataset = FoldersDistributedDataset 
