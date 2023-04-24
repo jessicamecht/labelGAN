@@ -88,7 +88,7 @@ class AugmentationDatasetEmbedded(Dataset):
     def __init__(self, root_dir, aug_size, res=(1024, 1024),):
 
         self.root_dir = root_dir
-        self.resize_px = resize_px
+        self.res = res
         self.mask_path = os.listdir(f"{self.root_dir}/masks/")[:aug_size]
         
         train_csv = pd.read_csv('/data3/jessica/data/labelGAN/vinbig/train.csv')
@@ -121,7 +121,7 @@ class AugmentationDatasetEmbedded(Dataset):
             labels = labels | mlb[label]
         
         #Converting to tensors and Resizing images
-        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(res)])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
         
         image = self.transform(image)
         mask = (self.transform(mask) > 0.5).type(torch.float)
@@ -130,7 +130,7 @@ class AugmentationDatasetEmbedded(Dataset):
     
 class AugmentationDatasetKDE(Dataset):
 
-    def __init__(self, root_dir, image_paths, mask_paths, labels=None, res=(102, 1024)):
+    def __init__(self, root_dir, image_paths, mask_paths, labels=None, res=(1024, 1024)):
         
         self.image_paths = image_paths
         self.mask_paths = mask_paths
@@ -180,6 +180,63 @@ class AugmentationDatasetKDE(Dataset):
 
         return image, mask, torch.tensor(label)
 
+class AugmentationDatasetOSMIS(Dataset):
+
+    def __init__(self, root_dir, aug_size, res=(1024, 1024)):
+
+        self.root_dir = root_dir
+        self.res = res
+        self.images_and_labels = self.get_images_and_labels(self.root_dir, aug_size)
+        
+    def get_images_and_labels(self, root_dir, aug_size):
+        image_list = []
+        
+        aug_size = 56 if aug_size == 50 else aug_size # updating 50 to 56, others remain same
+        sample_size = int(aug_size / 14) 
+        img_ids = random.sample(range(0, 100), sample_size)
+        
+        # root_dir is parent directory of all evaluation-* osmis files
+        for dir_ in os.listdir(root_dir):
+            label = dir_.replace("evaluation_", "")
+            for img_id in img_ids:
+                image_list.append((os.path.join(root_dir, os.path.join(dir_, os.path.join("40000", f"{img_id}.png"))), label))
+        
+        return image_list
+
+    def __len__(self):
+        return len(self.images_and_labels)
+
+    def __getitem__(self, idx):
+ 
+        #Reading images
+        imgname = self.images_and_labels[idx][0]
+        image = Image.open(imgname)
+        
+        #Converting to grayscale if RGB
+        image = ImageOps.grayscale(image)
+        
+        #Reading segmentation Masks
+        mask_name = imgname.replace(".png", "_mask.png")
+        mask = Image.open(mask_name)
+        mask = ImageOps.grayscale(mask)
+        
+        #Extracting disease label
+        label_str = self.images_and_labels[idx][1]
+        label = None
+        for key in mlb.keys():
+            if label_str in key.lower():
+                label = mlb[key]
+                print(key)
+                
+        #Converting to tensors and Resizing images
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Resize(self.res)])
+        
+        image = self.transform(image)
+        mask = (self.transform(mask) > 0.5).type(torch.float)
+        
+        return image, mask, torch.tensor(label)
+    
+    
 def get_data_splits(f):
     return [(image.split()[0], np.array(list(map(int, image.split()[1:-1])))) for image in f.readlines()]
 
@@ -227,6 +284,11 @@ def get_datasets(res = (256, 256), aug_size = None, use_augmentation = False, au
             if aug_type == "Embedded":
                 root_dir = '/data3/jessica/data/labelGAN/train_images/'
                 augmentation_dataset = AugmentationDatasetEmbedded(root_dir, res, aug_size)
+                augmented_dataset.append(augmentation_dataset)
+                
+            if aug_type == "osmis":
+                root_dir = '/home/rmpatil/multi_task_gen/labelGAN/misc-and-old/one-shot-synthesis-osmis/eval-images/'
+                augmentation_dataset = AugmentationDatasetOSMIS(root_dir, aug_size, res)
                 augmented_dataset.append(augmentation_dataset)
             
         train_dataset = torch.utils.data.ConcatDataset(augmented_dataset)
